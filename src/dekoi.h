@@ -1,6 +1,10 @@
 #ifndef DEKOI_DEKOI_H
 #define DEKOI_DEKOI_H
 
+#if defined(DEBUG) || !defined(NDEBUG)
+ #define DK_DEBUG
+#endif
+
 #define DK_UNUSED(x) (void)(x)
 #define DK_STATIC_ASSERT(x, msg) \
     typedef char dk_static_assertion_failed_##msg[(x) ? 1 : -1]
