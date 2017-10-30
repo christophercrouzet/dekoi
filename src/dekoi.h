@@ -11,22 +11,22 @@
 
 /* Focus on the common ILP32, LP64 and LLP64 data models. */
 #ifndef DK_INT8
- #define DK_INT8 signed char
+ #define DK_INT8 char
 #endif
 #ifndef DK_UINT8
- #define DK_UINT8 unsigned char
+ #define DK_UINT8 unsigned DK_INT8
 #endif
 #ifndef DK_INT16
- #define DK_INT16 signed short
+ #define DK_INT16 short
 #endif
 #ifndef DK_UINT16
- #define DK_UINT16 unsigned short
+ #define DK_UINT16 unsigned DK_INT16
 #endif
 #ifndef DK_INT32
- #define DK_INT32 signed int
+ #define DK_INT32 int
 #endif
 #ifndef DK_UINT32
- #define DK_UINT32 unsigned int
+ #define DK_UINT32 unsigned DK_INT32
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
