@@ -65,4 +65,8 @@ typedef struct DkAllocator DkAllocator;
 typedef struct DkRenderer DkRenderer;
 typedef struct DkRendererCreateInfo DkRendererCreateInfo;
 
+typedef enum DkResult {
+    DK_SUCCESS = 0
+} DkResult;
+
 #endif /* DEKOI_DEKOI_H */

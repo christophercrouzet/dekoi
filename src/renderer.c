@@ -11,7 +11,7 @@ struct DkRenderer {
 };
 
 
-void
+DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
                  DkRenderer **ppRenderer)
@@ -24,6 +24,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     *ppRenderer = (DkRenderer *)
         pAllocator->pfnAllocate(pAllocator->pContext, sizeof(DkRenderer));
+
+    return DK_SUCCESS;
 }
 
 

@@ -7,9 +7,9 @@ struct DkRendererCreateInfo {
     void *pDummy;
 };
 
-void dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
-                      const DkAllocator *pAllocator,
-                      DkRenderer **ppRenderer);
+DkResult dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
+                          const DkAllocator *pAllocator,
+                          DkRenderer **ppRenderer);
 void dkDestroyRenderer(DkRenderer *pRenderer);
 
 #endif /* DEKOI_RENDERER_H */
