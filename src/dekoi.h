@@ -13,53 +13,70 @@
    Focus on the common ILP32, LP64 and LLP64 data models.
    64-bit integer types aren't part of C89 but should be available anyways.
 */
-#ifndef DK_INT8
- #define DK_INT8 char
-#endif
-#ifndef DK_UINT8
- #define DK_UINT8 unsigned DK_INT8
-#endif
-#ifndef DK_INT16
- #define DK_INT16 short
-#endif
-#ifndef DK_UINT16
- #define DK_UINT16 unsigned DK_INT16
-#endif
-#ifndef DK_INT32
- #if defined(_MSC_VER)
-  #define DK_INT32 __int32
- #else
-  #define DK_INT32 int
+#ifdef DK_USE_STD_FIXED_TYPES
+ #include <stdint.h>
+ #define DK_INT8 int8_t
+ #define DK_UINT8 uint8_t
+ #define DK_INT16 int16_t
+ #define DK_UINT16 uint16_t
+ #define DK_INT32 int32_t
+ #define DK_UINT32 uint32_t
+ #define DK_INT64 int64_t
+ #define DK_UINT64 uint64_t
+#else
+ #ifndef DK_INT8
+  #define DK_INT8 char
  #endif
-#endif
-#ifndef DK_UINT32
- #define DK_UINT32 unsigned DK_INT32
-#endif
-#ifndef DK_INT64
- #if defined(_MSC_VER)
-  #define DK_INT64 __int64
- #else
-  #define DK_INT64 long long
+ #ifndef DK_UINT8
+  #define DK_UINT8 unsigned DK_INT8
  #endif
-#endif
-#ifndef DK_UINT64
- #define DK_UINT64 unsigned DK_INT64
+ #ifndef DK_INT16
+  #define DK_INT16 short
+ #endif
+ #ifndef DK_UINT16
+  #define DK_UINT16 unsigned DK_INT16
+ #endif
+ #ifndef DK_INT32
+  #if defined(_MSC_VER)
+   #define DK_INT32 __int32
+  #else
+   #define DK_INT32 int
+  #endif
+ #endif
+ #ifndef DK_UINT32
+  #define DK_UINT32 unsigned DK_INT32
+ #endif
+ #ifndef DK_INT64
+  #if defined(_MSC_VER)
+   #define DK_INT64 __int64
+  #else
+   #define DK_INT64 long long
+  #endif
+ #endif
+ #ifndef DK_UINT64
+  #define DK_UINT64 unsigned DK_INT64
+ #endif
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
- #if defined(__x86_64__) || defined(__ppc64__)
-  #define DK_SIZE_T unsigned long
- #else
-  #define DK_SIZE_T unsigned int
- #endif
-#elif defined(_MSC_VER)
- #if defined(_WIN64)
-  #define DK_SIZE_T unsigned __int64
- #else
-  #define DK_SIZE_T unsigned __int32
- #endif
+#ifdef DK_USE_STD_BASIC_TYPES
+ #include <stddef.h>
+ #define DK_SIZE_T size_t
 #else
- #define DK_SIZE_T unsigned long
+ #if defined(__GNUC__) || defined(__clang__)
+  #if defined(__x86_64__) || defined(__ppc64__)
+   #define DK_SIZE_T unsigned long
+  #else
+   #define DK_SIZE_T unsigned int
+  #endif
+ #elif defined(_MSC_VER)
+  #if defined(_WIN64)
+   #define DK_SIZE_T unsigned __int64
+  #else
+   #define DK_SIZE_T unsigned __int32
+  #endif
+ #else
+  #define DK_SIZE_T unsigned long
+ #endif
 #endif
 
 typedef DK_INT32 DkBool32;
