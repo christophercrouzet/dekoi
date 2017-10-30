@@ -37,11 +37,9 @@
  #endif
 #elif defined(_MSC_VER)
  #if defined(_WIN64)
-  #define DK_SIZE_T unsigned long
- #elif defined(_WIN32)
-  #define DK_SIZE_T unsigned int
+  #define DK_SIZE_T __int64
  #else
-  #define DK_SIZE_T unsigned long
+  #define DK_SIZE_T __int32
  #endif
 #else
  #define DK_SIZE_T unsigned long
