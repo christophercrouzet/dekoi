@@ -26,7 +26,11 @@
  #define DK_UINT16 unsigned DK_INT16
 #endif
 #ifndef DK_INT32
- #define DK_INT32 int
+ #if defined(_MSC_VER)
+  #define DK_INT32 __int32
+ #else
+  #define DK_INT32 int
+ #endif
 #endif
 #ifndef DK_UINT32
  #define DK_UINT32 unsigned DK_INT32
