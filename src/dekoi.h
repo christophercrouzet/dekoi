@@ -9,7 +9,10 @@
 #define DK_STATIC_ASSERT(x, msg) \
     typedef char dk_static_assertion_failed_##msg[(x) ? 1 : -1]
 
-/* Focus on the common ILP32, LP64 and LLP64 data models. */
+/*
+   Focus on the common ILP32, LP64 and LLP64 data models.
+   64-bit integer types aren't part of C89 but should be available anyways.
+*/
 #ifndef DK_INT8
  #define DK_INT8 char
 #endif
@@ -27,6 +30,16 @@
 #endif
 #ifndef DK_UINT32
  #define DK_UINT32 unsigned DK_INT32
+#endif
+#ifndef DK_INT64
+ #if defined(_MSC_VER)
+  #define DK_INT64 __int64
+ #else
+  #define DK_INT64 long long
+ #endif
+#endif
+#ifndef DK_UINT64
+ #define DK_UINT64 unsigned DK_INT64
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
