@@ -24,6 +24,7 @@ void
 destroyApplication(Application *pApplication)
 {
     assert(pApplication != NULL);
+    UNUSED(pApplication);
 }
 
 

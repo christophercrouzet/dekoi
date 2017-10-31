@@ -141,7 +141,12 @@ createInstance(const char *pApplicationName,
     VkInstanceCreateInfo createInfo;
 
     DK_ASSERT(pApplicationName != NULL);
+
+#ifdef DK_ENABLE_VALIDATION_LAYERS
     DK_ASSERT(pAllocator != NULL);
+#else
+    DK_UNUSED(pAllocator);
+#endif
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     if (checkValidationLayersSupport(pAllocator, &validationLayersSupported)

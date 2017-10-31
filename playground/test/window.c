@@ -70,6 +70,7 @@ void
 pollWindowEvents(const Window *pWindow)
 {
     assert(pWindow != NULL);
+    UNUSED(pWindow);
 
     glfwPollEvents();
 }
