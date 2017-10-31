@@ -1,6 +1,11 @@
 #ifndef DEKOI_DEKOI_H
 #define DEKOI_DEKOI_H
 
+#define DK_NAME "dekoi"
+#define DK_MAJOR_VERSION 0
+#define DK_MINOR_VERSION 1
+#define DK_PATCH_VERSION 0
+
 #if defined(DEBUG) || !defined(NDEBUG)
  #define DK_DEBUG
 #endif
@@ -109,7 +114,8 @@ typedef struct DkRenderer DkRenderer;
 typedef struct DkRendererCreateInfo DkRendererCreateInfo;
 
 typedef enum DkResult {
-    DK_SUCCESS = 0
+    DK_SUCCESS = 0,
+    DK_ERROR = -1
 } DkResult;
 
 #endif /* DEKOI_DEKOI_H */

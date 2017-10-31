@@ -13,6 +13,9 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
     assert(pApplication != NULL);
 
     pApplication->pName = pCreateInfo->pName;
+    pApplication->majorVersion = pCreateInfo->majorVersion;
+    pApplication->minorVersion = pCreateInfo->minorVersion;
+    pApplication->patchVersion = pCreateInfo->patchVersion;
     pApplication->pWindow = NULL;
 }
 

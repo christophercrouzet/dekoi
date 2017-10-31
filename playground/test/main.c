@@ -4,9 +4,12 @@
 #include "window.h"
 
 
+const char *pApplicationName = "dekoi";
+const unsigned int majorVersion = 1;
+const unsigned int minorVersion = 0;
+const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
-const char *pApplicationName = "dekoi";
 
 
 void
@@ -17,6 +20,9 @@ setup(Application *pApplication,
     WindowCreateInfo windowCreateInfo;
 
     applicationCreateInfo.pName = pApplicationName;
+    applicationCreateInfo.majorVersion = majorVersion;
+    applicationCreateInfo.minorVersion = minorVersion;
+    applicationCreateInfo.patchVersion = patchVersion;
     createApplication(&applicationCreateInfo, pApplication);
 
     windowCreateInfo.width = width;

@@ -3,8 +3,16 @@
 
 #include "dekoi.h"
 
+typedef struct VkAllocationCallbacks VkAllocationCallbacks;
+
 struct DkRendererCreateInfo {
-    void *pDummy;
+    const char *pApplicationName;
+    DkUint32 applicationMajorVersion;
+    DkUint32 applicationMinorVersion;
+    DkUint32 applicationPatchVersion;
+    DkUint32 extensionCount;
+    const char **ppExtensionNames;
+    const VkAllocationCallbacks *pBackEndAllocator;
 };
 
 DkResult dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,

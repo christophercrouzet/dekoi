@@ -5,12 +5,18 @@
 
 struct Application {
     const char *pName;
+    unsigned int majorVersion;
+    unsigned int minorVersion;
+    unsigned int patchVersion;
     Window *pWindow;
     int stopFlag;
 };
 
 struct ApplicationCreateInfo {
     const char *pName;
+    unsigned int majorVersion;
+    unsigned int minorVersion;
+    unsigned int patchVersion;
 };
 
 void createApplication(const ApplicationCreateInfo *pCreateInfo,
