@@ -3,7 +3,7 @@
 #include "assert.h"
 #include "memory.h"
 
-#ifndef DK_ALLOCATE
+#ifndef DK_DEFAULT_ALLOCATION_CALLBACK
 #include <stdlib.h>
 
 void *
@@ -14,10 +14,10 @@ dkAllocate(void *pContext,
     return malloc(size);
 }
 
-#define DK_ALLOCATE dkAllocate
-#endif /* DK_ALLOCATE */
+#define DK_DEFAULT_ALLOCATION_CALLBACK dkAllocate
+#endif /* DK_DEFAULT_ALLOCATION_CALLBACK */
 
-#ifndef DK_FREE
+#ifndef DK_DEFAULT_FREE_CALLBACK
 #include <stdlib.h>
 
 void
@@ -28,11 +28,15 @@ dkFree(void *pContext,
     free(pMemory);
 }
 
-#define DK_FREE dkFree
-#endif /* DK_FREE */
+#define DK_DEFAULT_FREE_CALLBACK dkFree
+#endif /* DK_DEFAULT_FREE_CALLBACK */
 
 
-static const DkAllocator defaultAllocator = { NULL, DK_ALLOCATE, DK_FREE };
+static const DkAllocator defaultAllocator = {
+    NULL,
+    DK_DEFAULT_ALLOCATION_CALLBACK,
+    DK_DEFAULT_FREE_CALLBACK
+};
 
 
 void
