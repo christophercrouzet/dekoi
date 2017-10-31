@@ -118,4 +118,6 @@ typedef enum DkResult {
     DK_ERROR = -1
 } DkResult;
 
+const char * dkGetResultString(DkResult result);
+
 #endif /* DEKOI_DEKOI_H */
