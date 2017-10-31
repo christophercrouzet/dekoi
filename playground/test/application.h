@@ -4,13 +4,13 @@
 #include "test.h"
 
 struct Application {
-    const char *name;
+    const char *pName;
     Window *pWindow;
     int stopFlag;
 };
 
 struct ApplicationCreateInfo {
-    const char *name;
+    const char *pName;
 };
 
 void createApplication(const ApplicationCreateInfo *pCreateInfo,

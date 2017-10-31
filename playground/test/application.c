@@ -12,7 +12,7 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
     assert(pCreateInfo != NULL);
     assert(pApplication != NULL);
 
-    pApplication->name = pCreateInfo->name;
+    pApplication->pName = pCreateInfo->pName;
     pApplication->pWindow = NULL;
 }
 

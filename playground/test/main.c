@@ -6,7 +6,7 @@
 
 const unsigned int width = 1280;
 const unsigned int height = 720;
-const char *applicationName = "dekoi";
+const char *pApplicationName = "dekoi";
 
 
 void
@@ -16,12 +16,12 @@ setup(Application *pApplication,
     ApplicationCreateInfo applicationCreateInfo;
     WindowCreateInfo windowCreateInfo;
 
-    applicationCreateInfo.name = applicationName;
+    applicationCreateInfo.pName = pApplicationName;
     createApplication(&applicationCreateInfo, pApplication);
 
     windowCreateInfo.width = width;
     windowCreateInfo.height = height;
-    windowCreateInfo.title = applicationName;
+    windowCreateInfo.title = pApplicationName;
     createWindow(pApplication, &windowCreateInfo, pWindow);
 }
 
