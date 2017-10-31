@@ -32,7 +32,7 @@ dkFree(void *pContext,
 #endif /* DK_FREE */
 
 
-const DkAllocator defaultAllocator = { NULL, DK_ALLOCATE, DK_FREE };
+static const DkAllocator defaultAllocator = { NULL, DK_ALLOCATE, DK_FREE };
 
 
 void
