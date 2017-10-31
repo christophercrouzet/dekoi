@@ -22,8 +22,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     if (pAllocator == NULL)
         dkGetDefaultAllocator(&pAllocator);
 
-    *ppRenderer = (DkRenderer *)
-        pAllocator->pfnAllocate(pAllocator->pContext, sizeof(DkRenderer));
+    *ppRenderer = (DkRenderer *) DK_ALLOCATE(pAllocator, sizeof(DkRenderer));
 
     return DK_SUCCESS;
 }

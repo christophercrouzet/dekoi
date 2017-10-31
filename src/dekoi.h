@@ -8,6 +8,10 @@
 #define DK_UNUSED(x) (void)(x)
 #define DK_STATIC_ASSERT(x, msg) \
     typedef char dk_static_assertion_failed_##msg[(x) ? 1 : -1]
+#define DK_ALLOCATE(pAllocator, size) \
+    (pAllocator->pfnAllocate(pAllocator->pContext, size))
+#define DK_FREE(pAllocator, pMemory) \
+    (pAllocator->pfnFree(pAllocator->pContext, pMemory))
 
 /*
    Focus on the common ILP32, LP64 and LLP64 data models.
