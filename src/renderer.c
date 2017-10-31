@@ -255,11 +255,12 @@ dkDestroyRenderer(DkRenderer *pRenderer)
 {
     DK_ASSERT(pRenderer != NULL);
 
+    destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
+
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     destroyDebugExtensionNames(pRenderer->ppExtensionNames,
                                pRenderer->pAllocator);
 #endif
 
-    destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
     DK_FREE(pRenderer->pAllocator, pRenderer);
 }
