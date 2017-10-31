@@ -32,4 +32,6 @@ void
 dkDestroyRenderer(DkRenderer *pRenderer)
 {
     DK_ASSERT(pRenderer != NULL);
+
+    DK_FREE(pRenderer->pAllocator, pRenderer);
 }
