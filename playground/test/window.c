@@ -1,7 +1,8 @@
+#define GLFW_INCLUDE_VULKAN
+
 #include <assert.h>
 #include <stddef.h>
 
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <dekoi/renderer>
 
