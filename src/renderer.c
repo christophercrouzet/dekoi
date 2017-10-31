@@ -27,12 +27,12 @@ static const char * const ppValidationLayerNames[] = {
 #endif
 
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
 static void
 createExtensionNames(const DkAllocator *pAllocator,
                      DkUint32 *pExtensionCount,
                      const char ***pppExtensionNames)
 {
-#ifdef DK_ENABLE_VALIDATION_LAYERS
     const char **ppBuffer;
 
     DK_ASSERT(pAllocator != NULL);
@@ -48,7 +48,6 @@ createExtensionNames(const DkAllocator *pAllocator,
 
     (*pppExtensionNames)[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
     *pExtensionCount += 1;
-#endif
 }
 
 
@@ -56,13 +55,10 @@ static void
 destroyExtensionNames(const char **ppExtensionNames,
                       const DkAllocator *pAllocator)
 {
-#ifdef DK_ENABLE_VALIDATION_LAYERS
     DK_FREE(pAllocator, ppExtensionNames);
-#endif
 }
 
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
 static DkResult
 checkValidationLayersSupport(const DkAllocator *pAllocator,
                              DkBool32 *pSupported)
@@ -119,7 +115,7 @@ exit:
     DK_FREE(pAllocator, pLayers);
     return out;
 }
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 
 static DkResult
@@ -234,9 +230,11 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->extensionCount = pCreateInfo->extensionCount;
     (*ppRenderer)->ppExtensionNames = pCreateInfo->ppExtensionNames;
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
     createExtensionNames((*ppRenderer)->pAllocator,
                          &(*ppRenderer)->extensionCount,
                          &(*ppRenderer)->ppExtensionNames);
+#endif
 
     createInstance(pCreateInfo->pApplicationName,
                    pCreateInfo->applicationMajorVersion,
@@ -257,7 +255,10 @@ dkDestroyRenderer(DkRenderer *pRenderer)
 {
     DK_ASSERT(pRenderer != NULL);
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
     destroyExtensionNames(pRenderer->ppExtensionNames, pRenderer->pAllocator);
+#endif
+
     destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
     DK_FREE(pRenderer->pAllocator, pRenderer);
 }
