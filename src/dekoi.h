@@ -10,6 +10,12 @@
  #define DK_DEBUG
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+ #define DK_C_EXTENSION __extension__
+#else
+ #define DK_C_EXTENSION
+#endif
+
 #define DK_UNUSED(x) (void)(x)
 #define DK_STATIC_ASSERT(x, msg) \
     typedef char dk_static_assertion_failed_##msg[(x) ? 1 : -1]
@@ -95,6 +101,8 @@ typedef DK_INT16 DkInt16;
 typedef DK_UINT16 DkUint16;
 typedef DK_INT32 DkInt32;
 typedef DK_UINT32 DkUint32;
+DK_C_EXTENSION typedef DK_INT64 DkInt64;
+DK_C_EXTENSION typedef DK_UINT64 DkUint64;
 typedef DK_SIZE_T DkSize;
 
 DK_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
@@ -104,6 +112,8 @@ DK_STATIC_ASSERT(sizeof(DkInt16) == 2, invalid_int16_type);
 DK_STATIC_ASSERT(sizeof(DkUint16) == 2, invalid_uint16_type);
 DK_STATIC_ASSERT(sizeof(DkInt32) == 4, invalid_int32_type);
 DK_STATIC_ASSERT(sizeof(DkUint32) == 4, invalid_uint32_type);
+DK_STATIC_ASSERT(sizeof(DkInt64) == 8, invalid_int64_type);
+DK_STATIC_ASSERT(sizeof(DkUint64) == 8, invalid_uint64_type);
 DK_STATIC_ASSERT(sizeof(DkSize) == sizeof(void *), invalid_size_type);
 
 #define DK_FALSE ((DkBool32) 0)
