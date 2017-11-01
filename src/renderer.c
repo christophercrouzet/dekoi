@@ -121,10 +121,7 @@ createInstanceExtensionNames(const DkAllocator *pAllocator,
     DK_ASSERT(pExtensionCount != NULL);
     DK_ASSERT(pppExtensionNames != NULL);
 
-    *pExtensionCount = 1;
-#ifndef VK_USE_PLATFORM_INVALID
-    ++(*pExtensionCount);
-#endif
+    *pExtensionCount = 2;
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     ++(*pExtensionCount);
