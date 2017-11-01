@@ -15,6 +15,7 @@ struct DkRenderer {
     DkUint32 extensionCount;
     const char **ppExtensionNames;
     VkInstance instance;
+    VkDebugReportCallbackEXT debugReportCallback;
 };
 
 
@@ -212,6 +213,85 @@ destroyInstance(VkInstance instance,
 }
 
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+VkBool32
+debugReportCallback(
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objectType,
+    uint64_t object,
+    size_t location,
+    int32_t messageCode,
+    const char *pLayerPrefix,
+    const char *pMessage,
+    void *pUserData)
+{
+    DK_UNUSED(flags);
+    DK_UNUSED(objectType);
+    DK_UNUSED(object);
+    DK_UNUSED(location);
+    DK_UNUSED(messageCode);
+    DK_UNUSED(pLayerPrefix);
+    DK_UNUSED(pUserData);
+
+    fprintf(stderr, "validation layer: %s\n", pMessage);
+    return VK_FALSE;
+}
+
+
+static DkResult
+createDebugReportCallback(VkInstance instance,
+                          const VkAllocationCallbacks *pBackendAllocator,
+                          VkDebugReportCallbackEXT *pCallback)
+{
+    VkDebugReportCallbackCreateInfoEXT createInfo;
+    PFN_vkCreateDebugReportCallbackEXT function;
+
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+    createInfo.pNext = NULL;
+    createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT
+                       | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+    createInfo.pfnCallback = debugReportCallback;
+    createInfo.pUserData = NULL;
+
+    function = (PFN_vkCreateDebugReportCallbackEXT)
+        vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+    if (function == NULL) {
+        fprintf(stderr, "could not retrieve the "
+                        "'vkCreateDebugReportCallbackEXT' function\n");
+        return DK_ERROR;
+    }
+
+    if (function(instance, &createInfo, pBackendAllocator, pCallback)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the debug report callback\n");
+        return DK_ERROR;
+    }
+
+    return DK_SUCCESS;
+}
+
+
+static void
+destroyDebugReportCallback(VkInstance instance,
+                           VkDebugReportCallbackEXT callback,
+                           const VkAllocationCallbacks *pBackendAllocator)
+{
+    PFN_vkDestroyDebugReportCallbackEXT function;
+
+    function = (PFN_vkDestroyDebugReportCallbackEXT)
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+    if (function == NULL) {
+        fprintf(stderr, "could not retrieve the "
+                        "'vkDestroyDebugReportCallbackEXT' function\n");
+        return;
+    }
+
+    function(instance, callback, pBackendAllocator);
+}
+#endif
+
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
@@ -250,6 +330,16 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         return DK_ERROR;
     }
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    if (createDebugReportCallback((*ppRenderer)->instance,
+                                  (*ppRenderer)->pBackEndAllocator,
+                                  &(*ppRenderer)->debugReportCallback)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
+#endif
+
     return DK_SUCCESS;
 }
 
@@ -258,6 +348,12 @@ void
 dkDestroyRenderer(DkRenderer *pRenderer)
 {
     DK_ASSERT(pRenderer != NULL);
+
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    destroyDebugReportCallback(pRenderer->instance,
+                               pRenderer->debugReportCallback,
+                               pRenderer->pBackEndAllocator);
+#endif
 
     destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
 
