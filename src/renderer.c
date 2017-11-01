@@ -185,11 +185,18 @@ createInstance(const char *pApplicationName,
     createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = ppExtensionNames;
 
-    if (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)
-        != VK_SUCCESS)
-    {
-        fprintf(stderr, "failed to create the renderer instance\n");
-        return DK_ERROR;
+    switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
+        case VK_SUCCESS:
+            break;
+        case VK_ERROR_LAYER_NOT_PRESENT:
+            fprintf(stderr, "could not find the requested layers\n");
+            return DK_ERROR;
+        case VK_ERROR_EXTENSION_NOT_PRESENT:
+            fprintf(stderr, "could not find the requested extensions\n");
+            return DK_ERROR;
+        default:
+            fprintf(stderr, "failed to create the renderer instance\n");
+            return DK_ERROR;
     }
 
     return DK_SUCCESS;
