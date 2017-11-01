@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "application.h"
 #include "window.h"
@@ -19,12 +20,14 @@ setup(Application *pApplication,
     ApplicationCreateInfo applicationCreateInfo;
     WindowCreateInfo windowCreateInfo;
 
+    memset(&applicationCreateInfo, 0, sizeof(ApplicationCreateInfo));
     applicationCreateInfo.pName = pApplicationName;
     applicationCreateInfo.majorVersion = majorVersion;
     applicationCreateInfo.minorVersion = minorVersion;
     applicationCreateInfo.patchVersion = patchVersion;
     createApplication(&applicationCreateInfo, pApplication);
 
+    memset(&windowCreateInfo, 0, sizeof(WindowCreateInfo));
     windowCreateInfo.width = width;
     windowCreateInfo.height = height;
     windowCreateInfo.title = pApplicationName;

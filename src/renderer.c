@@ -166,6 +166,7 @@ createInstance(const char *pApplicationName,
     extensionCount += 1;
 #endif
 
+    memset(&applicationInfo, 0, sizeof(VkApplicationInfo));
     applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     applicationInfo.pNext = NULL;
     applicationInfo.pApplicationName = pApplicationName;
@@ -180,6 +181,7 @@ createInstance(const char *pApplicationName,
         DK_PATCH_VERSION);
     applicationInfo.apiVersion = VK_API_VERSION_1_0;
 
+    memset(&createInfo, 0, sizeof(VkInstanceCreateInfo));
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
@@ -246,6 +248,7 @@ createDebugReportCallback(VkInstance instance,
     VkDebugReportCallbackCreateInfoEXT createInfo;
     PFN_vkCreateDebugReportCallbackEXT function;
 
+    memset(&createInfo, 0, sizeof(VkDebugReportCallbackCreateInfoEXT));
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfo.pNext = NULL;
     createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT

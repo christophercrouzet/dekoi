@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <string.h>
 
 #include <GLFW/glfw3.h>
 #include <dekoi/renderer>
@@ -28,6 +29,7 @@ createWindow(Application *pApplication,
                                         (int) pCreateInfo->height,
                                         pCreateInfo->title, NULL, NULL);
 
+    memset(&rendererCreateInfo, 0, sizeof(DkRendererCreateInfo));
     rendererCreateInfo.pApplicationName = pApplication->pName;
     rendererCreateInfo.applicationMajorVersion =
         (DkUint32) pApplication->majorVersion;
