@@ -34,8 +34,6 @@
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
-    DkUint32 extensionCount;
-    const char **ppExtensionNames;
     VkInstance instance;
     VkDebugReportCallbackEXT debugReportCallback;
 };
@@ -50,10 +48,70 @@ static const char * const ppValidationLayerNames[] = {
 #endif
 
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+static DkResult
+checkValidationLayersSupport(const DkAllocator *pAllocator,
+                             DkBool32 *pSupported)
+{
+    DkResult out;
+    DkUint32 i;
+    DkUint32 j;
+    DkUint32 layerCount;
+    VkLayerProperties *pLayers;
+
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pSupported != NULL);
+
+    out = DK_SUCCESS;
+    *pSupported = DK_FALSE;
+
+    if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, NULL)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the number of layer properties "
+                        "available\n");
+        out = DK_ERROR;
+        return out;
+    }
+
+    pLayers = (VkLayerProperties *)
+        DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
+    if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, pLayers)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the layer properties available\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    for (i = 0; i < validationLayerCount; ++i) {
+        DkBool32 found;
+
+        found = DK_FALSE;
+        for (j = 0; j < layerCount; ++j) {
+            if (strcmp(pLayers[j].layerName, ppValidationLayerNames[i]) == 0) {
+                found = DK_TRUE;
+                break;
+            }
+        }
+
+        if (!found)
+            goto exit;
+    }
+
+    *pSupported = DK_TRUE;
+
+exit:
+    DK_FREE(pAllocator, pLayers);
+    return out;
+}
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
+
+
 static void
-createExtensionNames(const DkAllocator *pAllocator,
-                     DkUint32 *pExtensionCount,
-                     const char ***pppExtensionNames)
+createInstanceExtensionNames(const DkAllocator *pAllocator,
+                             DkUint32 *pExtensionCount,
+                             const char ***pppExtensionNames)
 {
     DkUint32 i;
 
@@ -118,71 +176,11 @@ createExtensionNames(const DkAllocator *pAllocator,
 
 
 static void
-destroyExtensionNames(const char **ppExtensionNames,
-                      const DkAllocator *pAllocator)
+destroyInstanceExtensionNames(const char **ppExtensionNames,
+                              const DkAllocator *pAllocator)
 {
     DK_FREE(pAllocator, ppExtensionNames);
 }
-
-
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-static DkResult
-checkValidationLayersSupport(const DkAllocator *pAllocator,
-                             DkBool32 *pSupported)
-{
-    DkResult out;
-    DkUint32 i;
-    DkUint32 j;
-    DkUint32 layerCount;
-    VkLayerProperties *pLayers;
-
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSupported != NULL);
-
-    out = DK_SUCCESS;
-    *pSupported = DK_FALSE;
-
-    if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, NULL)
-        != VK_SUCCESS)
-    {
-        fprintf(stderr, "could not retrieve the number of layer properties "
-                        "available\n");
-        out = DK_ERROR;
-        return out;
-    }
-
-    pLayers = (VkLayerProperties *)
-        DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
-    if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, pLayers)
-        != VK_SUCCESS)
-    {
-        fprintf(stderr, "could not retrieve the layer properties available\n");
-        out = DK_ERROR;
-        goto exit;
-    }
-
-    for (i = 0; i < validationLayerCount; ++i) {
-        DkBool32 found;
-
-        found = DK_FALSE;
-        for (j = 0; j < layerCount; ++j) {
-            if (strcmp(pLayers[j].layerName, ppValidationLayerNames[i]) == 0) {
-                found = DK_TRUE;
-                break;
-            }
-        }
-
-        if (!found)
-            goto exit;
-    }
-
-    *pSupported = DK_TRUE;
-
-exit:
-    DK_FREE(pAllocator, pLayers);
-    return out;
-}
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 
 static DkResult
@@ -190,15 +188,16 @@ createInstance(const char *pApplicationName,
                DkUint32 applicationMajorVersion,
                DkUint32 applicationMinorVersion,
                DkUint32 applicationPatchVersion,
-               DkUint32 extensionCount,
-               const char **ppExtensionNames,
                const VkAllocationCallbacks *pBackEndAllocator,
                const DkAllocator *pAllocator,
                VkInstance *pInstance)
 {
+    DkResult out;
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     DkBool32 validationLayersSupported;
 #endif
+    DkUint32 extensionCount;
+    const char **ppExtensionNames;
     VkApplicationInfo applicationInfo;
     VkInstanceCreateInfo createInfo;
 
@@ -220,6 +219,11 @@ createInstance(const char *pApplicationName,
         return DK_ERROR;
     }
 #endif
+
+    out = DK_SUCCESS;
+
+    createInstanceExtensionNames(pAllocator,
+                                 &extensionCount, &ppExtensionNames);
 
     memset(&applicationInfo, 0, sizeof(VkApplicationInfo));
     applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -256,16 +260,20 @@ createInstance(const char *pApplicationName,
             break;
         case VK_ERROR_LAYER_NOT_PRESENT:
             fprintf(stderr, "could not find the requested layers\n");
-            return DK_ERROR;
+            out = DK_ERROR;
+            break;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
             fprintf(stderr, "could not find the requested extensions\n");
-            return DK_ERROR;
+            out = DK_ERROR;
+            break;
         default:
             fprintf(stderr, "failed to create the renderer instance\n");
-            return DK_ERROR;
+            out = DK_ERROR;
+            break;
     }
 
-    return DK_SUCCESS;
+    destroyInstanceExtensionNames(ppExtensionNames, pAllocator);
+    return out;
 }
 
 
@@ -373,16 +381,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
 
-    createExtensionNames((*ppRenderer)->pAllocator,
-                         &(*ppRenderer)->extensionCount,
-                         &(*ppRenderer)->ppExtensionNames);
-
     if (createInstance(pCreateInfo->pApplicationName,
                        pCreateInfo->applicationMajorVersion,
                        pCreateInfo->applicationMinorVersion,
                        pCreateInfo->applicationPatchVersion,
-                       (*ppRenderer)->extensionCount,
-                       (*ppRenderer)->ppExtensionNames,
                        (*ppRenderer)->pBackEndAllocator,
                        (*ppRenderer)->pAllocator,
                        &(*ppRenderer)->instance)
@@ -417,9 +419,6 @@ dkDestroyRenderer(DkRenderer *pRenderer)
 #endif
 
     destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
-
-    destroyExtensionNames(pRenderer->ppExtensionNames,
-                          pRenderer->pAllocator);
 
     DK_FREE(pRenderer->pAllocator, pRenderer);
 }
