@@ -132,7 +132,6 @@ createInstance(const char *pApplicationName,
 {
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     DkBool32 validationLayersSupported;
-    const char **ppExtensionNamesBuffer;
 #endif
     VkApplicationInfo applicationInfo;
     VkInstanceCreateInfo createInfo;
@@ -154,16 +153,6 @@ createInstance(const char *pApplicationName,
         fprintf(stderr, "one or more validation layers are not supported\n");
         return DK_ERROR;
     }
-
-    ppExtensionNamesBuffer = ppExtensionNames;
-    ppExtensionNames = (const char **)
-        DK_ALLOCATE(pAllocator, (extensionCount + 1) * sizeof(char *));
-    if (ppExtensionNamesBuffer != NULL)
-        memcpy(ppExtensionNames, ppExtensionNamesBuffer,
-               extensionCount * sizeof(char *));
-
-    ppExtensionNames[extensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-    extensionCount += 1;
 #endif
 
     memset(&applicationInfo, 0, sizeof(VkApplicationInfo));
