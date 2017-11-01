@@ -10,8 +10,6 @@ struct DkRendererCreateInfo {
     DkUint32 applicationMajorVersion;
     DkUint32 applicationMinorVersion;
     DkUint32 applicationPatchVersion;
-    DkUint32 extensionCount;
-    const char **ppExtensionNames;
     const VkAllocationCallbacks *pBackEndAllocator;
 };
 

@@ -1,3 +1,25 @@
+#include "dekoi.h"
+#ifdef DK_PLATFORM_ANDROID
+ #define VK_USE_PLATFORM_ANDROID_KHR
+#endif
+#ifdef DK_PLATFORM_IOS
+ #define VK_USE_PLATFORM_IOS_MVK
+#endif
+#ifdef DK_PLATFORM_MACOS
+ #define VK_USE_PLATFORM_MACOS_MVK
+#endif
+#ifdef DK_PLATFORM_LINUX
+ #if defined(DK_USE_WAYLAND)
+  #define VK_USE_PLATFORM_WAYLAND_KHR
+ #else
+  #define VK_USE_PLATFORM_XCB_KHR
+ #endif
+#endif
+#ifdef DK_PLATFORM_WINDOWS
+ #define VK_USE_PLATFORM_WIN32_KHR
+#endif
+
+
 #include <stdio.h>
 #include <string.h>
 
@@ -28,38 +50,82 @@ static const char * const ppValidationLayerNames[] = {
 #endif
 
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
 static void
-createDebugExtensionNames(const DkAllocator *pAllocator,
-                          DkUint32 *pExtensionCount,
-                          const char ***pppExtensionNames)
+createExtensionNames(const DkAllocator *pAllocator,
+                     DkUint32 *pExtensionCount,
+                     const char ***pppExtensionNames)
 {
-    const char **ppBuffer;
+    DkUint32 i;
 
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pExtensionCount != NULL);
     DK_ASSERT(pppExtensionNames != NULL);
 
-    ppBuffer = *pppExtensionNames;
-    *pppExtensionNames = (const char **)
-        DK_ALLOCATE(pAllocator, ((*pExtensionCount) + 1) * sizeof(char *));
-    if (ppBuffer != NULL)
-        memcpy(*pppExtensionNames, ppBuffer,
-               (*pExtensionCount) * sizeof(char *));
+    *pExtensionCount = 1;
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+    ++(*pExtensionCount);
+#endif
+#ifdef VK_USE_PLATFORM_IOS_MVK
+    ++(*pExtensionCount);
+#endif
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+    ++(*pExtensionCount);
+#endif
+#ifdef VK_USE_PLATFORM_WAYLAND_KHR
+    ++(*pExtensionCount);
+#endif
+#ifdef VK_USE_PLATFORM_XCB_KHR
+    ++(*pExtensionCount);
+#endif
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    ++(*pExtensionCount);
+#endif
 
-    (*pppExtensionNames)[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-    *pExtensionCount += 1;
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    ++(*pExtensionCount);
+#endif
+
+    *pppExtensionNames = (const char **)
+        DK_ALLOCATE(pAllocator, (*pExtensionCount) * sizeof(char *));
+
+    i = 0;
+    (*pppExtensionNames)[i++] = VK_KHR_SURFACE_EXTENSION_NAME;
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+    (*pppExtensionNames)[i++] = VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
+#endif
+#ifdef VK_USE_PLATFORM_IOS_MVK
+    (*pppExtensionNames)[i++] = VK_MVK_IOS_SURFACE_EXTENSION_NAME;
+#endif
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+    (*pppExtensionNames)[i++] = VK_MVK_MACOS_SURFACE_EXTENSION_NAME;
+#endif
+#ifdef VK_USE_PLATFORM_WAYLAND_KHR
+    (*pppExtensionNames)[i++] = VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
+#endif
+#ifdef VK_USE_PLATFORM_XCB_KHR
+    (*pppExtensionNames)[i++] = VK_KHR_XCB_SURFACE_EXTENSION_NAME;
+#endif
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    (*pppExtensionNames)[i++] = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+#endif
+
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    (*pppExtensionNames)[i++] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+#endif
+
+    DK_ASSERT(i == *pExtensionCount);
 }
 
 
 static void
-destroyDebugExtensionNames(const char **ppExtensionNames,
-                           const DkAllocator *pAllocator)
+destroyExtensionNames(const char **ppExtensionNames,
+                      const DkAllocator *pAllocator)
 {
     DK_FREE(pAllocator, ppExtensionNames);
 }
 
 
+#ifdef DK_ENABLE_VALIDATION_LAYERS
 static DkResult
 checkValidationLayersSupport(const DkAllocator *pAllocator,
                              DkBool32 *pSupported)
@@ -306,14 +372,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
-    (*ppRenderer)->extensionCount = pCreateInfo->extensionCount;
-    (*ppRenderer)->ppExtensionNames = pCreateInfo->ppExtensionNames;
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-    createDebugExtensionNames((*ppRenderer)->pAllocator,
-                              &(*ppRenderer)->extensionCount,
-                              &(*ppRenderer)->ppExtensionNames);
-#endif
+    createExtensionNames((*ppRenderer)->pAllocator,
+                         &(*ppRenderer)->extensionCount,
+                         &(*ppRenderer)->ppExtensionNames);
 
     if (createInstance(pCreateInfo->pApplicationName,
                        pCreateInfo->applicationMajorVersion,
@@ -356,10 +418,8 @@ dkDestroyRenderer(DkRenderer *pRenderer)
 
     destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-    destroyDebugExtensionNames(pRenderer->ppExtensionNames,
-                               pRenderer->pAllocator);
-#endif
+    destroyExtensionNames(pRenderer->ppExtensionNames,
+                          pRenderer->pAllocator);
 
     DK_FREE(pRenderer->pAllocator, pRenderer);
 }

@@ -37,8 +37,6 @@ createWindow(Application *pApplication,
         (DkUint32) pApplication->minorVersion;
     rendererInfo.applicationPatchVersion =
         (DkUint32) pApplication->patchVersion;
-    rendererInfo.ppExtensionNames = glfwGetRequiredInstanceExtensions(
-        &rendererInfo.extensionCount);
     rendererInfo.pBackEndAllocator = NULL;
     dkCreateRenderer(&rendererInfo, NULL, &pWindow->pRenderer);
 

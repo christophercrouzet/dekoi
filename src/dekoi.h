@@ -24,6 +24,24 @@
 #define DK_FREE(pAllocator, pMemory) \
     (pAllocator->pfnFree(pAllocator->pContext, pMemory))
 
+#if defined(__ANDROID__)
+ #define DK_PLATFORM_ANDROID
+#elif defined(__APPLE__) && defined(__MACH__)
+ #if TARGET_OS_IPHONE == 1
+  #define DK_PLATFORM_IOS
+ #elif TARGET_OS_MAC == 1
+  #define DK_PLATFORM_MACOS
+ #else
+  DK_STATIC_ASSERT(0, apple_platform_not_supported);
+ #endif
+#elif defined(__linux__)
+ #define DK_PLATFORM_LINUX
+#elif defined(_WIN32)
+ #define DK_PLATFORM_WINDOWS
+#else
+ DK_STATIC_ASSERT(0, platform_not_supported);
+#endif
+
 /*
    Focus on the common ILP32, LP64 and LLP64 data models.
    64-bit integer types aren't part of C89 but should be available anyways.
