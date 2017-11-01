@@ -33,6 +33,7 @@
   #define DK_PLATFORM_MACOS
  #else
   DK_STATIC_ASSERT(0, apple_platform_not_supported);
+  #define DK_PLATFORM_INVALID
  #endif
 #elif defined(__linux__)
  #define DK_PLATFORM_LINUX
@@ -40,6 +41,7 @@
  #define DK_PLATFORM_WINDOWS
 #else
  DK_STATIC_ASSERT(0, platform_not_supported);
+ #define DK_PLATFORM_INVALID
 #endif
 
 #if defined(DK_PLATFORM_ANDROID)
