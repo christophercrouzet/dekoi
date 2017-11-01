@@ -16,7 +16,7 @@ createWindow(Application *pApplication,
              const WindowCreateInfo *pCreateInfo,
              Window *pWindow)
 {
-    DkRendererCreateInfo rendererCreateInfo;
+    DkRendererCreateInfo rendererInfo;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
@@ -29,18 +29,18 @@ createWindow(Application *pApplication,
                                         (int) pCreateInfo->height,
                                         pCreateInfo->title, NULL, NULL);
 
-    memset(&rendererCreateInfo, 0, sizeof(DkRendererCreateInfo));
-    rendererCreateInfo.pApplicationName = pApplication->pName;
-    rendererCreateInfo.applicationMajorVersion =
+    memset(&rendererInfo, 0, sizeof(DkRendererCreateInfo));
+    rendererInfo.pApplicationName = pApplication->pName;
+    rendererInfo.applicationMajorVersion =
         (DkUint32) pApplication->majorVersion;
-    rendererCreateInfo.applicationMinorVersion =
+    rendererInfo.applicationMinorVersion =
         (DkUint32) pApplication->minorVersion;
-    rendererCreateInfo.applicationPatchVersion =
+    rendererInfo.applicationPatchVersion =
         (DkUint32) pApplication->patchVersion;
-    rendererCreateInfo.ppExtensionNames = glfwGetRequiredInstanceExtensions(
-        &rendererCreateInfo.extensionCount);
-    rendererCreateInfo.pBackEndAllocator = NULL;
-    dkCreateRenderer(&rendererCreateInfo, NULL, &pWindow->pRenderer);
+    rendererInfo.ppExtensionNames = glfwGetRequiredInstanceExtensions(
+        &rendererInfo.extensionCount);
+    rendererInfo.pBackEndAllocator = NULL;
+    dkCreateRenderer(&rendererInfo, NULL, &pWindow->pRenderer);
 
     pApplication->pWindow = pWindow;
 }

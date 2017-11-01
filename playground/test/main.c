@@ -17,21 +17,21 @@ void
 setup(Application *pApplication,
       Window *pWindow)
 {
-    ApplicationCreateInfo applicationCreateInfo;
-    WindowCreateInfo windowCreateInfo;
+    ApplicationCreateInfo applicationInfo;
+    WindowCreateInfo windowInfo;
 
-    memset(&applicationCreateInfo, 0, sizeof(ApplicationCreateInfo));
-    applicationCreateInfo.pName = pApplicationName;
-    applicationCreateInfo.majorVersion = majorVersion;
-    applicationCreateInfo.minorVersion = minorVersion;
-    applicationCreateInfo.patchVersion = patchVersion;
-    createApplication(&applicationCreateInfo, pApplication);
+    memset(&applicationInfo, 0, sizeof(ApplicationCreateInfo));
+    applicationInfo.pName = pApplicationName;
+    applicationInfo.majorVersion = majorVersion;
+    applicationInfo.minorVersion = minorVersion;
+    applicationInfo.patchVersion = patchVersion;
+    createApplication(&applicationInfo, pApplication);
 
-    memset(&windowCreateInfo, 0, sizeof(WindowCreateInfo));
-    windowCreateInfo.width = width;
-    windowCreateInfo.height = height;
-    windowCreateInfo.title = pApplicationName;
-    createWindow(pApplication, &windowCreateInfo, pWindow);
+    memset(&windowInfo, 0, sizeof(WindowCreateInfo));
+    windowInfo.width = width;
+    windowInfo.height = height;
+    windowInfo.title = pApplicationName;
+    createWindow(pApplication, &windowInfo, pWindow);
 }
 
 
