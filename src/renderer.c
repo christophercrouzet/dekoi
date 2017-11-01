@@ -236,15 +236,19 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                               &(*ppRenderer)->ppExtensionNames);
 #endif
 
-    createInstance(pCreateInfo->pApplicationName,
-                   pCreateInfo->applicationMajorVersion,
-                   pCreateInfo->applicationMinorVersion,
-                   pCreateInfo->applicationPatchVersion,
-                   (*ppRenderer)->extensionCount,
-                   (*ppRenderer)->ppExtensionNames,
-                   (*ppRenderer)->pBackEndAllocator,
-                   (*ppRenderer)->pAllocator,
-                   &(*ppRenderer)->instance);
+    if (createInstance(pCreateInfo->pApplicationName,
+                       pCreateInfo->applicationMajorVersion,
+                       pCreateInfo->applicationMinorVersion,
+                       pCreateInfo->applicationPatchVersion,
+                       (*ppRenderer)->extensionCount,
+                       (*ppRenderer)->ppExtensionNames,
+                       (*ppRenderer)->pBackEndAllocator,
+                       (*ppRenderer)->pAllocator,
+                       &(*ppRenderer)->instance)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
 
     return DK_SUCCESS;
 }
