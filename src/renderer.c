@@ -99,12 +99,14 @@ createInstanceExtensionNames(
     DK_UNUSED(pAllocator);
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
-    DK_ASSERT(pWindowManagerInterface != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pExtensionCount != NULL);
     DK_ASSERT(pppExtensionNames != NULL);
 
-    if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
+    if (pWindowManagerInterface == NULL) {
+        *pExtensionCount = 0;
+        *pppExtensionNames = NULL;
+    } else if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
             pWindowManagerInterface->pContext,
             pExtensionCount,
             &(*pppExtensionNames))
@@ -125,9 +127,10 @@ createInstanceExtensionNames(
     (*pppExtensionNames)[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
     *pExtensionCount += 1;
 
-    pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
-        pWindowManagerInterface->pContext,
-        ppBuffer);
+    if (pWindowManagerInterface != NULL)
+        pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
+            pWindowManagerInterface->pContext,
+            ppBuffer);
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     return DK_SUCCESS;
@@ -147,9 +150,10 @@ destroyInstanceExtensionNames(
 #else
     DK_UNUSED(pAllocator);
 
-    pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
-        pWindowManagerInterface->pContext,
-        ppExtensionNames);
+    if (pWindowManagerInterface != NULL)
+        pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
+            pWindowManagerInterface->pContext,
+            ppExtensionNames);
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 }
 
