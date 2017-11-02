@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "../dekoi.h"
 #include "../memory.h"
 #include "assert.h"
