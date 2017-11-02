@@ -369,7 +369,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                        &(*ppRenderer)->instance)
         != DK_SUCCESS)
     {
-        return DK_ERROR;
+        goto instance_error;
     }
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
@@ -378,11 +378,24 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                                   &(*ppRenderer)->debugReportCallback)
         != DK_SUCCESS)
     {
-        return DK_ERROR;
+        goto debug_report_callback_error;
     }
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     return DK_SUCCESS;
+
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+debug_report_callback_error:
+    destroyDebugReportCallback((*ppRenderer)->instance,
+                               (*ppRenderer)->debugReportCallback,
+                               (*ppRenderer)->pBackEndAllocator);
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
+
+instance_error:
+    destroyInstance((*ppRenderer)->instance, (*ppRenderer)->pBackEndAllocator);
+
+    DK_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
+    return DK_ERROR;
 }
 
 
