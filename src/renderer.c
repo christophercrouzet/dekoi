@@ -41,7 +41,6 @@ checkValidationLayersSupport(const DkAllocator *pAllocator,
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSupported != NULL);
 
-    out = DK_SUCCESS;
     *pSupported = DK_FALSE;
 
     if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, NULL)
@@ -49,10 +48,10 @@ checkValidationLayersSupport(const DkAllocator *pAllocator,
     {
         fprintf(stderr, "could not retrieve the number of layer properties "
                         "available\n");
-        out = DK_ERROR;
-        return out;
+        return DK_ERROR;
     }
 
+    out = DK_SUCCESS;
     pLayers = (VkLayerProperties *)
         DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
     if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, pLayers)
@@ -193,8 +192,6 @@ createInstance(const char *pApplicationName,
     }
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
-    out = DK_SUCCESS;
-
     if (createInstanceExtensionNames(pWindowManagerInterface, pAllocator,
                                      &extensionCount, &ppExtensionNames)
         != DK_SUCCESS)
@@ -232,6 +229,7 @@ createInstance(const char *pApplicationName,
     createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = ppExtensionNames;
 
+    out = DK_SUCCESS;
     switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
         case VK_SUCCESS:
             break;
