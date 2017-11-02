@@ -1,27 +1,3 @@
-#include "dekoi.h"
-#if defined(DK_WINDOW_MANAGER_ANDROID)
- #define VK_USE_PLATFORM_ANDROID_KHR
-#elif defined(DK_WINDOW_MANAGER_COCOA)
- #if defined(DK_PLATFORM_IOS)
-  #define VK_USE_PLATFORM_IOS_MVK
- #elif defined(DK_PLATFORM_MACOS)
-  #define VK_USE_PLATFORM_MACOS_MVK
- #else
-  DK_STATIC_ASSERT(0, vk_apple_platform_not_supported);
-  #define VK_USE_PLATFORM_INVALID
- #endif
-#elif defined(DK_WINDOW_MANAGER_WAYLAND)
- #define VK_USE_PLATFORM_WAYLAND_KHR
-#elif defined(DK_WINDOW_MANAGER_X11)
- #define VK_USE_PLATFORM_XCB_KHR
-#elif defined(DK_WINDOW_MANAGER_WINDOWS)
- #define VK_USE_PLATFORM_WIN32_KHR
-#else
-  DK_STATIC_ASSERT(0, vk_platform_not_supported);
- #define VK_USE_PLATFORM_INVALID
-#endif
-
-
 #include <stdio.h>
 #include <string.h>
 
@@ -110,55 +86,71 @@ exit:
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 
-static void
-createInstanceExtensionNames(const DkAllocator *pAllocator,
-                             DkUint32 *pExtensionCount,
-                             const char ***pppExtensionNames)
+static DkResult
+createInstanceExtensionNames(
+    const DkWindowManagerInterface *pWindowManagerInterface,
+    const DkAllocator *pAllocator,
+    DkUint32 *pExtensionCount,
+    const char ***pppExtensionNames)
 {
-    DkUint32 i;
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    const char **ppBuffer;
+#else
+    DK_UNUSED(pAllocator);
+#endif
 
+    DK_ASSERT(pWindowManagerInterface != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pExtensionCount != NULL);
     DK_ASSERT(pppExtensionNames != NULL);
 
-    *pExtensionCount = 2;
+    if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
+            pWindowManagerInterface->pContext,
+            pExtensionCount,
+            &(*pppExtensionNames))
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
-    ++(*pExtensionCount);
-#endif
-
+    ppBuffer = *pppExtensionNames;
     *pppExtensionNames = (const char **)
-        DK_ALLOCATE(pAllocator, (*pExtensionCount) * sizeof(char *));
+        DK_ALLOCATE(pAllocator, ((*pExtensionCount) + 1) * sizeof(char *));
 
-    i = 0;
-    (*pppExtensionNames)[i++] = VK_KHR_SURFACE_EXTENSION_NAME;
-#if defined(VK_USE_PLATFORM_ANDROID_KHR)
-    (*pppExtensionNames)[i++] = VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
-#elif defined(VK_USE_PLATFORM_IOS_MVK)
-    (*pppExtensionNames)[i++] = VK_MVK_IOS_SURFACE_EXTENSION_NAME;
-#elif defined(VK_USE_PLATFORM_MACOS_MVK)
-    (*pppExtensionNames)[i++] = VK_MVK_MACOS_SURFACE_EXTENSION_NAME;
-#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
-    (*pppExtensionNames)[i++] = VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
-#elif defined(VK_USE_PLATFORM_XCB_KHR)
-    (*pppExtensionNames)[i++] = VK_KHR_XCB_SURFACE_EXTENSION_NAME;
-#elif defined(VK_USE_PLATFORM_WIN32_KHR)
-    (*pppExtensionNames)[i++] = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+    if (ppBuffer != NULL)
+        memcpy(*pppExtensionNames, ppBuffer,
+               (*pExtensionCount) * sizeof(char *));
+
+    (*pppExtensionNames)[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+    *pExtensionCount += 1;
+
+    pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
+        pWindowManagerInterface->pContext,
+        ppBuffer);
 #endif
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-    (*pppExtensionNames)[i++] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-#endif
-
-    DK_ASSERT(i == *pExtensionCount);
+    return DK_SUCCESS;
 }
 
 
 static void
-destroyInstanceExtensionNames(const char **ppExtensionNames,
-                              const DkAllocator *pAllocator)
+destroyInstanceExtensionNames(
+    const char **ppExtensionNames,
+    const DkWindowManagerInterface *pWindowManagerInterface,
+    const DkAllocator *pAllocator)
 {
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    DK_UNUSED(pWindowManagerInterface);
+
     DK_FREE(pAllocator, ppExtensionNames);
+#else
+    DK_UNUSED(pAllocator);
+
+    pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
+        pWindowManagerInterface->pContext,
+        ppExtensionNames);
+#endif
 }
 
 
@@ -167,6 +159,7 @@ createInstance(const char *pApplicationName,
                DkUint32 applicationMajorVersion,
                DkUint32 applicationMinorVersion,
                DkUint32 applicationPatchVersion,
+               const DkWindowManagerInterface *pWindowManagerInterface,
                const VkAllocationCallbacks *pBackEndAllocator,
                const DkAllocator *pAllocator,
                VkInstance *pInstance)
@@ -201,8 +194,12 @@ createInstance(const char *pApplicationName,
 
     out = DK_SUCCESS;
 
-    createInstanceExtensionNames(pAllocator,
-                                 &extensionCount, &ppExtensionNames);
+    if (createInstanceExtensionNames(pWindowManagerInterface, pAllocator,
+                                     &extensionCount, &ppExtensionNames)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
 
     memset(&applicationInfo, 0, sizeof(VkApplicationInfo));
     applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -251,7 +248,8 @@ createInstance(const char *pApplicationName,
             break;
     }
 
-    destroyInstanceExtensionNames(ppExtensionNames, pAllocator);
+    destroyInstanceExtensionNames(ppExtensionNames, pWindowManagerInterface,
+                                  pAllocator);
     return out;
 }
 
@@ -364,6 +362,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                        pCreateInfo->applicationMajorVersion,
                        pCreateInfo->applicationMinorVersion,
                        pCreateInfo->applicationPatchVersion,
+                       pCreateInfo->pWindowManagerInterface,
                        (*ppRenderer)->pBackEndAllocator,
                        (*ppRenderer)->pAllocator,
                        &(*ppRenderer)->instance)

@@ -5,11 +5,23 @@
 
 typedef struct VkAllocationCallbacks VkAllocationCallbacks;
 
+typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)
+    (void *, DkUint32 *, const char ***);
+typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)
+    (void *, const char **);
+
+struct DkWindowManagerInterface {
+    void *pContext;
+    DkPfnCreateInstanceExtensionNamesCallback pfnCreateInstanceExtensionNames;
+    DkPfnDestroyInstanceExtensionNamesCallback pfnDestroyInstanceExtensionNames;
+};
+
 struct DkRendererCreateInfo {
     const char *pApplicationName;
     DkUint32 applicationMajorVersion;
     DkUint32 applicationMinorVersion;
     DkUint32 applicationPatchVersion;
+    const DkWindowManagerInterface *pWindowManagerInterface;
     const VkAllocationCallbacks *pBackEndAllocator;
 };
 
