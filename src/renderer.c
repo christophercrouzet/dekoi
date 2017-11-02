@@ -393,6 +393,7 @@ instance_error:
     destroyInstance((*ppRenderer)->instance, (*ppRenderer)->pBackEndAllocator);
 
     DK_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
+    *ppRenderer = NULL;
     return DK_ERROR;
 }
 
@@ -400,7 +401,8 @@ instance_error:
 void
 dkDestroyRenderer(DkRenderer *pRenderer)
 {
-    DK_ASSERT(pRenderer != NULL);
+    if (pRenderer == NULL)
+        return;
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     destroyDebugReportCallback(pRenderer->instance,
