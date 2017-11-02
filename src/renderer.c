@@ -24,7 +24,7 @@ static const DkUint32 validationLayerCount = 1;
 static const char * const ppValidationLayerNames[] = {
     "VK_LAYER_LUNARG_standard_validation"
 };
-#endif
+#endif /* DK_DEBUG */
 
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
@@ -98,7 +98,7 @@ createInstanceExtensionNames(
     const char **ppBuffer;
 #else
     DK_UNUSED(pAllocator);
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     DK_ASSERT(pWindowManagerInterface != NULL);
     DK_ASSERT(pAllocator != NULL);
@@ -129,7 +129,7 @@ createInstanceExtensionNames(
     pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
         pWindowManagerInterface->pContext,
         ppBuffer);
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     return DK_SUCCESS;
 }
@@ -151,7 +151,7 @@ destroyInstanceExtensionNames(
     pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
         pWindowManagerInterface->pContext,
         ppExtensionNames);
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 }
 
 
@@ -168,7 +168,7 @@ createInstance(const char *pApplicationName,
     DkResult out;
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     DkBool32 validationLayersSupported;
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
     DkUint32 extensionCount;
     const char **ppExtensionNames;
     VkApplicationInfo applicationInfo;
@@ -180,7 +180,7 @@ createInstance(const char *pApplicationName,
     DK_ASSERT(pAllocator != NULL);
 #else
     DK_UNUSED(pAllocator);
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     if (checkValidationLayersSupport(pAllocator, &validationLayersSupported)
@@ -191,7 +191,7 @@ createInstance(const char *pApplicationName,
         fprintf(stderr, "one or more validation layers are not supported\n");
         return DK_ERROR;
     }
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     out = DK_SUCCESS;
 
@@ -228,7 +228,7 @@ createInstance(const char *pApplicationName,
 #else
     createInfo.enabledLayerCount = 0;
     createInfo.ppEnabledLayerNames = NULL;
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
     createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = ppExtensionNames;
 
@@ -340,7 +340,7 @@ destroyDebugReportCallback(VkInstance instance,
 
     function(instance, callback, pBackendAllocator);
 }
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 
 DkResult
@@ -380,7 +380,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     {
         return DK_ERROR;
     }
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     return DK_SUCCESS;
 }
@@ -395,7 +395,7 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     destroyDebugReportCallback(pRenderer->instance,
                                pRenderer->debugReportCallback,
                                pRenderer->pBackEndAllocator);
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     destroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
 
