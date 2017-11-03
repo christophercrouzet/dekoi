@@ -293,7 +293,7 @@ debugReportCallback(
 
 static DkResult
 createDebugReportCallback(VkInstance instance,
-                          const VkAllocationCallbacks *pBackendAllocator,
+                          const VkAllocationCallbacks *pBackEndAllocator,
                           VkDebugReportCallbackEXT *pCallback)
 {
     VkDebugReportCallbackCreateInfoEXT createInfo;
@@ -318,7 +318,7 @@ createDebugReportCallback(VkInstance instance,
         return DK_ERROR;
     }
 
-    if (function(instance, &createInfo, pBackendAllocator, pCallback)
+    if (function(instance, &createInfo, pBackEndAllocator, pCallback)
         != VK_SUCCESS)
     {
         fprintf(stderr, "failed to create the debug report callback\n");
@@ -332,7 +332,7 @@ createDebugReportCallback(VkInstance instance,
 static void
 destroyDebugReportCallback(VkInstance instance,
                            VkDebugReportCallbackEXT callback,
-                           const VkAllocationCallbacks *pBackendAllocator)
+                           const VkAllocationCallbacks *pBackEndAllocator)
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
 
@@ -347,7 +347,7 @@ destroyDebugReportCallback(VkInstance instance,
         return;
     }
 
-    function(instance, callback, pBackendAllocator);
+    function(instance, callback, pBackEndAllocator);
 }
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
@@ -355,7 +355,7 @@ destroyDebugReportCallback(VkInstance instance,
 static DkResult
 createSurface(VkInstance instance,
               const DkWindowManagerInterface *pWindowManagerInterface,
-              const VkAllocationCallbacks *pBackendAllocator,
+              const VkAllocationCallbacks *pBackEndAllocator,
               VkSurfaceKHR *pSurface)
 {
     DK_ASSERT(instance != VK_NULL_HANDLE);
@@ -363,13 +363,13 @@ createSurface(VkInstance instance,
 
     if (pWindowManagerInterface == NULL) {
         DK_UNUSED(instance);
-        DK_UNUSED(pBackendAllocator);
+        DK_UNUSED(pBackEndAllocator);
 
         *pSurface = VK_NULL_HANDLE;
     } else if (pWindowManagerInterface->pfnCreateSurface(
             pWindowManagerInterface->pContext,
             instance,
-            pBackendAllocator,
+            pBackEndAllocator,
             pSurface)
         != DK_SUCCESS)
     {
@@ -385,9 +385,9 @@ createSurface(VkInstance instance,
 static void
 destroySurface(VkInstance instance,
                VkSurfaceKHR surface,
-               const VkAllocationCallbacks *pBackendAllocator)
+               const VkAllocationCallbacks *pBackEndAllocator)
 {
-    vkDestroySurfaceKHR(instance, surface, pBackendAllocator);
+    vkDestroySurfaceKHR(instance, surface, pBackEndAllocator);
 }
 
 
