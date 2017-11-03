@@ -148,6 +148,8 @@ destroyInstanceExtensionNames(
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     DK_UNUSED(pWindowManagerInterface);
 
+    DK_ASSERT(pAllocator != NULL);
+
     DK_FREE(pAllocator, ppExtensionNames);
 #else
     DK_UNUSED(pAllocator);
@@ -180,10 +182,9 @@ createInstance(const char *pApplicationName,
     VkInstanceCreateInfo createInfo;
 
     DK_ASSERT(pApplicationName != NULL);
-
-#ifdef DK_ENABLE_VALIDATION_LAYERS
     DK_ASSERT(pAllocator != NULL);
-#else
+
+#ifndef DK_ENABLE_VALIDATION_LAYERS
     DK_UNUSED(pAllocator);
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
@@ -263,6 +264,8 @@ static void
 destroyInstance(VkInstance instance,
                 const VkAllocationCallbacks *pBackEndAllocator)
 {
+    DK_ASSERT(instance != VK_NULL_HANDLE);
+
     vkDestroyInstance(instance, pBackEndAllocator);
 }
 
@@ -300,6 +303,9 @@ createDebugReportCallback(VkInstance instance,
     VkDebugReportCallbackCreateInfoEXT createInfo;
     PFN_vkCreateDebugReportCallbackEXT function;
 
+    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(pCallback != NULL);
+
     memset(&createInfo, 0, sizeof(VkDebugReportCallbackCreateInfoEXT));
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfo.pNext = NULL;
@@ -333,6 +339,9 @@ destroyDebugReportCallback(VkInstance instance,
                            const VkAllocationCallbacks *pBackendAllocator)
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
+
+    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(callback != VK_NULL_HANDLE);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)
         vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
