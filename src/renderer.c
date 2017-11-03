@@ -184,10 +184,6 @@ createInstance(const char *pApplicationName,
     DK_ASSERT(pApplicationName != NULL);
     DK_ASSERT(pAllocator != NULL);
 
-#ifndef DK_ENABLE_VALIDATION_LAYERS
-    DK_UNUSED(pAllocator);
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
-
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     if (checkValidationLayersSupport(pAllocator, &validationLayersSupported)
         != DK_SUCCESS)
