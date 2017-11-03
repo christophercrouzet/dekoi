@@ -44,23 +44,6 @@
  #define DK_PLATFORM_INVALID
 #endif
 
-#if defined(DK_PLATFORM_ANDROID)
- #define DK_WINDOW_MANAGER_ANDROID
-#elif defined(DK_PLATFORM_IOS) || defined(DK_PLATFORM_MACOS)
- #define DK_WINDOW_MANAGER_COCOA
-#elif defined(DK_PLATFORM_LINUX)
- #if defined(DK_USE_WAYLAND)
-  #define DK_WINDOW_MANAGER_WAYLAND
- #else
-  #define DK_WINDOW_MANAGER_X11
- #endif
-#elif defined(DK_PLATFORM_WINDOWS)
- #define DK_WINDOW_MANAGER_WINDOWS
-#else
- DK_STATIC_ASSERT(0, window_manager_not_supported);
- #define DK_WINDOW_MANAGER_INVALID
-#endif
-
 /*
    Focus on the common ILP32, LP64 and LLP64 data models.
    64-bit integer types aren't part of C89 but should be available anyways.
