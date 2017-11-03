@@ -267,7 +267,7 @@ destroyInstance(VkInstance instance,
 
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
-VkBool32
+static VkBool32
 debugReportCallback(
     VkDebugReportFlagsEXT flags,
     VkDebugReportObjectTypeEXT objectType,
