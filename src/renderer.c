@@ -406,6 +406,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
+    (*ppRenderer)->instance = VK_NULL_HANDLE;
+    (*ppRenderer)->debugReportCallback = VK_NULL_HANDLE;
+    (*ppRenderer)->surface = VK_NULL_HANDLE;
 
     if (createInstance(pCreateInfo->pApplicationName,
                        pCreateInfo->applicationMajorVersion,
