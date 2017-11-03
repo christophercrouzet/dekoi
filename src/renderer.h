@@ -4,16 +4,21 @@
 #include "dekoi.h"
 
 typedef struct VkAllocationCallbacks VkAllocationCallbacks;
+typedef struct VkInstance_T * VkInstance;
+typedef struct VkSurfaceKHR_T * VkSurfaceKHR;
 
 typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)
     (void *, DkUint32 *, const char ***);
 typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)
     (void *, const char **);
+typedef DkResult (*DkPfnCreateSurfaceCallback)
+    (void *, VkInstance, const VkAllocationCallbacks *, VkSurfaceKHR *);
 
 struct DkWindowManagerInterface {
     void *pContext;
     DkPfnCreateInstanceExtensionNamesCallback pfnCreateInstanceExtensionNames;
     DkPfnDestroyInstanceExtensionNamesCallback pfnDestroyInstanceExtensionNames;
+    DkPfnCreateSurfaceCallback pfnCreateSurface;
 };
 
 struct DkRendererCreateInfo {

@@ -47,6 +47,27 @@ destroyVulkanInstanceExtensionNames(void *pContext,
 }
 
 
+DkResult
+createVulkanSurface(void *pContext,
+                    VkInstance instance,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    VkSurfaceKHR *pSurface)
+{
+    if (glfwCreateWindowSurface(
+            instance,
+            ((WindowManagerInterfaceContext *) pContext)->pWindow,
+            pBackEndAllocator,
+            pSurface)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the Vulkan surface\n");
+        return DK_ERROR;
+    }
+
+    return DK_SUCCESS;
+}
+
+
 void
 createWindow(Application *pApplication,
              const WindowCreateInfo *pCreateInfo,
@@ -74,6 +95,7 @@ createWindow(Application *pApplication,
         createVulkanInstanceExtensionNames;
     windowManagerInterface.pfnDestroyInstanceExtensionNames =
         destroyVulkanInstanceExtensionNames;
+    windowManagerInterface.pfnCreateSurface = createVulkanSurface;
 
     memset(&rendererInfo, 0, sizeof(DkRendererCreateInfo));
     rendererInfo.pApplicationName = pApplication->pName;

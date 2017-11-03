@@ -15,6 +15,7 @@ struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
     VkInstance instance;
+    VkSurfaceKHR surface;
     VkDebugReportCallbackEXT debugReportCallback;
 };
 
@@ -346,6 +347,45 @@ destroyDebugReportCallback(VkInstance instance,
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 
+static DkResult
+createSurface(VkInstance instance,
+              const DkWindowManagerInterface *pWindowManagerInterface,
+              const VkAllocationCallbacks *pBackendAllocator,
+              VkSurfaceKHR *pSurface)
+{
+    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(pSurface != NULL);
+
+    if (pWindowManagerInterface == NULL) {
+        DK_UNUSED(instance);
+        DK_UNUSED(pBackendAllocator);
+
+        *pSurface = VK_NULL_HANDLE;
+    } else if (pWindowManagerInterface->pfnCreateSurface(
+            pWindowManagerInterface->pContext,
+            instance,
+            pBackendAllocator,
+            pSurface)
+        != DK_SUCCESS)
+    {
+        fprintf(stderr, "the window manager interface's 'createSurface' "
+                        "callback returned an error\n");
+        return DK_ERROR;
+    }
+
+    return DK_SUCCESS;
+}
+
+
+static void
+destroySurface(VkInstance instance,
+               VkSurfaceKHR surface,
+               const VkAllocationCallbacks *pBackendAllocator)
+{
+    vkDestroySurfaceKHR(instance, surface, pBackendAllocator);
+}
+
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
@@ -385,7 +425,21 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
+    if (createSurface((*ppRenderer)->instance,
+                      pCreateInfo->pWindowManagerInterface,
+                      (*ppRenderer)->pBackEndAllocator,
+                      &(*ppRenderer)->surface)
+        != DK_SUCCESS)
+    {
+        goto create_surface_error;
+    }
+
     return DK_SUCCESS;
+
+create_surface_error:
+    destroySurface((*ppRenderer)->instance,
+                   (*ppRenderer)->surface,
+                   (*ppRenderer)->pBackEndAllocator);
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
 debug_report_callback_error:
@@ -408,6 +462,10 @@ dkDestroyRenderer(DkRenderer *pRenderer)
 {
     if (pRenderer == NULL)
         return;
+
+    destroySurface(pRenderer->instance,
+                   pRenderer->surface,
+                   pRenderer->pBackEndAllocator);
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     destroyDebugReportCallback(pRenderer->instance,
