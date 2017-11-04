@@ -22,8 +22,8 @@ struct DkRenderer {
 
 #ifdef DK_DEBUG
 #define DK_ENABLE_VALIDATION_LAYERS
-static const DkUint32 dkpValidationLayerCount = 1;
-static const char * const ppDkpValidationLayerNames[] = {
+static const uint32_t dkpRequiredValidationLayerCount = 1;
+static const char * const ppDkpRequiredValidationLayerNames[] = {
     "VK_LAYER_LUNARG_standard_validation"
 };
 #endif /* DK_DEBUG */
@@ -64,12 +64,14 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
         goto exit;
     }
 
-    for (i = 0; i < dkpValidationLayerCount; ++i) {
+    for (i = 0; i < dkpRequiredValidationLayerCount; ++i) {
         DkBool32 found;
 
         found = DK_FALSE;
         for (j = 0; j < layerCount; ++j) {
-            if (strcmp(pLayers[j].layerName, ppDkpValidationLayerNames[i]) == 0)
+            if (strcmp(pLayers[j].layerName,
+                       ppDkpRequiredValidationLayerNames[i])
+                == 0)
             {
                 found = DK_TRUE;
                 break;
@@ -224,8 +226,8 @@ dkpCreateInstance(const char *pApplicationName,
     createInfo.flags = 0;
     createInfo.pApplicationInfo = &applicationInfo;
 #ifdef DK_ENABLE_VALIDATION_LAYERS
-    createInfo.enabledLayerCount = dkpValidationLayerCount;
-    createInfo.ppEnabledLayerNames = ppDkpValidationLayerNames;
+    createInfo.enabledLayerCount = dkpRequiredValidationLayerCount;
+    createInfo.ppEnabledLayerNames = ppDkpRequiredValidationLayerNames;
 #else
     createInfo.enabledLayerCount = 0;
     createInfo.ppEnabledLayerNames = NULL;
