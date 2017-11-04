@@ -3,6 +3,6 @@
 
 #include "../dekoi.h"
 
-void dkGetDefaultAllocator(const DkAllocator **ppAllocator);
+void dkpGetDefaultAllocator(const DkAllocator **ppAllocator);
 
 #endif /* DEKOI_INTERNAL_MEMORY_H */

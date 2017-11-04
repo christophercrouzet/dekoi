@@ -9,32 +9,32 @@
 #include <stdlib.h>
 
 static void *
-dkAllocate(void *pContext,
-           DkSize size)
+dkpAllocate(void *pContext,
+            DkSize size)
 {
     DK_UNUSED(pContext);
     return malloc(size);
 }
 
-#define DK_DEFAULT_ALLOCATION_CALLBACK dkAllocate
+#define DK_DEFAULT_ALLOCATION_CALLBACK dkpAllocate
 #endif /* DK_DEFAULT_ALLOCATION_CALLBACK */
 
 #ifndef DK_DEFAULT_FREE_CALLBACK
 #include <stdlib.h>
 
 static void
-dkFree(void *pContext,
-       void *pMemory)
+dkpFree(void *pContext,
+        void *pMemory)
 {
     DK_UNUSED(pContext);
     free(pMemory);
 }
 
-#define DK_DEFAULT_FREE_CALLBACK dkFree
+#define DK_DEFAULT_FREE_CALLBACK dkpFree
 #endif /* DK_DEFAULT_FREE_CALLBACK */
 
 
-static const DkAllocator defaultAllocator = {
+static const DkAllocator dkpDefaultAllocator = {
     NULL,
     DK_DEFAULT_ALLOCATION_CALLBACK,
     DK_DEFAULT_FREE_CALLBACK
@@ -42,9 +42,9 @@ static const DkAllocator defaultAllocator = {
 
 
 void
-dkGetDefaultAllocator(const DkAllocator **ppAllocator)
+dkpGetDefaultAllocator(const DkAllocator **ppAllocator)
 {
     DK_ASSERT(ppAllocator != NULL);
 
-    *ppAllocator = &defaultAllocator;
+    *ppAllocator = &dkpDefaultAllocator;
 }
