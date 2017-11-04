@@ -268,15 +268,14 @@ destroyInstance(VkInstance instance,
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
 static VkBool32
-debugReportCallback(
-    VkDebugReportFlagsEXT flags,
-    VkDebugReportObjectTypeEXT objectType,
-    uint64_t object,
-    size_t location,
-    int32_t messageCode,
-    const char *pLayerPrefix,
-    const char *pMessage,
-    void *pUserData)
+debugReportCallback(VkDebugReportFlagsEXT flags,
+                    VkDebugReportObjectTypeEXT objectType,
+                    uint64_t object,
+                    size_t location,
+                    int32_t messageCode,
+                    const char *pLayerPrefix,
+                    const char *pMessage,
+                    void *pUserData)
 {
     DK_UNUSED(flags);
     DK_UNUSED(objectType);
