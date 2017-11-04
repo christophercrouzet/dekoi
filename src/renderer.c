@@ -62,7 +62,7 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
         fprintf(stderr, "could not retrieve the instance layer properties "
                         "available\n");
         out = DK_ERROR;
-        goto exit;
+        goto layers_cleanup;
     }
 
     for (i = 0; i < dkpRequiredValidationLayerCount; ++i) {
@@ -80,12 +80,12 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
         }
 
         if (!found)
-            goto exit;
+            goto layers_cleanup;
     }
 
     *pSupported = DK_TRUE;
 
-exit:
+layers_cleanup:
     DK_FREE(pAllocator, pLayers);
     return out;
 }
@@ -423,7 +423,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           &(*ppRenderer)->instance)
         != DK_SUCCESS)
     {
-        goto instance_error;
+        goto renderer_cleanup;
     }
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
@@ -432,7 +432,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                                      &(*ppRenderer)->debugReportCallback)
         != DK_SUCCESS)
     {
-        goto debug_report_callback_error;
+        goto instance_cleanup;
     }
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
@@ -442,27 +442,28 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                          &(*ppRenderer)->surface)
         != DK_SUCCESS)
     {
-        goto create_surface_error;
+        goto debug_report_callback_cleanup;
     }
 
     return DK_SUCCESS;
 
-create_surface_error:
+surface_cleanup:
     dkpDestroySurface((*ppRenderer)->instance,
                       (*ppRenderer)->surface,
                       (*ppRenderer)->pBackEndAllocator);
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
-debug_report_callback_error:
+debug_report_callback_cleanup:
     dkpDestroyDebugReportCallback((*ppRenderer)->instance,
                                   (*ppRenderer)->debugReportCallback,
                                   (*ppRenderer)->pBackEndAllocator);
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
-instance_error:
+instance_cleanup:
     dkpDestroyInstance((*ppRenderer)->instance,
                        (*ppRenderer)->pBackEndAllocator);
 
+renderer_cleanup:
     DK_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
     *ppRenderer = NULL;
     return DK_ERROR;
