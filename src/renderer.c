@@ -35,9 +35,9 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
                                 DkBool32 *pSupported)
 {
     DkResult out;
-    DkUint32 i;
-    DkUint32 j;
-    DkUint32 layerCount;
+    uint32_t i;
+    uint32_t j;
+    uint32_t layerCount;
     VkLayerProperties *pLayers;
 
     DK_ASSERT(pAllocator != NULL);
@@ -45,7 +45,7 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
 
     *pSupported = DK_FALSE;
 
-    if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, NULL)
+    if (vkEnumerateInstanceLayerProperties(&layerCount, NULL)
         != VK_SUCCESS)
     {
         fprintf(stderr, "could not retrieve the number of layer properties "
@@ -56,7 +56,7 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
     out = DK_SUCCESS;
     pLayers = (VkLayerProperties *)
         DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
-    if (vkEnumerateInstanceLayerProperties((uint32_t *) &layerCount, pLayers)
+    if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS)
     {
         fprintf(stderr, "could not retrieve the layer properties available\n");
@@ -95,7 +95,7 @@ static DkResult
 dkpCreateInstanceExtensionNames(
     const DkWindowManagerInterface *pWindowManagerInterface,
     const DkAllocator *pAllocator,
-    DkUint32 *pExtensionCount,
+    uint32_t *pExtensionCount,
     const char ***pppExtensionNames)
 {
 #ifdef DK_ENABLE_VALIDATION_LAYERS
@@ -113,7 +113,7 @@ dkpCreateInstanceExtensionNames(
         *pppExtensionNames = NULL;
     } else if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
             pWindowManagerInterface->pContext,
-            pExtensionCount,
+            (uint32_t *) pExtensionCount,
             &(*pppExtensionNames))
         != DK_SUCCESS)
     {
@@ -179,7 +179,7 @@ dkpCreateInstance(const char *pApplicationName,
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     DkBool32 validationLayersSupported;
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
-    DkUint32 extensionCount;
+    uint32_t extensionCount;
     const char **ppExtensionNames;
     VkApplicationInfo applicationInfo;
     VkInstanceCreateInfo createInfo;
