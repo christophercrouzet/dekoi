@@ -48,8 +48,8 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
     if (vkEnumerateInstanceLayerProperties(&layerCount, NULL)
         != VK_SUCCESS)
     {
-        fprintf(stderr, "could not retrieve the number of layer properties "
-                        "available\n");
+        fprintf(stderr, "could not retrieve the number of instance layer "
+                        "properties available\n");
         return DK_ERROR;
     }
 
@@ -59,7 +59,8 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS)
     {
-        fprintf(stderr, "could not retrieve the layer properties available\n");
+        fprintf(stderr, "could not retrieve the instance layer properties "
+                        "available\n");
         out = DK_ERROR;
         goto exit;
     }
