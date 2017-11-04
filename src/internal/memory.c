@@ -8,7 +8,7 @@
 #ifndef DK_DEFAULT_ALLOCATION_CALLBACK
 #include <stdlib.h>
 
-void *
+static void *
 dkAllocate(void *pContext,
            DkSize size)
 {
@@ -22,7 +22,7 @@ dkAllocate(void *pContext,
 #ifndef DK_DEFAULT_FREE_CALLBACK
 #include <stdlib.h>
 
-void
+static void
 dkFree(void *pContext,
        void *pMemory)
 {
