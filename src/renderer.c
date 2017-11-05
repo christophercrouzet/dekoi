@@ -59,7 +59,7 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS)
     {
-        fprintf(stderr, "could not retrieve the instance layer properties "
+        fprintf(stderr, "could not enumerate the instance layer properties "
                         "available\n");
         out = DK_ERROR;
         goto layers_cleanup;
