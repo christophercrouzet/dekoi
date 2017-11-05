@@ -11,6 +11,11 @@
 #include "internal/memory.h"
 
 
+#ifdef DK_DEBUG
+#define DK_ENABLE_VALIDATION_LAYERS
+#endif /* DK_DEBUG */
+
+
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
@@ -20,19 +25,51 @@ struct DkRenderer {
 };
 
 
-#ifdef DK_DEBUG
-#define DK_ENABLE_VALIDATION_LAYERS
-static const uint32_t dkpRequiredValidationLayerCount = 1;
-static const char * const ppDkpRequiredValidationLayerNames[] = {
-    "VK_LAYER_LUNARG_standard_validation"
-};
-#endif /* DK_DEBUG */
 
+
+static DkResult
+dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
+                            uint32_t *pLayerCount,
+                            const char ***pppLayerNames)
+{
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pLayerCount != NULL);
+    DK_ASSERT(pppLayerNames != NULL);
 
 #ifdef DK_ENABLE_VALIDATION_LAYERS
+    *pLayerCount = 1;
+    *pppLayerNames = (const char **)
+        DK_ALLOCATE(pAllocator, (*pLayerCount) * sizeof(char *));
+    (*pppLayerNames)[0] = "VK_LAYER_LUNARG_standard_validation";
+#else
+    DK_UNUSED(pAllocator);
+
+    *pLayerCount = 0;
+    *pppLayerNames = NULL;
+#endif
+
+    return DK_SUCCESS;
+}
+
+
+static void
+dkpDestroyInstanceLayerNames(const char **ppLayerNames,
+                             const DkAllocator *pAllocator)
+{
+#ifdef DK_ENABLE_VALIDATION_LAYERS
+    DK_FREE(pAllocator, ppLayerNames);
+#else
+    DK_UNUSED(ppLayerNames);
+    DK_UNUSED(pAllocator);
+#endif
+}
+
+
 static DkResult
-dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
-                                DkBool32 *pSupported)
+dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
+                              uint32_t requiredLayerCount,
+                              const char **ppRequiredLayerNames,
+                              DkBool32 *pSupported)
 {
     DkResult out;
     uint32_t i;
@@ -41,6 +78,7 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
     VkLayerProperties *pLayers;
 
     DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(ppRequiredLayerNames != NULL);
     DK_ASSERT(pSupported != NULL);
 
     *pSupported = DK_FALSE;
@@ -65,15 +103,12 @@ dkpCheckValidationLayersSupport(const DkAllocator *pAllocator,
         goto layers_cleanup;
     }
 
-    for (i = 0; i < dkpRequiredValidationLayerCount; ++i) {
+    for (i = 0; i < requiredLayerCount; ++i) {
         DkBool32 found;
 
         found = DK_FALSE;
         for (j = 0; j < layerCount; ++j) {
-            if (strcmp(pLayers[j].layerName,
-                       ppDkpRequiredValidationLayerNames[i])
-                == 0)
-            {
+            if (strcmp(pLayers[j].layerName, ppRequiredLayerNames[i]) == 0) {
                 found = DK_TRUE;
                 break;
             }
@@ -89,7 +124,6 @@ layers_cleanup:
     DK_FREE(pAllocator, pLayers);
     return out;
 }
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 
 static DkResult
@@ -177,9 +211,9 @@ dkpCreateInstance(const char *pApplicationName,
                   VkInstance *pInstance)
 {
     DkResult out;
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-    DkBool32 validationLayersSupported;
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+    uint32_t layerCount;
+    const char **ppLayerNames;
+    DkBool32 layersSupported;
     uint32_t extensionCount;
     const char **ppExtensionNames;
     VkApplicationInfo applicationInfo;
@@ -188,22 +222,29 @@ dkpCreateInstance(const char *pApplicationName,
     DK_ASSERT(pApplicationName != NULL);
     DK_ASSERT(pAllocator != NULL);
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-    if (dkpCheckValidationLayersSupport(pAllocator, &validationLayersSupported)
+    out = DK_SUCCESS;
+    if (dkpCreateInstanceLayerNames(pAllocator, &layerCount, &ppLayerNames)
         != DK_SUCCESS)
     {
         return DK_ERROR;
-    } else if (!validationLayersSupported) {
-        fprintf(stderr, "one or more validation layers are not supported\n");
-        return DK_ERROR;
+    } else if (dkpCheckInstanceLayersSupport(pAllocator, layerCount,
+                                             ppLayerNames, &layersSupported)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto layer_names_cleanup;
+    } else if (!layersSupported) {
+        fprintf(stderr, "one or more instance layers are not supported\n");
+        out = DK_ERROR;
+        goto layer_names_cleanup;
     }
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     if (dkpCreateInstanceExtensionNames(pWindowManagerInterface, pAllocator,
                                         &extensionCount, &ppExtensionNames)
         != DK_SUCCESS)
     {
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto layer_names_cleanup;
     }
 
     memset(&applicationInfo, 0, sizeof(VkApplicationInfo));
@@ -226,17 +267,11 @@ dkpCreateInstance(const char *pApplicationName,
     createInfo.pNext = NULL;
     createInfo.flags = 0;
     createInfo.pApplicationInfo = &applicationInfo;
-#ifdef DK_ENABLE_VALIDATION_LAYERS
-    createInfo.enabledLayerCount = dkpRequiredValidationLayerCount;
-    createInfo.ppEnabledLayerNames = ppDkpRequiredValidationLayerNames;
-#else
-    createInfo.enabledLayerCount = 0;
-    createInfo.ppEnabledLayerNames = NULL;
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+    createInfo.enabledLayerCount = layerCount;
+    createInfo.ppEnabledLayerNames = ppLayerNames;
     createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = ppExtensionNames;
 
-    out = DK_SUCCESS;
     switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
         case VK_SUCCESS:
             break;
@@ -256,6 +291,9 @@ dkpCreateInstance(const char *pApplicationName,
 
     dkpDestroyInstanceExtensionNames(ppExtensionNames, pWindowManagerInterface,
                                      pAllocator);
+
+layer_names_cleanup:
+    dkpDestroyInstanceLayerNames(ppLayerNames, pAllocator);
     return out;
 }
 
