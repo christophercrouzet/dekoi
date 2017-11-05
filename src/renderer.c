@@ -40,6 +40,11 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
     *pLayerCount = 1;
     *pppLayerNames = (const char **)
         DK_ALLOCATE(pAllocator, (*pLayerCount) * sizeof(char *));
+    if (*pppLayerNames == NULL) {
+        fprintf(stderr, "failed to allocate the instance layer names\n");
+        return DK_ERROR;
+    }
+
     (*pppLayerNames)[0] = "VK_LAYER_LUNARG_standard_validation";
 #else
     DK_UNUSED(pAllocator);
@@ -94,8 +99,11 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
     out = DK_SUCCESS;
     pLayers = (VkLayerProperties *)
         DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
-    if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
-        != VK_SUCCESS)
+    if (pLayers == NULL) {
+        fprintf(stderr, "failed to allocate the instance layer properties\n");
+        return DK_ERROR_ALLOCATION;
+    } else if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
+               != VK_SUCCESS)
     {
         fprintf(stderr, "could not enumerate the instance layer properties "
                         "available\n");
@@ -159,8 +167,10 @@ dkpCreateInstanceExtensionNames(
     ppBuffer = *pppExtensionNames;
     *pppExtensionNames = (const char **)
         DK_ALLOCATE(pAllocator, ((*pExtensionCount) + 1) * sizeof(char *));
-
-    if (ppBuffer != NULL)
+    if (*pppExtensionNames == NULL) {
+        fprintf(stderr, "failed to allocate the instance extension names\n");
+        return DK_ERROR_ALLOCATION;
+    } else if (ppBuffer != NULL)
         memcpy(*pppExtensionNames, ppBuffer,
                (*pExtensionCount) * sizeof(char *));
 
@@ -444,6 +454,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         dkpGetDefaultAllocator(&pAllocator);
 
     *ppRenderer = (DkRenderer *) DK_ALLOCATE(pAllocator, sizeof(DkRenderer));
+    if (*ppRenderer == NULL) {
+        fprintf(stderr, "failed to allocate the renderer\n");
+        return DK_ERROR_ALLOCATION;
+    }
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;

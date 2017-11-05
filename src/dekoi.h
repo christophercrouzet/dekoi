@@ -146,7 +146,8 @@ typedef struct DkWindowManagerInterface DkWindowManagerInterface;
 
 typedef enum DkResult {
     DK_SUCCESS = 0,
-    DK_ERROR = -1
+    DK_ERROR = -1,
+    DK_ERROR_ALLOCATION = -2
 } DkResult;
 
 const char * dkGetResultString(DkResult result);
