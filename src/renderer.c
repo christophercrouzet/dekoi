@@ -86,8 +86,6 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
     DK_ASSERT(ppRequiredLayerNames != NULL);
     DK_ASSERT(pSupported != NULL);
 
-    *pSupported = DK_FALSE;
-
     if (vkEnumerateInstanceLayerProperties(&layerCount, NULL)
         != VK_SUCCESS)
     {
@@ -111,6 +109,7 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
         goto layers_cleanup;
     }
 
+    *pSupported = DK_FALSE;
     for (i = 0; i < requiredLayerCount; ++i) {
         DkBool32 found;
 
