@@ -53,7 +53,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
 
     *pLayerCount = 0;
     *pppLayerNames = NULL;
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
     return DK_SUCCESS;
 }
@@ -68,7 +68,7 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 #else
     DK_UNUSED(ppLayerNames);
     DK_UNUSED(pAllocator);
-#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 }
 
 
