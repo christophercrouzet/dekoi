@@ -505,11 +505,13 @@ surface_cleanup:
                       (*ppRenderer)->surface,
                       (*ppRenderer)->pBackEndAllocator);
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
 debug_report_callback_cleanup:
+#ifdef DK_ENABLE_VALIDATION_LAYERS
     dkpDestroyDebugReportCallback((*ppRenderer)->instance,
                                   (*ppRenderer)->debugReportCallback,
                                   (*ppRenderer)->pBackEndAllocator);
+#else
+    ;
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 instance_cleanup:
