@@ -17,6 +17,12 @@
 #endif /* DK_DEBUG */
 
 
+typedef struct DkpQueueFamilyIndices {
+    uint32_t graphics;
+    uint32_t present;
+} DkpQueueFamilyIndices;
+
+
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
@@ -25,8 +31,7 @@ struct DkRenderer {
 #ifdef DK_ENABLE_DEBUG_REPORT
     VkDebugReportCallbackEXT debugReportCallback;
 #endif /* DK_ENABLE_DEBUG_REPORT */
-    uint32_t graphicsQueueFamilyIndex;
-    uint32_t presentQueueFamilyIndex;
+    DkpQueueFamilyIndices queueFamilyIndices;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
 };
@@ -582,8 +587,7 @@ static DkResult
 dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
                            VkSurfaceKHR surface,
                            const DkAllocator *pAllocator,
-                           uint32_t *pGraphicsQueueFamilyIndex,
-                           uint32_t *pPresentQueueFamilyIndex)
+                           DkpQueueFamilyIndices *pQueueFamilyIndices)
 {
     DkResult out;
     uint32_t i;
@@ -592,11 +596,10 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
 
     DK_ASSERT(physicalDevice != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pGraphicsQueueFamilyIndex != NULL);
-    DK_ASSERT(pPresentQueueFamilyIndex != NULL);
+    DK_ASSERT(pQueueFamilyIndices != NULL);
 
-    *pGraphicsQueueFamilyIndex = UINT32_MAX;
-    *pPresentQueueFamilyIndex = UINT32_MAX;
+    pQueueFamilyIndices->graphics = UINT32_MAX;
+    pQueueFamilyIndices->present = UINT32_MAX;
 
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,
                                              &propertyCount, NULL);
@@ -625,7 +628,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
             DK_UNUSED(presentSupported);
 
             if (graphicsSupported) {
-                *pGraphicsQueueFamilyIndex = i;
+                pQueueFamilyIndices->graphics = i;
                 goto properties_cleanup;
             }
         } else {
@@ -640,19 +643,19 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
             }
 
             if (graphicsSupported && presentSupported) {
-                *pGraphicsQueueFamilyIndex = i;
-                *pPresentQueueFamilyIndex = i;
+                pQueueFamilyIndices->graphics = i;
+                pQueueFamilyIndices->present = i;
                 goto properties_cleanup;
             }
 
             if (graphicsSupported
-                && *pGraphicsQueueFamilyIndex == UINT32_MAX)
+                && pQueueFamilyIndices->graphics == UINT32_MAX)
             {
-                *pGraphicsQueueFamilyIndex = i;
+                pQueueFamilyIndices->graphics = i;
             } else if (presentSupported
-                       && *pPresentQueueFamilyIndex == UINT32_MAX)
+                       && pQueueFamilyIndices->present == UINT32_MAX)
             {
-                *pPresentQueueFamilyIndex = i;
+                pQueueFamilyIndices->present = i;
             }
         }
     }
@@ -669,8 +672,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
                          uint32_t extensionCount,
                          const char **ppExtensionNames,
                          const DkAllocator *pAllocator,
-                         uint32_t *pGraphicsQueueFamilyIndex,
-                         uint32_t *pPresentQueueFamilyIndex,
+                         DkpQueueFamilyIndices *pQueueFamilyIndices,
                          DkBool32 *pSuitable)
 {
     DkBool32 extensionsSupported;
@@ -679,8 +681,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
     DK_ASSERT(physicalDevice != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSuitable != NULL);
-    DK_ASSERT(pGraphicsQueueFamilyIndex != NULL);
-    DK_ASSERT(pPresentQueueFamilyIndex != NULL);
+    DK_ASSERT(pQueueFamilyIndices != NULL);
 
     *pSuitable = DK_FALSE;
 
@@ -702,16 +703,15 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
     }
 
     if (dkpPickDeviceQueueFamilies(physicalDevice, surface, pAllocator,
-                                   pGraphicsQueueFamilyIndex,
-                                   pPresentQueueFamilyIndex)
+                                   pQueueFamilyIndices)
         != DK_SUCCESS)
     {
         return DK_ERROR;
     }
 
-    if (*pGraphicsQueueFamilyIndex == UINT32_MAX
+    if (pQueueFamilyIndices->graphics == UINT32_MAX
         || (surface != VK_NULL_HANDLE
-            && *pPresentQueueFamilyIndex == UINT32_MAX))
+            && pQueueFamilyIndices->present == UINT32_MAX))
     {
         return DK_SUCCESS;
     }
@@ -727,8 +727,7 @@ dkpPickPhysicalDevice(VkInstance instance,
                       uint32_t extensionCount,
                       const char **ppExtensionNames,
                       const DkAllocator *pAllocator,
-                      uint32_t *pGraphicsQueueFamilyIndex,
-                      uint32_t *pPresentQueueFamilyIndex,
+                      DkpQueueFamilyIndices *pQueueFamilyIndices,
                       VkPhysicalDevice *pPhysicalDevice)
 {
     DkResult out;
@@ -738,8 +737,7 @@ dkpPickPhysicalDevice(VkInstance instance,
 
     DK_ASSERT(instance != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pGraphicsQueueFamilyIndex != NULL);
-    DK_ASSERT(pPresentQueueFamilyIndex != NULL);
+    DK_ASSERT(pQueueFamilyIndices != NULL);
     DK_ASSERT(pPhysicalDevice != NULL);
 
     if (vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, NULL)
@@ -772,9 +770,7 @@ dkpPickPhysicalDevice(VkInstance instance,
 
         if (dkpInspectPhysicalDevice(pPhysicalDevices[i], surface,
                                      extensionCount, ppExtensionNames,
-                                     pAllocator,
-                                     pGraphicsQueueFamilyIndex,
-                                     pPresentQueueFamilyIndex,
+                                     pAllocator, pQueueFamilyIndices,
                                      &suitable)
             != DK_SUCCESS)
         {
@@ -805,8 +801,7 @@ dkpCreateDevice(VkInstance instance,
                 VkSurfaceKHR surface,
                 const DkAllocator *pAllocator,
                 const VkAllocationCallbacks *pBackEndAllocator,
-                uint32_t *pGraphicsQueueFamilyIndex,
-                uint32_t *pPresentQueueFamilyIndex,
+                DkpQueueFamilyIndices *pQueueFamilyIndices,
                 VkPhysicalDevice *pPhysicalDevice,
                 VkDevice *pDevice)
 {
@@ -823,8 +818,7 @@ dkpCreateDevice(VkInstance instance,
 
     DK_ASSERT(instance != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pGraphicsQueueFamilyIndex != NULL);
-    DK_ASSERT(pPresentQueueFamilyIndex != NULL);
+    DK_ASSERT(pQueueFamilyIndices != NULL);
     DK_ASSERT(pPhysicalDevice != NULL);
     DK_ASSERT(pDevice != NULL);
 
@@ -842,9 +836,7 @@ dkpCreateDevice(VkInstance instance,
     out = DK_SUCCESS;
     if (dkpPickPhysicalDevice(instance, surface, extensionCount,
                               ppExtensionNames, pAllocator,
-                              pGraphicsQueueFamilyIndex,
-                              pPresentQueueFamilyIndex,
-                              pPhysicalDevice)
+                              pQueueFamilyIndices, pPhysicalDevice)
         != DK_SUCCESS)
     {
         out = DK_ERROR;
@@ -864,8 +856,8 @@ dkpCreateDevice(VkInstance instance,
         pQueuePriorities[i] = 1.0f;
 
     queueInfoCount = (presentSupport
-                      && *pGraphicsQueueFamilyIndex
-                         != *pPresentQueueFamilyIndex)
+                      && pQueueFamilyIndices->graphics
+                         != pQueueFamilyIndices->present)
         ? 2 : 1;
     pQueueInfos = (VkDeviceQueueCreateInfo *)
         DK_ALLOCATE(pAllocator,
@@ -880,7 +872,7 @@ dkpCreateDevice(VkInstance instance,
     pQueueInfos[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     pQueueInfos[0].pNext = NULL;
     pQueueInfos[0].flags = 0;
-    pQueueInfos[0].queueFamilyIndex = *pGraphicsQueueFamilyIndex;
+    pQueueInfos[0].queueFamilyIndex = pQueueFamilyIndices->graphics;
     pQueueInfos[0].queueCount = queueCount;
     pQueueInfos[0].pQueuePriorities = pQueuePriorities;
 
@@ -889,7 +881,7 @@ dkpCreateDevice(VkInstance instance,
         pQueueInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         pQueueInfos[1].pNext = NULL;
         pQueueInfos[1].flags = 0;
-        pQueueInfos[1].queueFamilyIndex = *pPresentQueueFamilyIndex;
+        pQueueInfos[1].queueFamilyIndex = pQueueFamilyIndices->present;
         pQueueInfos[1].queueCount = queueCount;
         pQueueInfos[1].pQueuePriorities = pQueuePriorities;
     }
@@ -961,8 +953,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->debugReportCallback = VK_NULL_HANDLE;
 #endif /* DK_ENABLE_DEBUG_REPORT */
     (*ppRenderer)->surface = VK_NULL_HANDLE;
-    (*ppRenderer)->graphicsQueueFamilyIndex = UINT32_MAX;
-    (*ppRenderer)->presentQueueFamilyIndex = UINT32_MAX;
+    (*ppRenderer)->queueFamilyIndices.graphics = UINT32_MAX;
+    (*ppRenderer)->queueFamilyIndices.present = UINT32_MAX;
     (*ppRenderer)->physicalDevice = VK_NULL_HANDLE;
     (*ppRenderer)->device = VK_NULL_HANDLE;
 
@@ -1006,8 +998,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                         (*ppRenderer)->surface,
                         (*ppRenderer)->pAllocator,
                         (*ppRenderer)->pBackEndAllocator,
-                        &(*ppRenderer)->graphicsQueueFamilyIndex,
-                        &(*ppRenderer)->presentQueueFamilyIndex,
+                        &(*ppRenderer)->queueFamilyIndices,
                         &(*ppRenderer)->physicalDevice,
                         &(*ppRenderer)->device)
         != DK_SUCCESS)
