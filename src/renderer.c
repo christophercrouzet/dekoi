@@ -305,7 +305,7 @@ dkpCreateInstance(const char *pApplicationName,
             out = DK_ERROR;
             goto extension_names_cleanup;
         default:
-            fprintf(stderr, "failed to create the renderer instance\n");
+            fprintf(stderr, "failed to create the instance\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
     }
