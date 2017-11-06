@@ -103,8 +103,10 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
     if (pLayers == NULL) {
         fprintf(stderr, "failed to allocate the instance layer properties\n");
         return DK_ERROR_ALLOCATION;
-    } else if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
-               != VK_SUCCESS)
+    }
+
+    if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
+        != VK_SUCCESS)
     {
         fprintf(stderr, "could not enumerate the instance layer properties "
                         "available\n");
@@ -157,10 +159,10 @@ dkpCreateInstanceExtensionNames(
         *pExtensionCount = 0;
         *pppExtensionNames = NULL;
     } else if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
-            pWindowManagerInterface->pContext,
-            (uint32_t *) pExtensionCount,
-            &(*pppExtensionNames))
-        != DK_SUCCESS)
+                   pWindowManagerInterface->pContext,
+                   (uint32_t *) pExtensionCount,
+                   &(*pppExtensionNames))
+               != DK_SUCCESS)
     {
         return DK_ERROR;
     }
@@ -172,7 +174,9 @@ dkpCreateInstanceExtensionNames(
     if (*pppExtensionNames == NULL) {
         fprintf(stderr, "failed to allocate the instance extension names\n");
         return DK_ERROR_ALLOCATION;
-    } else if (ppBuffer != NULL)
+    }
+
+    if (ppBuffer != NULL)
         memcpy(*pppExtensionNames, ppBuffer,
                (*pExtensionCount) * sizeof(char *));
 
@@ -239,13 +243,17 @@ dkpCreateInstance(const char *pApplicationName,
         != DK_SUCCESS)
     {
         return DK_ERROR;
-    } else if (dkpCheckInstanceLayersSupport(pAllocator, layerCount,
-                                             ppLayerNames, &layersSupported)
+    }
+
+    if (dkpCheckInstanceLayersSupport(pAllocator, layerCount, ppLayerNames,
+                                      &layersSupported)
         != DK_SUCCESS)
     {
         out = DK_ERROR;
         goto layer_names_cleanup;
-    } else if (!layersSupported) {
+    }
+
+    if (!layersSupported) {
         fprintf(stderr, "one or more instance layers are not supported\n");
         out = DK_ERROR;
         goto layer_names_cleanup;
@@ -420,11 +428,11 @@ dkpCreateSurface(VkInstance instance,
 
         *pSurface = VK_NULL_HANDLE;
     } else if (pWindowManagerInterface->pfnCreateSurface(
-            pWindowManagerInterface->pContext,
-            instance,
-            pBackEndAllocator,
-            pSurface)
-        != DK_SUCCESS)
+                   pWindowManagerInterface->pContext,
+                   instance,
+                   pBackEndAllocator,
+                   pSurface)
+               != DK_SUCCESS)
     {
         fprintf(stderr, "the window manager interface's 'createSurface' "
                         "callback returned an error\n");
