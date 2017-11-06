@@ -97,7 +97,6 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
         return DK_ERROR;
     }
 
-    out = DK_SUCCESS;
     pLayers = (VkLayerProperties *)
         DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
     if (pLayers == NULL) {
@@ -105,6 +104,7 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
         return DK_ERROR_ALLOCATION;
     }
 
+    out = DK_SUCCESS;
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS)
     {
@@ -238,13 +238,13 @@ dkpCreateInstance(const char *pApplicationName,
     DK_ASSERT(pApplicationName != NULL);
     DK_ASSERT(pAllocator != NULL);
 
-    out = DK_SUCCESS;
     if (dkpCreateInstanceLayerNames(pAllocator, &layerCount, &ppLayerNames)
         != DK_SUCCESS)
     {
         return DK_ERROR;
     }
 
+    out = DK_SUCCESS;
     if (dkpCheckInstanceLayersSupport(pAllocator, layerCount, ppLayerNames,
                                       &layersSupported)
         != DK_SUCCESS)
