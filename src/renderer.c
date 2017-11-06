@@ -863,8 +863,10 @@ dkpCreateDevice(VkInstance instance,
     for (i = 0; i < queueCount; ++i)
         pQueuePriorities[i] = 1.0f;
 
-    queueInfoCount = *pGraphicsQueueFamilyIndex == *pPresentQueueFamilyIndex
-        ? 1 : 2;
+    queueInfoCount = (presentSupport
+                      && *pGraphicsQueueFamilyIndex
+                         != *pPresentQueueFamilyIndex)
+        ? 2 : 1;
     pQueueInfos = (VkDeviceQueueCreateInfo *)
         DK_ALLOCATE(pAllocator,
                     queueInfoCount * sizeof(VkDeviceQueueCreateInfo));
@@ -882,7 +884,7 @@ dkpCreateDevice(VkInstance instance,
     pQueueInfos[0].queueCount = queueCount;
     pQueueInfos[0].pQueuePriorities = pQueuePriorities;
 
-    if (*pGraphicsQueueFamilyIndex != *pPresentQueueFamilyIndex) {
+    if (queueInfoCount == 2) {
         memset(&pQueueInfos[1], 0, sizeof(VkDeviceQueueCreateInfo));
         pQueueInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         pQueueInfos[1].pNext = NULL;
