@@ -474,7 +474,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
     (*ppRenderer)->instance = VK_NULL_HANDLE;
+#ifdef DK_ENABLE_DEBUG_REPORT
     (*ppRenderer)->debugReportCallback = VK_NULL_HANDLE;
+#endif /* DK_ENABLE_DEBUG_REPORT */
     (*ppRenderer)->surface = VK_NULL_HANDLE;
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
@@ -522,7 +524,7 @@ debug_report_callback_cleanup:
                                   (*ppRenderer)->debugReportCallback,
                                   (*ppRenderer)->pBackEndAllocator);
 #else
-    ;
+    goto instance_cleanup;
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
 instance_cleanup:
