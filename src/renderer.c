@@ -1042,18 +1042,14 @@ dkDestroyRenderer(DkRenderer *pRenderer)
         return;
 
     dkpDestroyDevice(pRenderer->device, pRenderer->pBackEndAllocator);
-
     dkpDestroySurface(pRenderer->instance,
                       pRenderer->surface,
                       pRenderer->pBackEndAllocator);
-
 #ifdef DK_ENABLE_DEBUG_REPORT
     dkpDestroyDebugReportCallback(pRenderer->instance,
                                   pRenderer->debugReportCallback,
                                   pRenderer->pBackEndAllocator);
 #endif /* DK_ENABLE_DEBUG_REPORT */
-
     dkpDestroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
-
     DK_FREE(pRenderer->pAllocator, pRenderer);
 }
