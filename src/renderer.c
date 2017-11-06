@@ -23,6 +23,12 @@ typedef struct DkpQueueFamilyIndices {
 } DkpQueueFamilyIndices;
 
 
+typedef struct DkpQueues {
+    VkQueue graphics;
+    VkQueue present;
+} DkpQueues;
+
+
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
@@ -34,6 +40,7 @@ struct DkRenderer {
     DkpQueueFamilyIndices queueFamilyIndices;
     VkPhysicalDevice physicalDevice;
     VkDevice device;
+    DkpQueues queues;
 };
 
 
@@ -927,6 +934,24 @@ dkpDestroyDevice(VkDevice device,
 }
 
 
+static DkResult
+dkpGetDeviceQueues(VkDevice device,
+                   DkpQueueFamilyIndices queueFamilyIndices,
+                   DkpQueues *pQueues)
+{
+    uint32_t queueIndex;
+
+    DK_ASSERT(pQueues != NULL);
+
+    queueIndex = 0;
+    vkGetDeviceQueue(device, queueFamilyIndices.graphics, queueIndex,
+                     &pQueues->graphics);
+    vkGetDeviceQueue(device, queueFamilyIndices.present, queueIndex,
+                     &pQueues->present);
+    return DK_SUCCESS;
+}
+
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
@@ -957,6 +982,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->queueFamilyIndices.present = UINT32_MAX;
     (*ppRenderer)->physicalDevice = VK_NULL_HANDLE;
     (*ppRenderer)->device = VK_NULL_HANDLE;
+    (*ppRenderer)->queues.graphics = VK_NULL_HANDLE;
+    (*ppRenderer)->queues.present = VK_NULL_HANDLE;
 
     out = DK_SUCCESS;
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
@@ -1007,7 +1034,19 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto surface_cleanup;
     }
 
+    if (dkpGetDeviceQueues((*ppRenderer)->device,
+                           (*ppRenderer)->queueFamilyIndices,
+                           &(*ppRenderer)->queues)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto device_cleanup;
+    }
+
     return out;
+
+device_cleanup:
+    dkpDestroyDevice((*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
 
 surface_cleanup:
     dkpDestroySurface((*ppRenderer)->instance,
