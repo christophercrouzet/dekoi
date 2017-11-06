@@ -12,6 +12,7 @@
 
 
 #ifdef DK_DEBUG
+#define DK_ENABLE_DEBUG_REPORT
 #define DK_ENABLE_VALIDATION_LAYERS
 #endif /* DK_DEBUG */
 
@@ -21,9 +22,9 @@ struct DkRenderer {
     const VkAllocationCallbacks *pBackEndAllocator;
     VkInstance instance;
     VkSurfaceKHR surface;
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     VkDebugReportCallbackEXT debugReportCallback;
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 };
 
 
@@ -142,11 +143,11 @@ dkpCreateInstanceExtensionNames(
     uint32_t *pExtensionCount,
     const char ***pppExtensionNames)
 {
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     const char **ppBuffer;
 #else
     DK_UNUSED(pAllocator);
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pExtensionCount != NULL);
@@ -164,7 +165,7 @@ dkpCreateInstanceExtensionNames(
         return DK_ERROR;
     }
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     ppBuffer = *pppExtensionNames;
     *pppExtensionNames = (const char **)
         DK_ALLOCATE(pAllocator, ((*pExtensionCount) + 1) * sizeof(char *));
@@ -182,7 +183,7 @@ dkpCreateInstanceExtensionNames(
         pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
             pWindowManagerInterface->pContext,
             ppBuffer);
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 
     return DK_SUCCESS;
 }
@@ -194,7 +195,7 @@ dkpDestroyInstanceExtensionNames(
     const DkWindowManagerInterface *pWindowManagerInterface,
     const DkAllocator *pAllocator)
 {
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     DK_UNUSED(pWindowManagerInterface);
 
     DK_ASSERT(pAllocator != NULL);
@@ -207,7 +208,7 @@ dkpDestroyInstanceExtensionNames(
         pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
             pWindowManagerInterface->pContext,
             ppExtensionNames);
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 }
 
 
@@ -319,7 +320,7 @@ dkpDestroyInstance(VkInstance instance,
 }
 
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
 static VkBool32
 dkpDebugReportCallback(VkDebugReportFlagsEXT flags,
                        VkDebugReportObjectTypeEXT objectType,
@@ -401,7 +402,7 @@ dkpDestroyDebugReportCallback(VkInstance instance,
 
     function(instance, callback, pBackEndAllocator);
 }
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 
 
 static DkResult
@@ -479,7 +480,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto renderer_cleanup;
     }
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     if (dkpCreateDebugReportCallback((*ppRenderer)->instance,
                                      (*ppRenderer)->pBackEndAllocator,
                                      &(*ppRenderer)->debugReportCallback)
@@ -487,7 +488,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     {
         goto instance_cleanup;
     }
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 
     if (dkpCreateSurface((*ppRenderer)->instance,
                          pCreateInfo->pWindowManagerInterface,
@@ -506,13 +507,13 @@ surface_cleanup:
                       (*ppRenderer)->pBackEndAllocator);
 
 debug_report_callback_cleanup:
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     dkpDestroyDebugReportCallback((*ppRenderer)->instance,
                                   (*ppRenderer)->debugReportCallback,
                                   (*ppRenderer)->pBackEndAllocator);
 #else
     ;
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 
 instance_cleanup:
     dkpDestroyInstance((*ppRenderer)->instance,
@@ -535,11 +536,11 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                       pRenderer->surface,
                       pRenderer->pBackEndAllocator);
 
-#ifdef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_ENABLE_DEBUG_REPORT
     dkpDestroyDebugReportCallback(pRenderer->instance,
                                   pRenderer->debugReportCallback,
                                   pRenderer->pBackEndAllocator);
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#endif /* DK_ENABLE_DEBUG_REPORT */
 
     dkpDestroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
 
