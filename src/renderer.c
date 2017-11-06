@@ -458,6 +458,12 @@ dkpDestroySurface(VkInstance instance,
                   VkSurfaceKHR surface,
                   const VkAllocationCallbacks *pBackEndAllocator)
 {
+    if (surface == VK_NULL_HANDLE) {
+        DK_UNUSED(instance);
+        DK_UNUSED(pBackEndAllocator);
+        return;
+    }
+
     vkDestroySurfaceKHR(instance, surface, pBackEndAllocator);
 }
 
