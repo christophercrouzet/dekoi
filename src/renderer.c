@@ -237,6 +237,7 @@ dkpCreateInstance(const char *pApplicationName,
 
     DK_ASSERT(pApplicationName != NULL);
     DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pInstance != NULL);
 
     if (dkpCreateInstanceLayerNames(pAllocator, &layerCount, &ppLayerNames)
         != DK_SUCCESS)
