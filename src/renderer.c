@@ -21,7 +21,9 @@ struct DkRenderer {
     const VkAllocationCallbacks *pBackEndAllocator;
     VkInstance instance;
     VkSurfaceKHR surface;
+#ifdef DK_ENABLE_VALIDATION_LAYERS
     VkDebugReportCallbackEXT debugReportCallback;
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 };
 
 
