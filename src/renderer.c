@@ -459,6 +459,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
                  DkRenderer **ppRenderer)
 {
+    DkResult out;
+
     DK_ASSERT(pCreateInfo != NULL);
     DK_ASSERT(ppRenderer != NULL);
 
@@ -479,6 +481,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 #endif /* DK_ENABLE_DEBUG_REPORT */
     (*ppRenderer)->surface = VK_NULL_HANDLE;
 
+    out = DK_SUCCESS;
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
                           pCreateInfo->applicationMajorVersion,
                           pCreateInfo->applicationMinorVersion,
@@ -489,6 +492,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           &(*ppRenderer)->instance)
         != DK_SUCCESS)
     {
+        out = DK_ERROR;
         goto renderer_cleanup;
     }
 
@@ -498,6 +502,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                                      &(*ppRenderer)->debugReportCallback)
         != DK_SUCCESS)
     {
+        out = DK_ERROR;
         goto instance_cleanup;
     }
 #endif /* DK_ENABLE_DEBUG_REPORT */
@@ -508,10 +513,11 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                          &(*ppRenderer)->surface)
         != DK_SUCCESS)
     {
+        out = DK_ERROR;
         goto debug_report_callback_cleanup;
     }
 
-    return DK_SUCCESS;
+    return out;
 
 surface_cleanup:
     dkpDestroySurface((*ppRenderer)->instance,
@@ -534,7 +540,7 @@ instance_cleanup:
 renderer_cleanup:
     DK_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
     *ppRenderer = NULL;
-    return DK_ERROR;
+    return out;
 }
 
 
