@@ -295,21 +295,22 @@ dkpCreateInstance(const char *pApplicationName,
 
     switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
         case VK_SUCCESS:
-            break;
+            goto extension_names_cleanup;
         case VK_ERROR_LAYER_NOT_PRESENT:
             fprintf(stderr, "could not find the requested layers\n");
             out = DK_ERROR;
-            break;
+            goto extension_names_cleanup;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
             fprintf(stderr, "could not find the requested extensions\n");
             out = DK_ERROR;
-            break;
+            goto extension_names_cleanup;
         default:
             fprintf(stderr, "failed to create the renderer instance\n");
             out = DK_ERROR;
-            break;
+            goto extension_names_cleanup;
     }
 
+extension_names_cleanup:
     dkpDestroyInstanceExtensionNames(ppExtensionNames, pWindowManagerInterface,
                                      pAllocator);
 
