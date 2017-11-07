@@ -18,7 +18,7 @@ struct WindowCreateInfo {
 
 int createWindow(Application *pApplication,
                  const WindowCreateInfo *pCreateInfo,
-                 Window *pWindow);
+                 Window **ppWindow);
 void destroyWindow(Window *pWindow);
 void getWindowCloseFlag(const Window *pWindow,
                         int *pCloseFlag);

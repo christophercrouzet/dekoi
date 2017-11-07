@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "application.h"
 #include "window.h"
@@ -7,16 +9,22 @@
 
 int
 createApplication(const ApplicationCreateInfo *pCreateInfo,
-                  Application *pApplication)
+                  Application **ppApplication)
 {
     assert(pCreateInfo != NULL);
-    assert(pApplication != NULL);
+    assert(ppApplication != NULL);
 
-    pApplication->pName = pCreateInfo->pName;
-    pApplication->majorVersion = pCreateInfo->majorVersion;
-    pApplication->minorVersion = pCreateInfo->minorVersion;
-    pApplication->patchVersion = pCreateInfo->patchVersion;
-    pApplication->pWindow = NULL;
+    *ppApplication = (Application *) malloc(sizeof(Application));
+    if (*ppApplication == NULL) {
+        fprintf(stderr, "failed to allocate the application\n");
+        return 1;
+    }
+
+    (*ppApplication)->pName = pCreateInfo->pName;
+    (*ppApplication)->majorVersion = pCreateInfo->majorVersion;
+    (*ppApplication)->minorVersion = pCreateInfo->minorVersion;
+    (*ppApplication)->patchVersion = pCreateInfo->patchVersion;
+    (*ppApplication)->pWindow = NULL;
     return 0;
 }
 
@@ -24,8 +32,7 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
 void
 destroyApplication(Application *pApplication)
 {
-    assert(pApplication != NULL);
-    UNUSED(pApplication);
+    free(pApplication);
 }
 
 

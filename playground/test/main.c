@@ -15,15 +15,15 @@ const unsigned int height = 720;
 
 
 int
-setup(Application *pApplication,
-      Window *pWindow)
+setup(Application **ppApplication,
+      Window **ppWindow)
 {
     int out;
     ApplicationCreateInfo applicationInfo;
     WindowCreateInfo windowInfo;
 
-    assert(pApplication != NULL);
-    assert(pWindow != NULL);
+    assert(ppApplication != NULL);
+    assert(ppWindow != NULL);
 
     memset(&applicationInfo, 0, sizeof(ApplicationCreateInfo));
     applicationInfo.pName = pApplicationName;
@@ -31,7 +31,7 @@ setup(Application *pApplication,
     applicationInfo.minorVersion = minorVersion;
     applicationInfo.patchVersion = patchVersion;
 
-    if (createApplication(&applicationInfo, pApplication)) {
+    if (createApplication(&applicationInfo, ppApplication)) {
         return 1;
     }
 
@@ -41,7 +41,7 @@ setup(Application *pApplication,
     windowInfo.title = pApplicationName;
 
     out = 0;
-    if (createWindow(pApplication, &windowInfo, pWindow)) {
+    if (createWindow(*ppApplication, &windowInfo, ppWindow)) {
         out = 1;
         goto application_cleanup;
     }
@@ -49,7 +49,7 @@ setup(Application *pApplication,
     return out;
 
 application_cleanup:
-    destroyApplication(pApplication);
+    destroyApplication(*ppApplication);
     return out;
 }
 
@@ -67,20 +67,20 @@ int
 main(void)
 {
     int out;
-    Application application;
-    Window window;
+    Application *pApplication;
+    Window *pWindow;
 
-    if (setup(&application, &window)) {
+    if (setup(&pApplication, &pWindow)) {
         return EXIT_FAILURE;
     }
 
     out = EXIT_SUCCESS;
-    if (runApplication(&application)) {
+    if (runApplication(pApplication)) {
         out = EXIT_FAILURE;
         goto cleanup;
     }
 
 cleanup:
-    cleanup(&application, &window);
+    cleanup(pApplication, pWindow);
     return out;
 }

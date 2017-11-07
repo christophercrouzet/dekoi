@@ -20,7 +20,7 @@ struct ApplicationCreateInfo {
 };
 
 int createApplication(const ApplicationCreateInfo *pCreateInfo,
-                      Application *pApplication);
+                      Application **ppApplication);
 void destroyApplication(Application *pApplication);
 int runApplication(Application *pApplication);
 

@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <GLFW/glfw3.h>
@@ -71,7 +72,7 @@ createVulkanSurface(void *pContext,
 int
 createWindow(Application *pApplication,
              const WindowCreateInfo *pCreateInfo,
-             Window *pWindow)
+             Window **ppWindow)
 {
     int out;
     WindowManagerInterfaceContext windowManagerInterfaceContext;
@@ -80,27 +81,34 @@ createWindow(Application *pApplication,
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
-    assert(pWindow != NULL);
+    assert(ppWindow != NULL);
 
+    *ppWindow = (Window *) malloc(sizeof(Window));
+    if (*ppWindow == NULL) {
+        fprintf(stderr, "failed to allocate the window\n");
+        return 1;
+    }
+
+    out = 0;
     if (glfwInit() != GLFW_TRUE) {
         fprintf(stderr, "failed to initialize GLFW\n");
-        return 1;
+        out = 1;
+        goto window_cleanup;
     }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    out = 0;
-    pWindow->pHandle = glfwCreateWindow((int) pCreateInfo->width,
-                                        (int) pCreateInfo->height,
-                                        pCreateInfo->title, NULL, NULL);
-    if (pWindow->pHandle == NULL) {
+    (*ppWindow)->pHandle = glfwCreateWindow((int) pCreateInfo->width,
+                                            (int) pCreateInfo->height,
+                                            pCreateInfo->title, NULL, NULL);
+    if ((*ppWindow)->pHandle == NULL) {
         fprintf(stderr, "failed to create the window\n");
         out = 1;
         goto glfw_cleanup;
     }
 
-    windowManagerInterfaceContext.pWindow = pWindow->pHandle;
+    windowManagerInterfaceContext.pWindow = (*ppWindow)->pHandle;
 
     windowManagerInterface.pContext = (void *) &windowManagerInterfaceContext;
     windowManagerInterface.pfnCreateInstanceExtensionNames =
@@ -120,22 +128,25 @@ createWindow(Application *pApplication,
     rendererInfo.pWindowManagerInterface = &windowManagerInterface;
     rendererInfo.pBackEndAllocator = NULL;
 
-    if (dkCreateRenderer(&rendererInfo, NULL, &pWindow->pRenderer)
+    if (dkCreateRenderer(&rendererInfo, NULL, &(*ppWindow)->pRenderer)
         != DK_SUCCESS)
     {
         fprintf(stderr, "failed to create the renderer\n");
         out = 1;
-        goto window_cleanup;
+        goto glfw_window_cleanup;
     }
 
-    pApplication->pWindow = pWindow;
+    pApplication->pWindow = *ppWindow;
     return out;
 
-window_cleanup:
-    glfwDestroyWindow(pWindow->pHandle);
+glfw_window_cleanup:
+    glfwDestroyWindow((*ppWindow)->pHandle);
 
 glfw_cleanup:
     glfwTerminate();
+
+window_cleanup:
+    free(*ppWindow);
     return out;
 }
 
@@ -148,6 +159,7 @@ destroyWindow(Window *pWindow)
     dkDestroyRenderer(pWindow->pRenderer);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
+    free(pWindow);
 }
 
 
