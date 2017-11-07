@@ -980,6 +980,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     DkpSemaphores *pSemaphores)
 {
+    DkResult out;
     VkSemaphoreCreateInfo createInfo;
 
     DK_ASSERT(pSemaphores != NULL);
@@ -991,16 +992,28 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
 
     if (vkCreateSemaphore(pDevice->logical, &createInfo, pBackEndAllocator,
                           &pSemaphores->imageAcquired)
-        != VK_SUCCESS
-        || vkCreateSemaphore(pDevice->logical, &createInfo, pBackEndAllocator,
-                             &pSemaphores->presentCompleted)
         != VK_SUCCESS)
     {
-        fprintf(stderr, "failed to create the semaphores\n");
+        fprintf(stderr, "failed to create the 'image acquired' semaphore\n");
         return DK_ERROR;
     }
 
-    return DK_SUCCESS;
+    out = DK_SUCCESS;
+    if (vkCreateSemaphore(pDevice->logical, &createInfo, pBackEndAllocator,
+                          &pSemaphores->presentCompleted)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the 'present completed' semaphore\n");
+        out = DK_ERROR;
+        goto image_acquired_semaphore_cleanup;
+    }
+
+    return out;
+
+image_acquired_semaphore_cleanup:
+    vkDestroySemaphore(pDevice->logical, pSemaphores->imageAcquired,
+                       pBackEndAllocator);
+    return out;
 }
 
 
