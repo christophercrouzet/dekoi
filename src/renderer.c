@@ -935,34 +935,37 @@ extension_names_cleanup:
 
 
 static void
-dkpDestroyDevice(DkpDevice device,
+dkpDestroyDevice(DkpDevice *pDevice,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
-    vkDestroyDevice(device.logical, pBackEndAllocator);
+    DK_ASSERT(pDevice != NULL);
+
+    vkDestroyDevice(pDevice->logical, pBackEndAllocator);
 }
 
 
 static DkResult
-dkpGetDeviceQueues(DkpDevice device,
+dkpGetDeviceQueues(const DkpDevice *pDevice,
                    DkpQueues *pQueues)
 {
     uint32_t queueIndex;
 
+    DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pQueues != NULL);
 
     queueIndex = 0;
 
-    if (device.queueFamilyIndices.graphics != UINT32_MAX)
-        vkGetDeviceQueue(device.logical,
-                         device.queueFamilyIndices.graphics,
+    if (pDevice->queueFamilyIndices.graphics != UINT32_MAX)
+        vkGetDeviceQueue(pDevice->logical,
+                         pDevice->queueFamilyIndices.graphics,
                          queueIndex,
                          &pQueues->graphics);
     else
         pQueues->graphics = NULL;
 
-    if (device.queueFamilyIndices.present != UINT32_MAX)
-        vkGetDeviceQueue(device.logical,
-                         device.queueFamilyIndices.present,
+    if (pDevice->queueFamilyIndices.present != UINT32_MAX)
+        vkGetDeviceQueue(pDevice->logical,
+                         pDevice->queueFamilyIndices.present,
                          queueIndex,
                          &pQueues->present);
     else
@@ -973,7 +976,7 @@ dkpGetDeviceQueues(DkpDevice device,
 
 
 static DkResult
-dkpCreateSemaphores(DkpDevice device,
+dkpCreateSemaphores(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     DkpSemaphores *pSemaphores)
 {
@@ -986,10 +989,10 @@ dkpCreateSemaphores(DkpDevice device,
     createInfo.pNext = NULL;
     createInfo.flags = 0;
 
-    if (vkCreateSemaphore(device.logical, &createInfo, pBackEndAllocator,
+    if (vkCreateSemaphore(pDevice->logical, &createInfo, pBackEndAllocator,
                           &pSemaphores->imageAcquired)
         != VK_SUCCESS
-        || vkCreateSemaphore(device.logical, &createInfo, pBackEndAllocator,
+        || vkCreateSemaphore(pDevice->logical, &createInfo, pBackEndAllocator,
                              &pSemaphores->presentCompleted)
         != VK_SUCCESS)
     {
@@ -1002,16 +1005,17 @@ dkpCreateSemaphores(DkpDevice device,
 
 
 static void
-dkpDestroySemaphores(DkpDevice device,
-                     DkpSemaphores semaphores,
+dkpDestroySemaphores(const DkpDevice *pDevice,
+                     DkpSemaphores *pSemaphores,
                      const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(semaphores.imageAcquired != VK_NULL_HANDLE);
-    DK_ASSERT(semaphores.presentCompleted != VK_NULL_HANDLE);
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pSemaphores->imageAcquired != VK_NULL_HANDLE);
+    DK_ASSERT(pSemaphores->presentCompleted != VK_NULL_HANDLE);
 
-    vkDestroySemaphore(device.logical, semaphores.imageAcquired,
+    vkDestroySemaphore(pDevice->logical, pSemaphores->imageAcquired,
                        pBackEndAllocator);
-    vkDestroySemaphore(device.logical, semaphores.presentCompleted,
+    vkDestroySemaphore(pDevice->logical, pSemaphores->presentCompleted,
                        pBackEndAllocator);
 }
 
@@ -1098,7 +1102,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto surface_cleanup;
     }
 
-    if (dkpGetDeviceQueues((*ppRenderer)->device,
+    if (dkpGetDeviceQueues(&(*ppRenderer)->device,
                            &(*ppRenderer)->queues)
         != DK_SUCCESS)
     {
@@ -1106,7 +1110,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_cleanup;
     }
 
-    if (dkpCreateSemaphores((*ppRenderer)->device,
+    if (dkpCreateSemaphores(&(*ppRenderer)->device,
                             (*ppRenderer)->pBackEndAllocator,
                             &(*ppRenderer)->semaphores)
         != DK_SUCCESS)
@@ -1118,7 +1122,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     return out;
 
 device_cleanup:
-    dkpDestroyDevice((*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
+    dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
 
 surface_cleanup:
     dkpDestroySurface((*ppRenderer)->instance,
@@ -1151,9 +1155,9 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     if (pRenderer == NULL)
         return;
 
-    dkpDestroySemaphores(pRenderer->device, pRenderer->semaphores,
+    dkpDestroySemaphores(&pRenderer->device, &pRenderer->semaphores,
                          pRenderer->pBackEndAllocator);
-    dkpDestroyDevice(pRenderer->device, pRenderer->pBackEndAllocator);
+    dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
     dkpDestroySurface(pRenderer->instance,
                       pRenderer->surface,
                       pRenderer->pBackEndAllocator);
