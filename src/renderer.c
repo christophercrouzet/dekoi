@@ -937,6 +937,8 @@ static void
 dkpDestroyDevice(VkDevice device,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
+    DK_ASSERT(device != NULL);
+
     vkDestroyDevice(device, pBackEndAllocator);
 }
 
@@ -1003,6 +1005,9 @@ dkpDestroySemaphores(VkDevice device,
                      DkpSemaphores semaphores,
                      const VkAllocationCallbacks *pBackEndAllocator)
 {
+    DK_ASSERT(semaphores.imageAcquired != VK_NULL_HANDLE);
+    DK_ASSERT(semaphores.presentCompleted != VK_NULL_HANDLE);
+
     vkDestroySemaphore(device, semaphores.imageAcquired, pBackEndAllocator);
     vkDestroySemaphore(device, semaphores.presentCompleted, pBackEndAllocator);
 }
