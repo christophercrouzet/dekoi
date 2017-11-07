@@ -77,7 +77,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
         DK_ALLOCATE(pAllocator, (*pLayerCount) * sizeof(char *));
     if (*pppLayerNames == NULL) {
         fprintf(stderr, "failed to allocate the instance layer names\n");
-        return DK_ERROR;
+        return DK_ERROR_ALLOCATION;
     }
 
     (*pppLayerNames)[0] = "VK_LAYER_LUNARG_standard_validation";
