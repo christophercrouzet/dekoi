@@ -690,8 +690,8 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
                          DkpQueueFamilyIndices *pQueueFamilyIndices,
                          DkBool32 *pSuitable)
 {
-    DkBool32 extensionsSupported;
     VkPhysicalDeviceProperties properties;
+    DkBool32 extensionsSupported;
 
     DK_ASSERT(physicalDevice != NULL);
     DK_ASSERT(pAllocator != NULL);
@@ -712,10 +712,8 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
         return DK_ERROR;
     }
 
-    if (!extensionsSupported) {
-        fprintf(stderr, "one or more device extensions are not supported\n");
-        return DK_ERROR;
-    }
+    if (!extensionsSupported)
+        return DK_SUCCESS;
 
     if (dkpPickDeviceQueueFamilies(physicalDevice, surface, pAllocator,
                                    pQueueFamilyIndices)
