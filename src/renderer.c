@@ -108,7 +108,7 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 static DkResult
 dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
                               uint32_t requiredLayerCount,
-                              const char **ppRequiredLayerNames,
+                              const char * const * ppRequiredLayerNames,
                               DkBool32 *pSupported)
 {
     DkResult out;
@@ -535,7 +535,7 @@ dkpDestroyDeviceExtensionNames(const char **ppExtensionNames,
 static DkResult
 dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice,
                                 uint32_t requiredExtensionCount,
-                                const char **ppRequiredExtensionNames,
+                                const char * const * ppRequiredExtensionNames,
                                 const DkAllocator *pAllocator,
                                 DkBool32 *pSupported)
 {
@@ -690,7 +690,7 @@ static DkResult
 dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
                          VkSurfaceKHR surface,
                          uint32_t extensionCount,
-                         const char **ppExtensionNames,
+                         const char * const * ppExtensionNames,
                          const DkAllocator *pAllocator,
                          DkpQueueFamilyIndices *pQueueFamilyIndices,
                          DkBool32 *pSuitable)
@@ -743,7 +743,7 @@ static DkResult
 dkpPickPhysicalDevice(VkInstance instance,
                       VkSurfaceKHR surface,
                       uint32_t extensionCount,
-                      const char **ppExtensionNames,
+                      const char * const * ppExtensionNames,
                       const DkAllocator *pAllocator,
                       DkpQueueFamilyIndices *pQueueFamilyIndices,
                       VkPhysicalDevice *pPhysicalDevice)
