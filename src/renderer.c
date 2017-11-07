@@ -868,7 +868,7 @@ dkpCreateDevice(VkInstance instance,
     for (i = 0; i < queueCount; ++i)
         pQueuePriorities[i] = 1.0f;
 
-    queueInfoCount = (presentSupport
+    queueInfoCount = (presentSupport == DKP_PRESENT_SUPPORT_ENABLED
                       && pQueueFamilyIndices->graphics
                          != pQueueFamilyIndices->present)
         ? 2 : 1;
