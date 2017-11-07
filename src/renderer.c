@@ -351,7 +351,7 @@ static void
 dkpDestroyInstance(VkInstance instance,
                    const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(instance != NULL);
 
     vkDestroyInstance(instance, pBackEndAllocator);
 }
@@ -389,7 +389,7 @@ dkpCreateDebugReportCallback(VkInstance instance,
     VkDebugReportCallbackCreateInfoEXT createInfo;
     PFN_vkCreateDebugReportCallbackEXT function;
 
-    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(instance != NULL);
     DK_ASSERT(pCallback != NULL);
 
     memset(&createInfo, 0, sizeof(VkDebugReportCallbackCreateInfoEXT));
@@ -426,7 +426,7 @@ dkpDestroyDebugReportCallback(VkInstance instance,
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
 
-    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(instance != NULL);
     DK_ASSERT(callback != VK_NULL_HANDLE);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)
@@ -448,7 +448,7 @@ dkpCreateSurface(VkInstance instance,
                  const VkAllocationCallbacks *pBackEndAllocator,
                  VkSurfaceKHR *pSurface)
 {
-    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(instance != NULL);
     DK_ASSERT(pSurface != NULL);
 
     if (pWindowManagerInterface == NULL) {
@@ -539,7 +539,7 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice,
     uint32_t extensionCount;
     VkExtensionProperties *pExtensions;
 
-    DK_ASSERT(physicalDevice != VK_NULL_HANDLE);
+    DK_ASSERT(physicalDevice != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSupported != NULL);
 
@@ -608,7 +608,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
     uint32_t propertyCount;
     VkQueueFamilyProperties *pProperties;
 
-    DK_ASSERT(physicalDevice != VK_NULL_HANDLE);
+    DK_ASSERT(physicalDevice != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
 
@@ -692,7 +692,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
     DkBool32 extensionsSupported;
     VkPhysicalDeviceProperties properties;
 
-    DK_ASSERT(physicalDevice != VK_NULL_HANDLE);
+    DK_ASSERT(physicalDevice != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSuitable != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
@@ -749,7 +749,7 @@ dkpPickPhysicalDevice(VkInstance instance,
     uint32_t physicalDeviceCount;
     VkPhysicalDevice *pPhysicalDevices;
 
-    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(instance != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
     DK_ASSERT(pPhysicalDevice != NULL);
@@ -778,7 +778,7 @@ dkpPickPhysicalDevice(VkInstance instance,
         goto physical_devices_cleanup;
     }
 
-    *pPhysicalDevice = VK_NULL_HANDLE;
+    *pPhysicalDevice = NULL;
     for (i = 0; i < physicalDeviceCount; ++i) {
         DkBool32 suitable;
 
@@ -798,7 +798,7 @@ dkpPickPhysicalDevice(VkInstance instance,
         }
     }
 
-    if (*pPhysicalDevice == VK_NULL_HANDLE) {
+    if (*pPhysicalDevice == NULL) {
         fprintf(stderr, "could not find a suitable physical device\n");
         out = DK_ERROR;
         goto physical_devices_cleanup;
@@ -830,7 +830,7 @@ dkpCreateDevice(VkInstance instance,
     VkDeviceQueueCreateInfo *pQueueInfos;
     VkDeviceCreateInfo createInfo;
 
-    DK_ASSERT(instance != VK_NULL_HANDLE);
+    DK_ASSERT(instance != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
     DK_ASSERT(pPhysicalDevice != NULL);
@@ -956,13 +956,13 @@ dkpGetDeviceQueues(VkDevice device,
         vkGetDeviceQueue(device, queueFamilyIndices.graphics, queueIndex,
                          &pQueues->graphics);
     else
-        pQueues->graphics = VK_NULL_HANDLE;
+        pQueues->graphics = NULL;
 
     if (queueFamilyIndices.present != UINT32_MAX)
         vkGetDeviceQueue(device, queueFamilyIndices.present, queueIndex,
                          &pQueues->present);
     else
-        pQueues->present = VK_NULL_HANDLE;
+        pQueues->present = NULL;
 
     return DK_SUCCESS;
 }
@@ -975,7 +975,7 @@ dkpCreateSemaphores(VkDevice device,
 {
     VkSemaphoreCreateInfo createInfo;
 
-    DK_ASSERT(device != VK_NULL_HANDLE);
+    DK_ASSERT(device != NULL);
     DK_ASSERT(pSemaphores != NULL);
 
     memset(&createInfo, 0, sizeof(VkSemaphoreCreateInfo));
@@ -1029,17 +1029,17 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
-    (*ppRenderer)->instance = VK_NULL_HANDLE;
+    (*ppRenderer)->instance = NULL;
 #ifdef DK_ENABLE_DEBUG_REPORT
     (*ppRenderer)->debugReportCallback = VK_NULL_HANDLE;
 #endif /* DK_ENABLE_DEBUG_REPORT */
     (*ppRenderer)->surface = VK_NULL_HANDLE;
     (*ppRenderer)->queueFamilyIndices.graphics = UINT32_MAX;
     (*ppRenderer)->queueFamilyIndices.present = UINT32_MAX;
-    (*ppRenderer)->physicalDevice = VK_NULL_HANDLE;
-    (*ppRenderer)->device = VK_NULL_HANDLE;
-    (*ppRenderer)->queues.graphics = VK_NULL_HANDLE;
-    (*ppRenderer)->queues.present = VK_NULL_HANDLE;
+    (*ppRenderer)->physicalDevice = NULL;
+    (*ppRenderer)->device = NULL;
+    (*ppRenderer)->queues.graphics = NULL;
+    (*ppRenderer)->queues.present = NULL;
     (*ppRenderer)->semaphores.imageAcquired = VK_NULL_HANDLE;
     (*ppRenderer)->semaphores.presentCompleted = VK_NULL_HANDLE;
 
