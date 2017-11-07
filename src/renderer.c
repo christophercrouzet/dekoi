@@ -1054,19 +1054,6 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
-    (*ppRenderer)->instance = NULL;
-#ifdef DK_ENABLE_DEBUG_REPORT
-    (*ppRenderer)->debugReportCallback = VK_NULL_HANDLE;
-#endif /* DK_ENABLE_DEBUG_REPORT */
-    (*ppRenderer)->surface = VK_NULL_HANDLE;
-    (*ppRenderer)->device.queueFamilyIndices.graphics = UINT32_MAX;
-    (*ppRenderer)->device.queueFamilyIndices.present = UINT32_MAX;
-    (*ppRenderer)->device.physical = NULL;
-    (*ppRenderer)->device.logical = NULL;
-    (*ppRenderer)->queues.graphics = NULL;
-    (*ppRenderer)->queues.present = NULL;
-    (*ppRenderer)->semaphores.imageAcquired = VK_NULL_HANDLE;
-    (*ppRenderer)->semaphores.presentCompleted = VK_NULL_HANDLE;
 
     out = DK_SUCCESS;
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
