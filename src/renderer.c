@@ -944,10 +944,19 @@ dkpGetDeviceQueues(VkDevice device,
     DK_ASSERT(pQueues != NULL);
 
     queueIndex = 0;
-    vkGetDeviceQueue(device, queueFamilyIndices.graphics, queueIndex,
-                     &pQueues->graphics);
-    vkGetDeviceQueue(device, queueFamilyIndices.present, queueIndex,
-                     &pQueues->present);
+
+    if (queueFamilyIndices.graphics != UINT32_MAX)
+        vkGetDeviceQueue(device, queueFamilyIndices.graphics, queueIndex,
+                         &pQueues->graphics);
+    else
+        pQueues->graphics = VK_NULL_HANDLE;
+
+    if (queueFamilyIndices.present != UINT32_MAX)
+        vkGetDeviceQueue(device, queueFamilyIndices.present, queueIndex,
+                         &pQueues->present);
+    else
+        pQueues->present = VK_NULL_HANDLE;
+
     return DK_SUCCESS;
 }
 
