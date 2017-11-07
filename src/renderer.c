@@ -694,8 +694,8 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
 
     DK_ASSERT(physicalDevice != NULL);
     DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSuitable != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
+    DK_ASSERT(pSuitable != NULL);
 
     *pSuitable = DK_FALSE;
 
