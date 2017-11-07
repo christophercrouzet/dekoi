@@ -195,25 +195,26 @@ dkpCreateInstanceExtensionNames(
     }
 
 #ifdef DK_ENABLE_DEBUG_REPORT
-    ppBuffer = *pppExtensionNames;
-    *pppExtensionNames = (const char **)
+    ppBuffer = (const char **)
         DK_ALLOCATE(pAllocator, ((*pExtensionCount) + 1) * sizeof(char *));
-    if (*pppExtensionNames == NULL) {
+    if (ppBuffer == NULL) {
         fprintf(stderr, "failed to allocate the instance extension names\n");
         return DK_ERROR_ALLOCATION;
     }
 
-    if (ppBuffer != NULL)
-        memcpy(*pppExtensionNames, ppBuffer,
+    if (*pppExtensionNames != NULL)
+        memcpy(ppBuffer, *pppExtensionNames,
                (*pExtensionCount) * sizeof(char *));
 
-    (*pppExtensionNames)[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-    *pExtensionCount += 1;
+    ppBuffer[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
     if (pWindowManagerInterface != NULL)
         pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
             pWindowManagerInterface->pContext,
-            ppBuffer);
+            *pppExtensionNames);
+
+    *pExtensionCount += 1;
+    *pppExtensionNames = ppBuffer;
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
     return DK_SUCCESS;
