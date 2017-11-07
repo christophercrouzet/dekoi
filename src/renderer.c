@@ -23,6 +23,13 @@ typedef struct DkpQueueFamilyIndices {
 } DkpQueueFamilyIndices;
 
 
+typedef struct DkpDevice {
+    DkpQueueFamilyIndices queueFamilyIndices;
+    VkPhysicalDevice physical;
+    VkDevice logical;
+} DkpDevice;
+
+
 typedef struct DkpQueues {
     VkQueue graphics;
     VkQueue present;
@@ -43,9 +50,7 @@ struct DkRenderer {
 #ifdef DK_ENABLE_DEBUG_REPORT
     VkDebugReportCallbackEXT debugReportCallback;
 #endif /* DK_ENABLE_DEBUG_REPORT */
-    DkpQueueFamilyIndices queueFamilyIndices;
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
+    DkpDevice device;
     DkpQueues queues;
     DkpSemaphores semaphores;
 };
@@ -814,9 +819,7 @@ dkpCreateDevice(VkInstance instance,
                 VkSurfaceKHR surface,
                 const DkAllocator *pAllocator,
                 const VkAllocationCallbacks *pBackEndAllocator,
-                DkpQueueFamilyIndices *pQueueFamilyIndices,
-                VkPhysicalDevice *pPhysicalDevice,
-                VkDevice *pDevice)
+                DkpDevice *pDevice)
 {
     DkResult out;
     uint32_t i;
@@ -831,8 +834,6 @@ dkpCreateDevice(VkInstance instance,
 
     DK_ASSERT(instance != NULL);
     DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pQueueFamilyIndices != NULL);
-    DK_ASSERT(pPhysicalDevice != NULL);
     DK_ASSERT(pDevice != NULL);
 
     presentSupport = surface == VK_NULL_HANDLE
@@ -849,7 +850,8 @@ dkpCreateDevice(VkInstance instance,
     out = DK_SUCCESS;
     if (dkpPickPhysicalDevice(instance, surface, extensionCount,
                               ppExtensionNames, pAllocator,
-                              pQueueFamilyIndices, pPhysicalDevice)
+                              &pDevice->queueFamilyIndices,
+                              &pDevice->physical)
         != DK_SUCCESS)
     {
         out = DK_ERROR;
@@ -869,8 +871,8 @@ dkpCreateDevice(VkInstance instance,
         pQueuePriorities[i] = 1.0f;
 
     queueInfoCount = (presentSupport == DKP_PRESENT_SUPPORT_ENABLED
-                      && pQueueFamilyIndices->graphics
-                         != pQueueFamilyIndices->present)
+                      && pDevice->queueFamilyIndices.graphics
+                         != pDevice->queueFamilyIndices.present)
         ? 2 : 1;
     pQueueInfos = (VkDeviceQueueCreateInfo *)
         DK_ALLOCATE(pAllocator,
@@ -885,7 +887,7 @@ dkpCreateDevice(VkInstance instance,
     pQueueInfos[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     pQueueInfos[0].pNext = NULL;
     pQueueInfos[0].flags = 0;
-    pQueueInfos[0].queueFamilyIndex = pQueueFamilyIndices->graphics;
+    pQueueInfos[0].queueFamilyIndex = pDevice->queueFamilyIndices.graphics;
     pQueueInfos[0].queueCount = queueCount;
     pQueueInfos[0].pQueuePriorities = pQueuePriorities;
 
@@ -894,7 +896,7 @@ dkpCreateDevice(VkInstance instance,
         pQueueInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         pQueueInfos[1].pNext = NULL;
         pQueueInfos[1].flags = 0;
-        pQueueInfos[1].queueFamilyIndex = pQueueFamilyIndices->present;
+        pQueueInfos[1].queueFamilyIndex = pDevice->queueFamilyIndices.present;
         pQueueInfos[1].queueCount = queueCount;
         pQueueInfos[1].pQueuePriorities = pQueuePriorities;
     }
@@ -911,8 +913,8 @@ dkpCreateDevice(VkInstance instance,
     createInfo.ppEnabledExtensionNames = ppExtensionNames;
     createInfo.pEnabledFeatures = NULL;
 
-    if (vkCreateDevice(*pPhysicalDevice, &createInfo, pBackEndAllocator,
-                       pDevice)
+    if (vkCreateDevice(pDevice->physical, &createInfo, pBackEndAllocator,
+                       &pDevice->logical)
         != VK_SUCCESS)
     {
         fprintf(stderr, "failed to create the device\n");
@@ -933,18 +935,15 @@ extension_names_cleanup:
 
 
 static void
-dkpDestroyDevice(VkDevice device,
+dkpDestroyDevice(DkpDevice device,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(device != NULL);
-
-    vkDestroyDevice(device, pBackEndAllocator);
+    vkDestroyDevice(device.logical, pBackEndAllocator);
 }
 
 
 static DkResult
-dkpGetDeviceQueues(VkDevice device,
-                   DkpQueueFamilyIndices queueFamilyIndices,
+dkpGetDeviceQueues(DkpDevice device,
                    DkpQueues *pQueues)
 {
     uint32_t queueIndex;
@@ -953,14 +952,18 @@ dkpGetDeviceQueues(VkDevice device,
 
     queueIndex = 0;
 
-    if (queueFamilyIndices.graphics != UINT32_MAX)
-        vkGetDeviceQueue(device, queueFamilyIndices.graphics, queueIndex,
+    if (device.queueFamilyIndices.graphics != UINT32_MAX)
+        vkGetDeviceQueue(device.logical,
+                         device.queueFamilyIndices.graphics,
+                         queueIndex,
                          &pQueues->graphics);
     else
         pQueues->graphics = NULL;
 
-    if (queueFamilyIndices.present != UINT32_MAX)
-        vkGetDeviceQueue(device, queueFamilyIndices.present, queueIndex,
+    if (device.queueFamilyIndices.present != UINT32_MAX)
+        vkGetDeviceQueue(device.logical,
+                         device.queueFamilyIndices.present,
+                         queueIndex,
                          &pQueues->present);
     else
         pQueues->present = NULL;
@@ -970,13 +973,12 @@ dkpGetDeviceQueues(VkDevice device,
 
 
 static DkResult
-dkpCreateSemaphores(VkDevice device,
+dkpCreateSemaphores(DkpDevice device,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     DkpSemaphores *pSemaphores)
 {
     VkSemaphoreCreateInfo createInfo;
 
-    DK_ASSERT(device != NULL);
     DK_ASSERT(pSemaphores != NULL);
 
     memset(&createInfo, 0, sizeof(VkSemaphoreCreateInfo));
@@ -984,10 +986,10 @@ dkpCreateSemaphores(VkDevice device,
     createInfo.pNext = NULL;
     createInfo.flags = 0;
 
-    if (vkCreateSemaphore(device, &createInfo, pBackEndAllocator,
+    if (vkCreateSemaphore(device.logical, &createInfo, pBackEndAllocator,
                           &pSemaphores->imageAcquired)
         != VK_SUCCESS
-        || vkCreateSemaphore(device, &createInfo, pBackEndAllocator,
+        || vkCreateSemaphore(device.logical, &createInfo, pBackEndAllocator,
                              &pSemaphores->presentCompleted)
         != VK_SUCCESS)
     {
@@ -1000,15 +1002,17 @@ dkpCreateSemaphores(VkDevice device,
 
 
 static void
-dkpDestroySemaphores(VkDevice device,
+dkpDestroySemaphores(DkpDevice device,
                      DkpSemaphores semaphores,
                      const VkAllocationCallbacks *pBackEndAllocator)
 {
     DK_ASSERT(semaphores.imageAcquired != VK_NULL_HANDLE);
     DK_ASSERT(semaphores.presentCompleted != VK_NULL_HANDLE);
 
-    vkDestroySemaphore(device, semaphores.imageAcquired, pBackEndAllocator);
-    vkDestroySemaphore(device, semaphores.presentCompleted, pBackEndAllocator);
+    vkDestroySemaphore(device.logical, semaphores.imageAcquired,
+                       pBackEndAllocator);
+    vkDestroySemaphore(device.logical, semaphores.presentCompleted,
+                       pBackEndAllocator);
 }
 
 
@@ -1038,10 +1042,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->debugReportCallback = VK_NULL_HANDLE;
 #endif /* DK_ENABLE_DEBUG_REPORT */
     (*ppRenderer)->surface = VK_NULL_HANDLE;
-    (*ppRenderer)->queueFamilyIndices.graphics = UINT32_MAX;
-    (*ppRenderer)->queueFamilyIndices.present = UINT32_MAX;
-    (*ppRenderer)->physicalDevice = NULL;
-    (*ppRenderer)->device = NULL;
+    (*ppRenderer)->device.queueFamilyIndices.graphics = UINT32_MAX;
+    (*ppRenderer)->device.queueFamilyIndices.present = UINT32_MAX;
+    (*ppRenderer)->device.physical = NULL;
+    (*ppRenderer)->device.logical = NULL;
     (*ppRenderer)->queues.graphics = NULL;
     (*ppRenderer)->queues.present = NULL;
     (*ppRenderer)->semaphores.imageAcquired = VK_NULL_HANDLE;
@@ -1087,8 +1091,6 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                         (*ppRenderer)->surface,
                         (*ppRenderer)->pAllocator,
                         (*ppRenderer)->pBackEndAllocator,
-                        &(*ppRenderer)->queueFamilyIndices,
-                        &(*ppRenderer)->physicalDevice,
                         &(*ppRenderer)->device)
         != DK_SUCCESS)
     {
@@ -1097,7 +1099,6 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     if (dkpGetDeviceQueues((*ppRenderer)->device,
-                           (*ppRenderer)->queueFamilyIndices,
                            &(*ppRenderer)->queues)
         != DK_SUCCESS)
     {
