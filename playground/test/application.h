@@ -19,8 +19,8 @@ struct ApplicationCreateInfo {
     unsigned int patchVersion;
 };
 
-void createApplication(const ApplicationCreateInfo *pCreateInfo,
-                       Application *pApplication);
+int createApplication(const ApplicationCreateInfo *pCreateInfo,
+                      Application *pApplication);
 void destroyApplication(Application *pApplication);
 int runApplication(Application *pApplication);
 

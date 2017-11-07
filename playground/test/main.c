@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,25 +14,43 @@ const unsigned int width = 1280;
 const unsigned int height = 720;
 
 
-void
+int
 setup(Application *pApplication,
       Window *pWindow)
 {
+    int out;
     ApplicationCreateInfo applicationInfo;
     WindowCreateInfo windowInfo;
+
+    assert(pApplication != NULL);
+    assert(pWindow != NULL);
 
     memset(&applicationInfo, 0, sizeof(ApplicationCreateInfo));
     applicationInfo.pName = pApplicationName;
     applicationInfo.majorVersion = majorVersion;
     applicationInfo.minorVersion = minorVersion;
     applicationInfo.patchVersion = patchVersion;
-    createApplication(&applicationInfo, pApplication);
+
+    if (createApplication(&applicationInfo, pApplication)) {
+        return 1;
+    }
 
     memset(&windowInfo, 0, sizeof(WindowCreateInfo));
     windowInfo.width = width;
     windowInfo.height = height;
     windowInfo.title = pApplicationName;
-    createWindow(pApplication, &windowInfo, pWindow);
+
+    out = 0;
+    if (createWindow(pApplication, &windowInfo, pWindow)) {
+        out = 1;
+        goto application_cleanup;
+    }
+
+    return out;
+
+application_cleanup:
+    destroyApplication(pApplication);
+    return out;
 }
 
 
@@ -47,11 +66,21 @@ cleanup(Application *pApplication,
 int
 main(void)
 {
+    int out;
     Application application;
     Window window;
 
-    setup(&application, &window);
-    runApplication(&application);
+    if (setup(&application, &window)) {
+        return EXIT_FAILURE;
+    }
+
+    out = EXIT_SUCCESS;
+    if (runApplication(&application)) {
+        out = EXIT_FAILURE;
+        goto cleanup;
+    }
+
+cleanup:
     cleanup(&application, &window);
-    return EXIT_SUCCESS;
+    return out;
 }

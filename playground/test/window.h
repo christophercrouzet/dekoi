@@ -16,12 +16,12 @@ struct WindowCreateInfo {
     const char *title;
 };
 
-void createWindow(Application *pApplication,
-                  const WindowCreateInfo *pCreateInfo,
-                  Window *pWindow);
+int createWindow(Application *pApplication,
+                 const WindowCreateInfo *pCreateInfo,
+                 Window *pWindow);
 void destroyWindow(Window *pWindow);
 void getWindowCloseFlag(const Window *pWindow,
                         int *pCloseFlag);
-void pollWindowEvents(const Window *pWindow);
+int pollWindowEvents(const Window *pWindow);
 
 #endif /* DEKOI_PLAYGROUND_TEST_WINDOW_H */

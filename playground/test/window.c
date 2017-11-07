@@ -68,11 +68,12 @@ createVulkanSurface(void *pContext,
 }
 
 
-void
+int
 createWindow(Application *pApplication,
              const WindowCreateInfo *pCreateInfo,
              Window *pWindow)
 {
+    int out;
     WindowManagerInterfaceContext windowManagerInterfaceContext;
     DkWindowManagerInterface windowManagerInterface;
     DkRendererCreateInfo rendererInfo;
@@ -81,12 +82,23 @@ createWindow(Application *pApplication,
     assert(pCreateInfo != NULL);
     assert(pWindow != NULL);
 
-    glfwInit();
+    if (glfwInit() != GLFW_TRUE) {
+        fprintf(stderr, "failed to initialize GLFW\n");
+        return 1;
+    }
+
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    out = 0;
     pWindow->pHandle = glfwCreateWindow((int) pCreateInfo->width,
                                         (int) pCreateInfo->height,
                                         pCreateInfo->title, NULL, NULL);
+    if (pWindow->pHandle == NULL) {
+        fprintf(stderr, "failed to create the window\n");
+        out = 1;
+        goto glfw_cleanup;
+    }
 
     windowManagerInterfaceContext.pWindow = pWindow->pHandle;
 
@@ -107,9 +119,24 @@ createWindow(Application *pApplication,
         (DkUint32) pApplication->patchVersion;
     rendererInfo.pWindowManagerInterface = &windowManagerInterface;
     rendererInfo.pBackEndAllocator = NULL;
-    dkCreateRenderer(&rendererInfo, NULL, &pWindow->pRenderer);
+
+    if (dkCreateRenderer(&rendererInfo, NULL, &pWindow->pRenderer)
+        != DK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the renderer\n");
+        out = 1;
+        goto window_cleanup;
+    }
 
     pApplication->pWindow = pWindow;
+    return out;
+
+window_cleanup:
+    glfwDestroyWindow(pWindow->pHandle);
+
+glfw_cleanup:
+    glfwTerminate();
+    return out;
 }
 
 
@@ -135,11 +162,12 @@ getWindowCloseFlag(const Window *pWindow,
 }
 
 
-void
+int
 pollWindowEvents(const Window *pWindow)
 {
     assert(pWindow != NULL);
     UNUSED(pWindow);
 
     glfwPollEvents();
+    return 0;
 }

@@ -5,7 +5,7 @@
 #include "window.h"
 
 
-void
+int
 createApplication(const ApplicationCreateInfo *pCreateInfo,
                   Application *pApplication)
 {
@@ -17,6 +17,7 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
     pApplication->minorVersion = pCreateInfo->minorVersion;
     pApplication->patchVersion = pCreateInfo->patchVersion;
     pApplication->pWindow = NULL;
+    return 0;
 }
 
 
