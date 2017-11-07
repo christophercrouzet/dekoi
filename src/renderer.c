@@ -29,6 +29,12 @@ typedef struct DkpQueues {
 } DkpQueues;
 
 
+typedef struct DkpSemaphores {
+    VkSemaphore imageAcquired;
+    VkSemaphore presentCompleted;
+} DkpSemaphores;
+
+
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
@@ -41,6 +47,7 @@ struct DkRenderer {
     VkPhysicalDevice physicalDevice;
     VkDevice device;
     DkpQueues queues;
+    DkpSemaphores semaphores;
 };
 
 
@@ -961,6 +968,46 @@ dkpGetDeviceQueues(VkDevice device,
 }
 
 
+static DkResult
+dkpCreateSemaphores(VkDevice device,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    DkpSemaphores *pSemaphores)
+{
+    VkSemaphoreCreateInfo createInfo;
+
+    DK_ASSERT(device != VK_NULL_HANDLE);
+    DK_ASSERT(pSemaphores != NULL);
+
+    memset(&createInfo, 0, sizeof(VkSemaphoreCreateInfo));
+    createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+
+    if (vkCreateSemaphore(device, &createInfo, pBackEndAllocator,
+                          &pSemaphores->imageAcquired)
+        != VK_SUCCESS
+        || vkCreateSemaphore(device, &createInfo, pBackEndAllocator,
+                             &pSemaphores->presentCompleted)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the semaphores\n");
+        return DK_ERROR;
+    }
+
+    return DK_SUCCESS;
+}
+
+
+static void
+dkpDestroySemaphores(VkDevice device,
+                     DkpSemaphores semaphores,
+                     const VkAllocationCallbacks *pBackEndAllocator)
+{
+    vkDestroySemaphore(device, semaphores.imageAcquired, pBackEndAllocator);
+    vkDestroySemaphore(device, semaphores.presentCompleted, pBackEndAllocator);
+}
+
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
@@ -993,6 +1040,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->device = VK_NULL_HANDLE;
     (*ppRenderer)->queues.graphics = VK_NULL_HANDLE;
     (*ppRenderer)->queues.present = VK_NULL_HANDLE;
+    (*ppRenderer)->semaphores.imageAcquired = VK_NULL_HANDLE;
+    (*ppRenderer)->semaphores.presentCompleted = VK_NULL_HANDLE;
 
     out = DK_SUCCESS;
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
@@ -1052,6 +1101,15 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_cleanup;
     }
 
+    if (dkpCreateSemaphores((*ppRenderer)->device,
+                            (*ppRenderer)->pBackEndAllocator,
+                            &(*ppRenderer)->semaphores)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto device_cleanup;
+    }
+
     return out;
 
 device_cleanup:
@@ -1088,6 +1146,8 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     if (pRenderer == NULL)
         return;
 
+    dkpDestroySemaphores(pRenderer->device, pRenderer->semaphores,
+                         pRenderer->pBackEndAllocator);
     dkpDestroyDevice(pRenderer->device, pRenderer->pBackEndAllocator);
     dkpDestroySurface(pRenderer->instance,
                       pRenderer->surface,
