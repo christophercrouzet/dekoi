@@ -121,22 +121,25 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSupported != NULL);
 
+    out = DK_SUCCESS;
+
     if (vkEnumerateInstanceLayerProperties(&layerCount, NULL)
         != VK_SUCCESS)
     {
         fprintf(stderr, "could not retrieve the number of instance layer "
                         "properties available\n");
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto exit;
     }
 
     pLayers = (VkLayerProperties *)
         DK_ALLOCATE(pAllocator, layerCount * sizeof(VkLayerProperties));
     if (pLayers == NULL) {
         fprintf(stderr, "failed to allocate the instance layer properties\n");
-        return DK_ERROR_ALLOCATION;
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS)
     {
@@ -166,6 +169,8 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
 
 layers_cleanup:
     DK_FREE(pAllocator, pLayers);
+
+exit:
     return out;
 }
 
@@ -272,13 +277,15 @@ dkpCreateInstance(const char *pApplicationName,
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pInstance != NULL);
 
+    out = DK_SUCCESS;
+
     if (dkpCreateInstanceLayerNames(pAllocator, &layerCount, &ppLayerNames)
         != DK_SUCCESS)
     {
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     if (dkpCheckInstanceLayersSupport(layerCount, ppLayerNames, pAllocator,
                                       &layersSupported)
         != DK_SUCCESS)
@@ -349,6 +356,8 @@ extension_names_cleanup:
 
 layer_names_cleanup:
     dkpDestroyInstanceLayerNames(ppLayerNames, pAllocator);
+
+exit:
     return out;
 }
 
@@ -549,23 +558,26 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice,
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSupported != NULL);
 
+    out = DK_SUCCESS;
+
     if (vkEnumerateDeviceExtensionProperties(physicalDevice, NULL,
                                              &extensionCount, NULL)
         != VK_SUCCESS)
     {
         fprintf(stderr, "could not retrieve the number of device extension "
                         "properties available\n");
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto exit;
     }
 
     pExtensions = (VkExtensionProperties *)
         DK_ALLOCATE(pAllocator, extensionCount * sizeof(VkExtensionProperties));
     if (pExtensions == NULL) {
         fprintf(stderr, "failed to allocate the device extension properties\n");
-        return DK_ERROR_ALLOCATION;
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     if (vkEnumerateDeviceExtensionProperties(physicalDevice, NULL,
                                              &extensionCount, pExtensions)
         != VK_SUCCESS)
@@ -599,6 +611,8 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice,
 
 extensions_cleanup:
     DK_FREE(pAllocator, pExtensions);
+
+exit:
     return out;
 }
 
@@ -618,23 +632,25 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
 
+    out = DK_SUCCESS;
+
     pQueueFamilyIndices->graphics = UINT32_MAX;
     pQueueFamilyIndices->present = UINT32_MAX;
 
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,
                                              &propertyCount, NULL);
     if (propertyCount == 0)
-        return DK_SUCCESS;
+        goto exit;
 
     pProperties = (VkQueueFamilyProperties *)
         DK_ALLOCATE(pAllocator,
                     propertyCount * sizeof(VkQueueFamilyProperties));
     if (pProperties == NULL) {
         fprintf(stderr, "failed to allocate the queue family properties\n");
-        return DK_ERROR_ALLOCATION;
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,
                                              &propertyCount, pProperties);
     for (i = 0; i < propertyCount; ++i) {
@@ -682,6 +698,8 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDevice,
 
 properties_cleanup:
     DK_FREE(pAllocator, pProperties);
+
+exit:
     return out;
 }
 
@@ -758,21 +776,24 @@ dkpPickPhysicalDevice(VkInstance instance,
     DK_ASSERT(pQueueFamilyIndices != NULL);
     DK_ASSERT(pPhysicalDevice != NULL);
 
+    out = DK_SUCCESS;
+
     if (vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, NULL)
         != VK_SUCCESS)
     {
         fprintf(stderr, "could not count the number of the physical devices\n");
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto exit;
     }
 
     pPhysicalDevices = (VkPhysicalDevice *)
         DK_ALLOCATE(pAllocator, physicalDeviceCount * sizeof(VkPhysicalDevice));
     if (pPhysicalDevices == NULL) {
         fprintf(stderr, "failed to allocate the physical devices\n");
-        return DK_ERROR_ALLOCATION;
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     if (vkEnumeratePhysicalDevices(instance, &physicalDeviceCount,
                                    pPhysicalDevices)
         != VK_SUCCESS)
@@ -810,6 +831,8 @@ dkpPickPhysicalDevice(VkInstance instance,
 
 physical_devices_cleanup:
     DK_FREE(pAllocator, pPhysicalDevices);
+
+exit:
     return out;
 }
 
@@ -836,6 +859,8 @@ dkpCreateDevice(VkInstance instance,
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pDevice != NULL);
 
+    out = DK_SUCCESS;
+
     presentSupport = surface == VK_NULL_HANDLE
         ? DKP_PRESENT_SUPPORT_DISABLED
         : DKP_PRESENT_SUPPORT_ENABLED;
@@ -844,10 +869,10 @@ dkpCreateDevice(VkInstance instance,
                                       &extensionCount, &ppExtensionNames)
         != DK_SUCCESS)
     {
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     if (dkpPickPhysicalDevice(instance, surface, extensionCount,
                               ppExtensionNames, pAllocator,
                               &pDevice->queueFamilyIndices,
@@ -930,6 +955,8 @@ queue_priorities_cleanup:
 
 extension_names_cleanup:
     dkpDestroyDeviceExtensionNames(ppExtensionNames, pAllocator);
+
+exit:
     return out;
 }
 
@@ -985,6 +1012,8 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
 
     DK_ASSERT(pSemaphores != NULL);
 
+    out = DK_SUCCESS;
+
     memset(&createInfo, 0, sizeof(VkSemaphoreCreateInfo));
     createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     createInfo.pNext = NULL;
@@ -995,10 +1024,10 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
         != VK_SUCCESS)
     {
         fprintf(stderr, "failed to create the 'image acquired' semaphore\n");
-        return DK_ERROR;
+        out = DK_ERROR;
+        goto exit;
     }
 
-    out = DK_SUCCESS;
     if (vkCreateSemaphore(pDevice->logical, &createInfo, pBackEndAllocator,
                           &pSemaphores->presentCompleted)
         != VK_SUCCESS)
@@ -1008,11 +1037,13 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
         goto image_acquired_semaphore_cleanup;
     }
 
-    return out;
+    goto exit;
 
 image_acquired_semaphore_cleanup:
     vkDestroySemaphore(pDevice->logical, pSemaphores->imageAcquired,
                        pBackEndAllocator);
+
+exit:
     return out;
 }
 
@@ -1043,19 +1074,21 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     DK_ASSERT(pCreateInfo != NULL);
     DK_ASSERT(ppRenderer != NULL);
 
+    out = DK_SUCCESS;
+
     if (pAllocator == NULL)
         dkpGetDefaultAllocator(&pAllocator);
 
     *ppRenderer = (DkRenderer *) DK_ALLOCATE(pAllocator, sizeof(DkRenderer));
     if (*ppRenderer == NULL) {
         fprintf(stderr, "failed to allocate the renderer\n");
-        return DK_ERROR_ALLOCATION;
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
     }
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
 
-    out = DK_SUCCESS;
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
                           pCreateInfo->applicationMajorVersion,
                           pCreateInfo->applicationMinorVersion,
@@ -1119,7 +1152,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_cleanup;
     }
 
-    return out;
+    goto exit;
 
 device_cleanup:
     dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
@@ -1145,6 +1178,8 @@ instance_cleanup:
 renderer_cleanup:
     DK_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
     *ppRenderer = NULL;
+
+exit:
     return out;
 }
 
