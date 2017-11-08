@@ -106,9 +106,9 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 
 
 static DkResult
-dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
-                              uint32_t requiredLayerCount,
+dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
                               const char * const * ppRequiredLayerNames,
+                              const DkAllocator *pAllocator,
                               DkBool32 *pSupported)
 {
     DkResult out;
@@ -117,8 +117,8 @@ dkpCheckInstanceLayersSupport(const DkAllocator *pAllocator,
     uint32_t layerCount;
     VkLayerProperties *pLayers;
 
-    DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(ppRequiredLayerNames != NULL);
+    DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pSupported != NULL);
 
     if (vkEnumerateInstanceLayerProperties(&layerCount, NULL)
@@ -279,7 +279,7 @@ dkpCreateInstance(const char *pApplicationName,
     }
 
     out = DK_SUCCESS;
-    if (dkpCheckInstanceLayersSupport(pAllocator, layerCount, ppLayerNames,
+    if (dkpCheckInstanceLayersSupport(layerCount, ppLayerNames, pAllocator,
                                       &layersSupported)
         != DK_SUCCESS)
     {
