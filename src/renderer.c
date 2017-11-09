@@ -826,6 +826,70 @@ exit:
 
 
 static void
+dkpPickSwapChainFormat(uint32_t formatCount,
+                       const VkSurfaceFormatKHR *pFormats,
+                       VkSurfaceFormatKHR *pFormat)
+{
+    uint32_t i;
+
+    DK_ASSERT(pFormats != NULL);
+    DK_ASSERT(pFormat != NULL);
+
+    if (formatCount == 1 && pFormats[0].format == VK_FORMAT_UNDEFINED) {
+        pFormat->format = VK_FORMAT_B8G8R8A8_UNORM;
+        pFormat->colorSpace = pFormats[0].colorSpace;
+        return;
+    }
+
+    for (i = 0; i < formatCount; ++i) {
+        if (pFormats[i].format == VK_FORMAT_B8G8R8A8_UNORM) {
+            pFormat->format = pFormats[i].format;
+            pFormat->colorSpace = pFormats[i].colorSpace;
+            return;
+        }
+    }
+
+    pFormat->format = pFormats[0].format;
+    pFormat->colorSpace = pFormats[0].colorSpace;
+}
+
+
+static void
+dkpPickSwapChainPresentMode(uint32_t presentModeCount,
+                            const VkPresentModeKHR *pPresentModes,
+                            VkPresentModeKHR *pPresentMode)
+{
+    uint32_t i;
+
+    DK_ASSERT(pPresentModes != NULL);
+    DK_ASSERT(pPresentMode != NULL);
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return;
+        }
+    }
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return;
+        }
+    }
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return;
+        }
+    }
+
+    *pPresentMode = (VkPresentModeKHR) -1;
+}
+
+
+static void
 dkpPickSwapChainMinImageCount(VkSurfaceCapabilitiesKHR capabilities,
                               VkPresentModeKHR presentMode,
                               uint32_t *pMinImageCount)
@@ -892,70 +956,6 @@ dkpPickSwapChainPreTransform(VkSurfaceCapabilitiesKHR capabilities,
     DK_ASSERT(pPreTransform != NULL);
 
     *pPreTransform = capabilities.currentTransform;
-}
-
-
-static void
-dkpPickSwapChainFormat(uint32_t formatCount,
-                       const VkSurfaceFormatKHR *pFormats,
-                       VkSurfaceFormatKHR *pFormat)
-{
-    uint32_t i;
-
-    DK_ASSERT(pFormats != NULL);
-    DK_ASSERT(pFormat != NULL);
-
-    if (formatCount == 1 && pFormats[0].format == VK_FORMAT_UNDEFINED) {
-        pFormat->format = VK_FORMAT_B8G8R8A8_UNORM;
-        pFormat->colorSpace = pFormats[0].colorSpace;
-        return;
-    }
-
-    for (i = 0; i < formatCount; ++i) {
-        if (pFormats[i].format == VK_FORMAT_B8G8R8A8_UNORM) {
-            pFormat->format = pFormats[i].format;
-            pFormat->colorSpace = pFormats[i].colorSpace;
-            return;
-        }
-    }
-
-    pFormat->format = pFormats[0].format;
-    pFormat->colorSpace = pFormats[0].colorSpace;
-}
-
-
-static void
-dkpPickSwapChainPresentMode(uint32_t presentModeCount,
-                            const VkPresentModeKHR *pPresentModes,
-                            VkPresentModeKHR *pPresentMode)
-{
-    uint32_t i;
-
-    DK_ASSERT(pPresentModes != NULL);
-    DK_ASSERT(pPresentMode != NULL);
-
-    for (i = 0; i < presentModeCount; ++i) {
-        if (pPresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-            *pPresentMode = pPresentModes[i];
-            return;
-        }
-    }
-
-    for (i = 0; i < presentModeCount; ++i) {
-        if (pPresentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
-            *pPresentMode = pPresentModes[i];
-            return;
-        }
-    }
-
-    for (i = 0; i < presentModeCount; ++i) {
-        if (pPresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-            *pPresentMode = pPresentModes[i];
-            return;
-        }
-    }
-
-    *pPresentMode = (VkPresentModeKHR) -1;
 }
 
 
