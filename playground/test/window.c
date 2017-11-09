@@ -125,6 +125,8 @@ createWindow(Application *pApplication,
         (DkUint32) pApplication->minorVersion;
     rendererInfo.applicationPatchVersion =
         (DkUint32) pApplication->patchVersion;
+    rendererInfo.surfaceWidth = (DkUint32) pCreateInfo->width;
+    rendererInfo.surfaceHeight = (DkUint32) pCreateInfo->height;
     rendererInfo.pWindowManagerInterface = &windowManagerInterface;
     rendererInfo.pBackEndAllocator = NULL;
 

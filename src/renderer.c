@@ -16,6 +16,9 @@
 #define DK_ENABLE_VALIDATION_LAYERS
 #endif /* DK_DEBUG */
 
+#define DK_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define DK_MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 
 typedef struct DkpQueueFamilyIndices {
     uint32_t graphics;
@@ -28,6 +31,16 @@ typedef struct DkpDevice {
     VkPhysicalDevice physical;
     VkDevice logical;
 } DkpDevice;
+
+
+typedef struct DkpSwapChainProperties {
+    uint32_t minImageCount;
+    VkExtent2D imageExtent;
+    VkImageUsageFlags imageUsage;
+    VkSurfaceTransformFlagBitsKHR preTransform;
+    VkSurfaceFormatKHR format;
+    VkPresentModeKHR presentMode;
+} DkpSwapChainProperties;
 
 
 typedef struct DkpQueues {
@@ -53,7 +66,15 @@ struct DkRenderer {
     DkpDevice device;
     DkpQueues queues;
     DkpSemaphores semaphores;
+    DkpSwapChainProperties swapChainProperties;
+    VkSwapchainKHR swapChain;
 };
+
+
+typedef enum DkpLogging {
+    DKP_LOGGING_DISABLED = 0,
+    DKP_LOGGING_ENABLED = 1
+} DkpLogging;
 
 
 typedef enum DkpPresentSupport {
@@ -704,6 +725,302 @@ exit:
 }
 
 
+static void
+dkpPickSwapChainMinImageCount(VkSurfaceCapabilitiesKHR capabilities,
+                              uint32_t *pMinImageCount)
+{
+    DK_ASSERT(pMinImageCount != NULL);
+
+    *pMinImageCount = capabilities.minImageCount + 1;
+    if (capabilities.maxImageCount > 0
+        && *pMinImageCount > capabilities.maxImageCount)
+    {
+        *pMinImageCount = capabilities.maxImageCount;
+    }
+}
+
+
+static void
+dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
+                            const VkExtent2D *pDefaultImageExtent,
+                            VkExtent2D *pImageExtent)
+{
+    DK_ASSERT(pDefaultImageExtent != NULL);
+    DK_ASSERT(pImageExtent != NULL);
+
+    if (capabilities.currentExtent.width == UINT32_MAX
+        || capabilities.currentExtent.height == UINT32_MAX)
+    {
+        pImageExtent->width = DK_MAX(capabilities.minImageExtent.width,
+                                     DK_MIN(capabilities.maxImageExtent.width,
+                                            pDefaultImageExtent->width));
+        pImageExtent->height = DK_MAX(capabilities.minImageExtent.height,
+                                      DK_MIN(capabilities.maxImageExtent.height,
+                                             pDefaultImageExtent->height));
+        return;
+    }
+
+    *pImageExtent = capabilities.currentExtent;
+}
+
+
+static void
+dkpPickSwapChainImageUsage(VkSurfaceCapabilitiesKHR capabilities,
+                           VkImageUsageFlags *pImageUsage)
+{
+    DK_ASSERT(pImageUsage != NULL);
+
+    if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
+        *pImageUsage = (VkImageUsageFlags) -1;
+        return;
+    }
+
+    *pImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+        | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+}
+
+
+static void
+dkpPickSwapChainPreTransform(VkSurfaceCapabilitiesKHR capabilities,
+                             VkSurfaceTransformFlagBitsKHR *pPreTransform)
+{
+    DK_ASSERT(pPreTransform != NULL);
+
+    *pPreTransform = capabilities.currentTransform;
+}
+
+
+static void
+dkpPickSwapChainFormat(uint32_t formatCount,
+                       const VkSurfaceFormatKHR *pFormats,
+                       VkSurfaceFormatKHR *pFormat)
+{
+    uint32_t i;
+
+    DK_ASSERT(pFormats != NULL);
+    DK_ASSERT(pFormat != NULL);
+
+    if (formatCount == 1 && pFormats[0].format == VK_FORMAT_UNDEFINED) {
+        pFormat->format = VK_FORMAT_B8G8R8A8_UNORM;
+        pFormat->colorSpace = pFormats[0].colorSpace;
+        return;
+    }
+
+    for (i = 0; i < formatCount; ++i) {
+        if (pFormats[i].format == VK_FORMAT_B8G8R8A8_UNORM) {
+            pFormat->format = pFormats[i].format;
+            pFormat->colorSpace = pFormats[i].colorSpace;
+            return;
+        }
+    }
+
+    pFormat->format = pFormats[0].format;
+    pFormat->colorSpace = pFormats[0].colorSpace;
+}
+
+
+static void
+dkpPickSwapChainPresentMode(uint32_t presentModeCount,
+                            const VkPresentModeKHR *pPresentModes,
+                            VkPresentModeKHR *pPresentMode)
+{
+    uint32_t i;
+
+    DK_ASSERT(pPresentModes != NULL);
+    DK_ASSERT(pPresentMode != NULL);
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return;
+        }
+    }
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return;
+        }
+    }
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return;
+        }
+    }
+
+    *pPresentMode = (VkPresentModeKHR) -1;
+}
+
+
+static DkResult
+dkpPickSwapChainProperties(VkPhysicalDevice physicalDevice,
+                           VkSurfaceKHR surface,
+                           const VkExtent2D *pDefaultImageExtent,
+                           const DkAllocator *pAllocator,
+                           DkpSwapChainProperties *pSwapChainProperties)
+{
+    DkResult out;
+    VkSurfaceCapabilitiesKHR capabilities;
+    uint32_t formatCount;
+    VkSurfaceFormatKHR *pFormats;
+    uint32_t presentModeCount;
+    VkPresentModeKHR *pPresentModes;
+
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pSwapChainProperties != NULL);
+
+    out = DK_SUCCESS;
+
+    if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface,
+                                                  &capabilities)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the surface capabilities\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface,
+                                             &formatCount, NULL)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not count the number of the surface formats\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    pFormats = (VkSurfaceFormatKHR *)
+        DK_ALLOCATE(pAllocator, formatCount * sizeof(VkSurfaceFormatKHR));
+    if (pFormats == NULL) {
+        fprintf(stderr, "failed to allocate the surface formats\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    if (vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface,
+                                             &formatCount, pFormats)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not enumerate the surface formats\n");
+        out = DK_ERROR;
+        goto formats_cleanup;
+    }
+
+    if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface,
+                                                  &presentModeCount, NULL)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not count the number of the surface present "
+                        "modes\n");
+        out = DK_ERROR;
+        goto formats_cleanup;
+    }
+
+    pPresentModes = (VkPresentModeKHR *)
+        DK_ALLOCATE(pAllocator, presentModeCount * sizeof(VkPresentModeKHR));
+    if (pPresentModes == NULL) {
+        fprintf(stderr, "failed to allocate the surface present modes\n");
+        out = DK_ERROR_ALLOCATION;
+        goto formats_cleanup;
+    }
+
+    if (vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface,
+                                                  &presentModeCount,
+                                                  pPresentModes)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not enumerate the surface present modes\n");
+        out = DK_ERROR;
+        goto present_modes_cleanup;
+    }
+
+    dkpPickSwapChainMinImageCount(capabilities,
+                                  &pSwapChainProperties->minImageCount);
+    dkpPickSwapChainImageExtent(capabilities, pDefaultImageExtent,
+                                &pSwapChainProperties->imageExtent);
+    dkpPickSwapChainImageUsage(capabilities,
+                               &pSwapChainProperties->imageUsage);
+    dkpPickSwapChainPreTransform(capabilities,
+                                 &pSwapChainProperties->preTransform);
+    dkpPickSwapChainFormat(formatCount, pFormats,
+                           &pSwapChainProperties->format);
+    dkpPickSwapChainPresentMode(presentModeCount, pPresentModes,
+                                &pSwapChainProperties->presentMode);
+
+present_modes_cleanup:
+    DK_FREE(pAllocator, pPresentModes);
+
+formats_cleanup:
+    DK_FREE(pAllocator, pFormats);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpCheckSwapChainProperties(const DkpSwapChainProperties *pSwapChainProperties,
+                            DkpLogging logging,
+                            DkBool32 *pValid)
+{
+    DK_ASSERT(pSwapChainProperties != NULL);
+
+    *pValid = DK_FALSE;
+
+    if (pSwapChainProperties->imageUsage == (VkImageUsageFlags) -1) {
+        if (logging == DKP_LOGGING_ENABLED)
+            fprintf(stderr, "one or more image usage flags are not "
+                            "supported\n");
+        return;
+    }
+
+    if (pSwapChainProperties->presentMode == (VkPresentModeKHR) -1) {
+        if (logging == DKP_LOGGING_ENABLED)
+            fprintf(stderr, "could not find a suitable present mode\n");
+
+        return;
+    }
+
+    *pValid = DK_TRUE;
+}
+
+
+static DkResult
+dkpCheckSwapChainSupport(VkPhysicalDevice physicalDevice,
+                         VkSurfaceKHR surface,
+                         const DkAllocator *pAllocator,
+                         DkBool32 *pSupported)
+{
+    VkExtent2D defaultImageExtent;
+    DkpSwapChainProperties swapChainProperties;
+
+    *pSupported = DK_FALSE;
+
+    if (surface == VK_NULL_HANDLE)
+        return DK_SUCCESS;
+
+    /*
+       Use dummy default image extent values here as we're only interested in
+       checking swap chain support rather than actually creating a valid swap
+       chain.
+    */
+    defaultImageExtent.width = 0;
+    defaultImageExtent.height = 0;
+    if (dkpPickSwapChainProperties(physicalDevice, surface, &defaultImageExtent,
+                                   pAllocator, &swapChainProperties)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
+
+    dkpCheckSwapChainProperties(&swapChainProperties, DKP_LOGGING_DISABLED,
+                                pSupported);
+    return DK_SUCCESS;
+}
+
+
 static DkResult
 dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
                          VkSurfaceKHR surface,
@@ -715,6 +1032,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
 {
     VkPhysicalDeviceProperties properties;
     DkBool32 extensionsSupported;
+    DkBool32 swapChainSupported;
 
     DK_ASSERT(physicalDevice != NULL);
     DK_ASSERT(pAllocator != NULL);
@@ -751,6 +1069,16 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDevice,
     {
         return DK_SUCCESS;
     }
+
+    if (dkpCheckSwapChainSupport(physicalDevice, surface, pAllocator,
+                                 &swapChainSupported)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
+
+    if (surface != VK_NULL_HANDLE && !swapChainSupported)
+        return DK_SUCCESS;
 
     *pSuitable = DK_TRUE;
     return DK_SUCCESS;
@@ -1064,12 +1392,130 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 }
 
 
+static DkResult
+dkpCreateSwapChain(const DkpDevice *pDevice,
+                   VkSurfaceKHR surface,
+                   const VkExtent2D *pDefaultImageExtent,
+                   VkSwapchainKHR oldSwapChain,
+                   const VkAllocationCallbacks *pBackEndAllocator,
+                   const DkAllocator *pAllocator,
+                   VkSwapchainKHR *pSwapChain)
+{
+    DkResult out;
+    DkpSwapChainProperties swapChainProperties;
+    DkBool32 valid;
+    VkSharingMode imageSharingMode;
+    uint32_t queueFamilyIndexCount;
+    uint32_t *pQueueFamilyIndices;
+    VkSwapchainCreateInfoKHR createInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pSwapChain != NULL);
+
+    out = DK_SUCCESS;
+    *pSwapChain = VK_NULL_HANDLE;
+
+    if (surface == VK_NULL_HANDLE)
+        goto exit;
+
+    if (dkpPickSwapChainProperties(pDevice->physical, surface,
+                                   pDefaultImageExtent, pAllocator,
+                                   &swapChainProperties)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    dkpCheckSwapChainProperties(&swapChainProperties, DKP_LOGGING_ENABLED,
+                                &valid);
+    if (!valid) {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    if (pDevice->queueFamilyIndices.graphics
+        != pDevice->queueFamilyIndices.present)
+    {
+        imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        queueFamilyIndexCount = 2;
+        pQueueFamilyIndices = (uint32_t *)
+            DK_ALLOCATE(pAllocator, queueFamilyIndexCount * sizeof (uint32_t));
+        if (pQueueFamilyIndices == NULL) {
+            out = DK_ERROR_ALLOCATION;
+            goto exit;
+        }
+
+        pQueueFamilyIndices[0] = pDevice->queueFamilyIndices.graphics;
+        pQueueFamilyIndices[1] = pDevice->queueFamilyIndices.present;
+    } else {
+        imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        queueFamilyIndexCount = 0;
+        pQueueFamilyIndices = NULL;
+    }
+
+    memset(&createInfo, 0, sizeof(VkSwapchainCreateInfoKHR));
+    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.surface = surface;
+    createInfo.minImageCount = swapChainProperties.minImageCount;
+    createInfo.imageFormat = swapChainProperties.format.format;
+    createInfo.imageColorSpace = swapChainProperties.format.colorSpace;
+    createInfo.imageExtent = swapChainProperties.imageExtent;
+    createInfo.imageArrayLayers = 1;
+    createInfo.imageUsage = swapChainProperties.imageUsage;
+    createInfo.imageSharingMode = imageSharingMode;
+    createInfo.queueFamilyIndexCount = queueFamilyIndexCount;
+    createInfo.pQueueFamilyIndices = pQueueFamilyIndices;
+    createInfo.preTransform = swapChainProperties.preTransform;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = swapChainProperties.presentMode;
+    createInfo.clipped = VK_TRUE;
+    createInfo.oldSwapchain = oldSwapChain;
+
+    if (vkCreateSwapchainKHR(pDevice->logical, &createInfo, pBackEndAllocator,
+                             pSwapChain)
+        != VK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto queue_family_indices_cleanup;
+    }
+
+    if (oldSwapChain != VK_NULL_HANDLE) {
+        vkDestroySwapchainKHR(pDevice->logical, oldSwapChain,
+                              pBackEndAllocator);
+    }
+
+queue_family_indices_cleanup:
+    if (pQueueFamilyIndices != NULL)
+        DK_FREE(pAllocator, pQueueFamilyIndices);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroySwapChain(const DkpDevice *pDevice,
+                    VkSwapchainKHR swapChain,
+                    const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+
+    if (swapChain != VK_NULL_HANDLE)
+        vkDestroySwapchainKHR(pDevice->logical, swapChain, pBackEndAllocator);
+}
+
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
+    VkExtent2D defaultImageExtent;
 
     DK_ASSERT(pCreateInfo != NULL);
     DK_ASSERT(ppRenderer != NULL);
@@ -1152,7 +1598,26 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_cleanup;
     }
 
+    defaultImageExtent.width = pCreateInfo->surfaceWidth;
+    defaultImageExtent.height = pCreateInfo->surfaceHeight;
+    if (dkpCreateSwapChain(&(*ppRenderer)->device,
+                           (*ppRenderer)->surface,
+                           &defaultImageExtent,
+                           VK_NULL_HANDLE,
+                           (*ppRenderer)->pBackEndAllocator,
+                           (*ppRenderer)->pAllocator,
+                           &(*ppRenderer)->swapChain)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto semaphores_cleanup;
+    }
+
     goto exit;
+
+semaphores_cleanup:
+    dkpDestroySemaphores(&(*ppRenderer)->device, &(*ppRenderer)->semaphores,
+                         (*ppRenderer)->pBackEndAllocator);
 
 device_cleanup:
     dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
@@ -1190,6 +1655,8 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     if (pRenderer == NULL)
         return;
 
+    dkpDestroySwapChain(&pRenderer->device, pRenderer->swapChain,
+                        pRenderer->pBackEndAllocator);
     dkpDestroySemaphores(&pRenderer->device, &pRenderer->semaphores,
                          pRenderer->pBackEndAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
