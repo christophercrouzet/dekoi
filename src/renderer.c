@@ -840,8 +840,8 @@ exit:
 static DkResult
 dkpCreateDevice(VkInstance instance,
                 VkSurfaceKHR surface,
-                const DkAllocator *pAllocator,
                 const VkAllocationCallbacks *pBackEndAllocator,
+                const DkAllocator *pAllocator,
                 DkpDevice *pDevice)
 {
     DkResult out;
@@ -1126,8 +1126,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     if (dkpCreateDevice((*ppRenderer)->instance,
                         (*ppRenderer)->surface,
-                        (*ppRenderer)->pAllocator,
                         (*ppRenderer)->pBackEndAllocator,
+                        (*ppRenderer)->pAllocator,
                         &(*ppRenderer)->device)
         != DK_SUCCESS)
     {
