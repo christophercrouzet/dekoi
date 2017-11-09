@@ -1618,16 +1618,16 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
             goto queue_family_indices_cleanup;
     }
 
-    if (oldSwapChain != VK_NULL_HANDLE) {
-        vkDestroySwapchainKHR(pDevice->logical, oldSwapChain,
-                              pBackEndAllocator);
-    }
-
 queue_family_indices_cleanup:
     if (pQueueFamilyIndices != NULL)
         DK_FREE(pAllocator, pQueueFamilyIndices);
 
 exit:
+    if (oldSwapChain != VK_NULL_HANDLE) {
+        vkDestroySwapchainKHR(pDevice->logical, oldSwapChain,
+                              pBackEndAllocator);
+    }
+
     return out;
 }
 
