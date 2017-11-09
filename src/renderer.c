@@ -447,12 +447,22 @@ dkpCreateInstance(const char *pApplicationName,
     switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
         case VK_SUCCESS:
             break;
+        case VK_ERROR_INITIALIZATION_FAILED:
+            fprintf(stderr, "failed to initialize the instance\n");
+            out = DK_ERROR;
+            goto extension_names_cleanup;
         case VK_ERROR_LAYER_NOT_PRESENT:
-            fprintf(stderr, "could not find the requested layers\n");
+            fprintf(stderr, "some requested instance layers are not "
+                            "supported\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
-            fprintf(stderr, "could not find the requested extensions\n");
+            fprintf(stderr, "some requested instance extensions are not "
+                            "supported\n");
+            out = DK_ERROR;
+            goto extension_names_cleanup;
+        case VK_ERROR_INCOMPATIBLE_DRIVER:
+            fprintf(stderr, "the driver is incompatible\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         default:
@@ -1356,13 +1366,33 @@ dkpCreateDevice(VkInstance instance,
     createInfo.ppEnabledExtensionNames = ppExtensionNames;
     createInfo.pEnabledFeatures = NULL;
 
-    if (vkCreateDevice(pDevice->physical, &createInfo, pBackEndAllocator,
-                       &pDevice->logical)
-        != VK_SUCCESS)
+    switch (vkCreateDevice(pDevice->physical, &createInfo, pBackEndAllocator,
+                           &pDevice->logical))
     {
-        fprintf(stderr, "failed to create the device\n");
-        out = DK_ERROR;
-        goto queue_infos_cleanup;
+        case VK_SUCCESS:
+            break;
+        case VK_ERROR_EXTENSION_NOT_PRESENT:
+            fprintf(stderr, "some requested device extensions are not "
+                            "supported\n");
+            out = DK_ERROR;
+            goto queue_infos_cleanup;
+        case VK_ERROR_FEATURE_NOT_PRESENT:
+            fprintf(stderr, "some requested device features are not "
+                            "supported\n");
+            out = DK_ERROR;
+            goto queue_infos_cleanup;
+        case VK_ERROR_TOO_MANY_OBJECTS:
+            fprintf(stderr, "too many devices have already been created\n");
+            out = DK_ERROR;
+            goto queue_infos_cleanup;
+        case VK_ERROR_DEVICE_LOST:
+            fprintf(stderr, "the device has been lost\n");
+            out = DK_ERROR;
+            goto queue_infos_cleanup;
+        default:
+            fprintf(stderr, "failed to create the device\n");
+            out = DK_ERROR;
+            goto queue_infos_cleanup;
     }
 
 queue_infos_cleanup:
@@ -1565,12 +1595,27 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = oldSwapChain;
 
-    if (vkCreateSwapchainKHR(pDevice->logical, &createInfo, pBackEndAllocator,
-                             pSwapChain)
-        != VK_SUCCESS)
+    switch (vkCreateSwapchainKHR(pDevice->logical, &createInfo,
+                                 pBackEndAllocator, pSwapChain))
     {
-        out = DK_ERROR;
-        goto queue_family_indices_cleanup;
+        case VK_SUCCESS:
+            break;
+        case VK_ERROR_DEVICE_LOST:
+            fprintf(stderr, "the swap chain's device has been lost\n");
+            out = DK_ERROR;
+            goto queue_family_indices_cleanup;
+        case VK_ERROR_SURFACE_LOST_KHR:
+            fprintf(stderr, "the swap chain's surface has been lost\n");
+            out = DK_ERROR;
+            goto queue_family_indices_cleanup;
+        case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
+            fprintf(stderr, "the swap chain's surface is already in use\n");
+            out = DK_ERROR;
+            goto queue_family_indices_cleanup;
+        default:
+            fprintf(stderr, "failed to create the swap chain\n");
+            out = DK_ERROR;
+            goto queue_family_indices_cleanup;
     }
 
     if (oldSwapChain != VK_NULL_HANDLE) {
