@@ -276,6 +276,81 @@ dkpDestroyInstanceExtensionNames(
 
 
 static DkResult
+dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
+                                  const char * const * ppRequiredExtensionNames,
+                                  const DkAllocator *pAllocator,
+                                  DkBool32 *pSupported)
+{
+    DkResult out;
+    uint32_t i;
+    uint32_t j;
+    uint32_t extensionCount;
+    VkExtensionProperties *pExtensions;
+
+    DK_ASSERT(ppRequiredExtensionNames != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pSupported != NULL);
+
+    out = DK_SUCCESS;
+
+    if (vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the number of instance extension "
+                        "properties available\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    pExtensions = (VkExtensionProperties *)
+        DK_ALLOCATE(pAllocator, extensionCount * sizeof(VkExtensionProperties));
+    if (pExtensions == NULL) {
+        fprintf(stderr, "failed to allocate the instance extension "
+                        "properties\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    if (vkEnumerateInstanceExtensionProperties(NULL, &extensionCount,
+                                               pExtensions)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not enumerate the instance extension properties "
+                        "available\n");
+        out = DK_ERROR;
+        goto extensions_cleanup;
+    }
+
+    *pSupported = DK_FALSE;
+    for (i = 0; i < requiredExtensionCount; ++i) {
+        DkBool32 found;
+
+        found = DK_FALSE;
+        for (j = 0; j < extensionCount; ++j) {
+            if (strcmp(pExtensions[j].extensionName,
+                       ppRequiredExtensionNames[i])
+                == 0)
+            {
+                found = DK_TRUE;
+                break;
+            }
+        }
+
+        if (!found)
+            goto extensions_cleanup;
+    }
+
+    *pSupported = DK_TRUE;
+
+extensions_cleanup:
+    DK_FREE(pAllocator, pExtensions);
+
+exit:
+    return out;
+}
+
+
+static DkResult
 dkpCreateInstance(const char *pApplicationName,
                   DkUint32 applicationMajorVersion,
                   DkUint32 applicationMinorVersion,
@@ -291,6 +366,7 @@ dkpCreateInstance(const char *pApplicationName,
     DkBool32 layersSupported;
     uint32_t extensionCount;
     const char **ppExtensionNames;
+    DkBool32 extensionsSupported;
     VkApplicationInfo applicationInfo;
     VkInstanceCreateInfo createInfo;
 
@@ -327,6 +403,20 @@ dkpCreateInstance(const char *pApplicationName,
     {
         out = DK_ERROR;
         goto layer_names_cleanup;
+    }
+
+    if (dkpCheckInstanceExtensionsSupport(extensionCount, ppExtensionNames,
+                                          pAllocator, &extensionsSupported)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto extension_names_cleanup;
+    }
+
+    if (!extensionsSupported) {
+        fprintf(stderr, "one or more instance extensions are not supported\n");
+        out = DK_ERROR;
+        goto extension_names_cleanup;
     }
 
     memset(&applicationInfo, 0, sizeof(VkApplicationInfo));
