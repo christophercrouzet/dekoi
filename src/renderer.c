@@ -446,7 +446,7 @@ dkpCreateInstance(const char *pApplicationName,
 
     switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
         case VK_SUCCESS:
-            goto extension_names_cleanup;
+            break;
         case VK_ERROR_LAYER_NOT_PRESENT:
             fprintf(stderr, "could not find the requested layers\n");
             out = DK_ERROR;
