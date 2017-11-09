@@ -827,11 +827,16 @@ exit:
 
 static void
 dkpPickSwapChainMinImageCount(VkSurfaceCapabilitiesKHR capabilities,
+                              VkPresentModeKHR presentMode,
                               uint32_t *pMinImageCount)
 {
     DK_ASSERT(pMinImageCount != NULL);
 
-    *pMinImageCount = capabilities.minImageCount + 1;
+    *pMinImageCount = capabilities.minImageCount;
+
+    if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+        ++(*pMinImageCount);
+
     if (capabilities.maxImageCount > 0
         && *pMinImageCount > capabilities.maxImageCount)
     {
@@ -1036,7 +1041,12 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDevice,
         goto present_modes_cleanup;
     }
 
+    dkpPickSwapChainFormat(formatCount, pFormats,
+                           &pSwapChainProperties->format);
+    dkpPickSwapChainPresentMode(presentModeCount, pPresentModes,
+                                &pSwapChainProperties->presentMode);
     dkpPickSwapChainMinImageCount(capabilities,
+                                  pSwapChainProperties->presentMode,
                                   &pSwapChainProperties->minImageCount);
     dkpPickSwapChainImageExtent(capabilities, pDefaultImageExtent,
                                 &pSwapChainProperties->imageExtent);
@@ -1044,10 +1054,6 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDevice,
                                &pSwapChainProperties->imageUsage);
     dkpPickSwapChainPreTransform(capabilities,
                                  &pSwapChainProperties->preTransform);
-    dkpPickSwapChainFormat(formatCount, pFormats,
-                           &pSwapChainProperties->format);
-    dkpPickSwapChainPresentMode(presentModeCount, pPresentModes,
-                                &pSwapChainProperties->presentMode);
 
 present_modes_cleanup:
     DK_FREE(pAllocator, pPresentModes);
