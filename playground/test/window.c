@@ -20,6 +20,19 @@ typedef struct WindowManagerInterfaceContext {
 } WindowManagerInterfaceContext;
 
 
+void
+onFramebufferSizeChanged(GLFWwindow *pWindowHandle,
+                         int width,
+                         int height)
+{
+    Window *pWindow;
+
+    pWindow = (Window *) glfwGetWindowUserPointer(pWindowHandle);
+    dkResizeRendererSurface(pWindow->pRenderer,
+                            (DkUint32) width, (DkUint32) height);
+}
+
+
 DkResult
 createVulkanInstanceExtensionNames(void *pContext,
                                    DkUint32 *pExtensionCount,
@@ -98,7 +111,6 @@ createWindow(Application *pApplication,
     }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     (*ppWindow)->pHandle = glfwCreateWindow((int) pCreateInfo->width,
                                             (int) pCreateInfo->height,
@@ -138,6 +150,11 @@ createWindow(Application *pApplication,
         out = 1;
         goto glfw_window_cleanup;
     }
+
+    glfwSetWindowUserPointer((*ppWindow)->pHandle, *ppWindow);
+
+    glfwSetFramebufferSizeCallback((*ppWindow)->pHandle,
+                                   onFramebufferSizeChanged);
 
     pApplication->pWindow = *ppWindow;
     goto exit;

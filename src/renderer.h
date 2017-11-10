@@ -36,5 +36,8 @@ DkResult dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           const DkAllocator *pAllocator,
                           DkRenderer **ppRenderer);
 void dkDestroyRenderer(DkRenderer *pRenderer);
+DkResult dkResizeRendererSurface(DkRenderer *pRenderer,
+                                 DkUint32 width,
+                                 DkUint32 height);
 
 #endif /* DEKOI_RENDERER_H */

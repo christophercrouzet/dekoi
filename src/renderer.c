@@ -1811,3 +1811,28 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     dkpDestroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
     DK_FREE(pRenderer->pAllocator, pRenderer);
 }
+
+
+DkResult
+dkResizeRendererSurface(DkRenderer *pRenderer,
+                        DkUint32 width,
+                        DkUint32 height)
+{
+    VkExtent2D desiredImageExtent;
+
+    desiredImageExtent.width = (uint32_t) width;
+    desiredImageExtent.height = (uint32_t) height;
+    if (dkpCreateSwapChain(&pRenderer->device,
+                           pRenderer->surface,
+                           &desiredImageExtent,
+                           pRenderer->swapChain,
+                           pRenderer->pBackEndAllocator,
+                           pRenderer->pAllocator,
+                           &pRenderer->swapChain)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
+
+    return DK_SUCCESS;
+}
