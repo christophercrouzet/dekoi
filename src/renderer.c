@@ -911,10 +911,10 @@ dkpPickSwapChainMinImageCount(VkSurfaceCapabilitiesKHR capabilities,
 
 static void
 dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
-                            const VkExtent2D *pDefaultImageExtent,
+                            const VkExtent2D *pDesiredImageExtent,
                             VkExtent2D *pImageExtent)
 {
-    DK_ASSERT(pDefaultImageExtent != NULL);
+    DK_ASSERT(pDesiredImageExtent != NULL);
     DK_ASSERT(pImageExtent != NULL);
 
     if (capabilities.currentExtent.width == UINT32_MAX
@@ -922,10 +922,10 @@ dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
     {
         pImageExtent->width = DK_MAX(capabilities.minImageExtent.width,
                                      DK_MIN(capabilities.maxImageExtent.width,
-                                            pDefaultImageExtent->width));
+                                            pDesiredImageExtent->width));
         pImageExtent->height = DK_MAX(capabilities.minImageExtent.height,
                                       DK_MIN(capabilities.maxImageExtent.height,
-                                             pDefaultImageExtent->height));
+                                             pDesiredImageExtent->height));
         return;
     }
 
@@ -962,7 +962,7 @@ dkpPickSwapChainPreTransform(VkSurfaceCapabilitiesKHR capabilities,
 static DkResult
 dkpPickSwapChainProperties(VkPhysicalDevice physicalDevice,
                            VkSurfaceKHR surface,
-                           const VkExtent2D *pDefaultImageExtent,
+                           const VkExtent2D *pDesiredImageExtent,
                            const DkAllocator *pAllocator,
                            DkpSwapChainProperties *pSwapChainProperties)
 {
@@ -1048,7 +1048,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDevice,
     dkpPickSwapChainMinImageCount(capabilities,
                                   pSwapChainProperties->presentMode,
                                   &pSwapChainProperties->minImageCount);
-    dkpPickSwapChainImageExtent(capabilities, pDefaultImageExtent,
+    dkpPickSwapChainImageExtent(capabilities, pDesiredImageExtent,
                                 &pSwapChainProperties->imageExtent);
     dkpPickSwapChainImageUsage(capabilities,
                                &pSwapChainProperties->imageUsage);
@@ -1099,7 +1099,7 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDevice,
                          const DkAllocator *pAllocator,
                          DkBool32 *pSupported)
 {
-    VkExtent2D defaultImageExtent;
+    VkExtent2D imageExtent;
     DkpSwapChainProperties swapChainProperties;
 
     *pSupported = DK_FALSE;
@@ -1108,13 +1108,12 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDevice,
         return DK_SUCCESS;
 
     /*
-       Use dummy default image extent values here as we're only interested in
-       checking swap chain support rather than actually creating a valid swap
-       chain.
+       Use dummy image extent values here as we're only interested in checking
+       swap chain support rather than actually creating a valid swap chain.
     */
-    defaultImageExtent.width = 0;
-    defaultImageExtent.height = 0;
-    if (dkpPickSwapChainProperties(physicalDevice, surface, &defaultImageExtent,
+    imageExtent.width = 0;
+    imageExtent.height = 0;
+    if (dkpPickSwapChainProperties(physicalDevice, surface, &imageExtent,
                                    pAllocator, &swapChainProperties)
         != DK_SUCCESS)
     {
@@ -1521,7 +1520,7 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 static DkResult
 dkpCreateSwapChain(const DkpDevice *pDevice,
                    VkSurfaceKHR surface,
-                   const VkExtent2D *pDefaultImageExtent,
+                   const VkExtent2D *pDesiredImageExtent,
                    VkSwapchainKHR oldSwapChain,
                    const VkAllocationCallbacks *pBackEndAllocator,
                    const DkAllocator *pAllocator,
@@ -1546,7 +1545,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         goto exit;
 
     if (dkpPickSwapChainProperties(pDevice->physical, surface,
-                                   pDefaultImageExtent, pAllocator,
+                                   pDesiredImageExtent, pAllocator,
                                    &swapChainProperties)
         != DK_SUCCESS)
     {
@@ -1656,7 +1655,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
-    VkExtent2D defaultImageExtent;
+    VkExtent2D desiredImageExtent;
 
     DK_ASSERT(pCreateInfo != NULL);
     DK_ASSERT(ppRenderer != NULL);
@@ -1739,11 +1738,11 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_cleanup;
     }
 
-    defaultImageExtent.width = pCreateInfo->surfaceWidth;
-    defaultImageExtent.height = pCreateInfo->surfaceHeight;
+    desiredImageExtent.width = (uint32_t) pCreateInfo->surfaceWidth;
+    desiredImageExtent.height = (uint32_t) pCreateInfo->surfaceHeight;
     if (dkpCreateSwapChain(&(*ppRenderer)->device,
                            (*ppRenderer)->surface,
-                           &defaultImageExtent,
+                           &desiredImageExtent,
                            VK_NULL_HANDLE,
                            (*ppRenderer)->pBackEndAllocator,
                            (*ppRenderer)->pAllocator,
