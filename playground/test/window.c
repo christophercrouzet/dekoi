@@ -16,7 +16,7 @@
 
 
 typedef struct WindowManagerInterfaceContext {
-    GLFWwindow *pWindow;
+    GLFWwindow *pWindowHandle;
 } WindowManagerInterfaceContext;
 
 
@@ -56,7 +56,7 @@ createVulkanSurface(void *pContext,
 {
     if (glfwCreateWindowSurface(
             instance,
-            ((WindowManagerInterfaceContext *) pContext)->pWindow,
+            ((WindowManagerInterfaceContext *) pContext)->pWindowHandle,
             pBackEndAllocator,
             pSurface)
         != VK_SUCCESS)
@@ -108,7 +108,7 @@ createWindow(Application *pApplication,
         goto glfw_cleanup;
     }
 
-    windowManagerInterfaceContext.pWindow = (*ppWindow)->pHandle;
+    windowManagerInterfaceContext.pWindowHandle = (*ppWindow)->pHandle;
 
     windowManagerInterface.pContext = (void *) &windowManagerInterfaceContext;
     windowManagerInterface.pfnCreateInstanceExtensionNames =
