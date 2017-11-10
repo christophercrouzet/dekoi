@@ -27,6 +27,8 @@ onFramebufferSizeChanged(GLFWwindow *pWindowHandle,
 {
     Window *pWindow;
 
+    assert(pWindowHandle != NULL);
+
     pWindow = (Window *) glfwGetWindowUserPointer(pWindowHandle);
     dkResizeRendererSurface(pWindow->pRenderer,
                             (DkUint32) width, (DkUint32) height);

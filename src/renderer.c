@@ -1820,6 +1820,8 @@ dkResizeRendererSurface(DkRenderer *pRenderer,
 {
     VkExtent2D desiredImageExtent;
 
+    DK_ASSERT(pRenderer != NULL);
+
     desiredImageExtent.width = (uint32_t) width;
     desiredImageExtent.height = (uint32_t) height;
     if (dkpCreateSwapChain(&pRenderer->device,
