@@ -86,7 +86,8 @@ createWindow(Application *pApplication,
     *ppWindow = (Window *) malloc(sizeof(Window));
     if (*ppWindow == NULL) {
         fprintf(stderr, "failed to allocate the window\n");
-        return 1;
+        out = 1;
+        goto exit;
     }
 
     out = 0;
@@ -139,7 +140,7 @@ createWindow(Application *pApplication,
     }
 
     pApplication->pWindow = *ppWindow;
-    return out;
+    goto exit;
 
 glfw_window_cleanup:
     glfwDestroyWindow((*ppWindow)->pHandle);
@@ -149,6 +150,8 @@ glfw_cleanup:
 
 window_cleanup:
     free(*ppWindow);
+
+exit:
     return out;
 }
 
