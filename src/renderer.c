@@ -1651,6 +1651,25 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
 
 
 DkResult
+dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
+{
+    if (dkpCreateSwapChain(&pRenderer->device,
+                           pRenderer->surface,
+                           &pRenderer->surfaceExtent,
+                           pRenderer->swapChain,
+                           pRenderer->pBackEndAllocator,
+                           pRenderer->pAllocator,
+                           &pRenderer->swapChain)
+        != DK_SUCCESS)
+    {
+        return DK_ERROR;
+    }
+
+    return DK_SUCCESS;
+}
+
+
+DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
                  DkRenderer **ppRenderer)
@@ -1822,17 +1841,5 @@ dkResizeRendererSurface(DkRenderer *pRenderer,
 
     pRenderer->surfaceExtent.width = (uint32_t) width;
     pRenderer->surfaceExtent.height = (uint32_t) height;
-    if (dkpCreateSwapChain(&pRenderer->device,
-                           pRenderer->surface,
-                           &pRenderer->surfaceExtent,
-                           pRenderer->swapChain,
-                           pRenderer->pBackEndAllocator,
-                           pRenderer->pAllocator,
-                           &pRenderer->swapChain)
-        != DK_SUCCESS)
-    {
-        return DK_ERROR;
-    }
-
-    return DK_SUCCESS;
+    return dkpRecreateRendererSwapChain(pRenderer);
 }
