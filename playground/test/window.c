@@ -180,7 +180,7 @@ destroyWindow(Window *pWindow)
 {
     assert(pWindow != NULL);
 
-    dkDestroyRenderer(pWindow->pRenderer);
+    dkDestroyRenderer(pWindow->pRenderer, NULL);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
     free(pWindow);

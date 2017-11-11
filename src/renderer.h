@@ -35,7 +35,8 @@ struct DkRendererCreateInfo {
 DkResult dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           const DkAllocator *pAllocator,
                           DkRenderer **ppRenderer);
-void dkDestroyRenderer(DkRenderer *pRenderer);
+void dkDestroyRenderer(DkRenderer *pRenderer,
+                       const DkAllocator *pAllocator);
 DkResult dkResizeRendererSurface(DkRenderer *pRenderer,
                                  DkUint32 width,
                                  DkUint32 height);

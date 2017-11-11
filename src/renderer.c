@@ -494,7 +494,10 @@ static void
 dkpDestroyInstance(VkInstance instance,
                    const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(instance != NULL);
+    if (instance == NULL) {
+        DK_UNUSED(pBackEndAllocator);
+        return;
+    }
 
     vkDestroyInstance(instance, pBackEndAllocator);
 }
@@ -569,8 +572,14 @@ dkpDestroyDebugReportCallback(VkInstance instance,
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
 
+    if (callback == VK_NULL_HANDLE) {
+        DK_UNUSED(instance);
+        DK_UNUSED(pBackEndAllocator);
+        DK_UNUSED(function);
+        return;
+    }
+
     DK_ASSERT(instance != NULL);
-    DK_ASSERT(callback != VK_NULL_HANDLE);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)
         vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
@@ -625,6 +634,8 @@ dkpDestroySurface(VkInstance instance,
         DK_UNUSED(pBackEndAllocator);
         return;
     }
+
+    DK_ASSERT(instance != NULL);
 
     vkDestroySurfaceKHR(instance, surface, pBackEndAllocator);
 }
@@ -1425,7 +1436,10 @@ static void
 dkpDestroyDevice(DkpDevice *pDevice,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
+    if (pDevice == NULL || pDevice->logical == NULL) {
+        DK_UNUSED(pBackEndAllocator);
+        return;
+    }
 
     vkDestroyDevice(pDevice->logical, pBackEndAllocator);
 }
@@ -1513,14 +1527,22 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
                      DkpSemaphores *pSemaphores,
                      const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pSemaphores->imageAcquired != VK_NULL_HANDLE);
-    DK_ASSERT(pSemaphores->presentCompleted != VK_NULL_HANDLE);
+    if (pSemaphores == NULL) {
+        DK_UNUSED(pDevice);
+        DK_UNUSED(pBackEndAllocator);
+        return;
+    }
 
-    vkDestroySemaphore(pDevice->logical, pSemaphores->imageAcquired,
-                       pBackEndAllocator);
-    vkDestroySemaphore(pDevice->logical, pSemaphores->presentCompleted,
-                       pBackEndAllocator);
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logical != NULL);
+
+    if (pSemaphores->imageAcquired != VK_NULL_HANDLE)
+        vkDestroySemaphore(pDevice->logical, pSemaphores->imageAcquired,
+                           pBackEndAllocator);
+
+    if (pSemaphores->presentCompleted != VK_NULL_HANDLE)
+        vkDestroySemaphore(pDevice->logical, pSemaphores->presentCompleted,
+                           pBackEndAllocator);
 }
 
 
@@ -1670,8 +1692,15 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocator *pAllocator)
 {
+    if (pSwapChain == NULL) {
+        DK_UNUSED(pDevice);
+        DK_UNUSED(pBackEndAllocator);
+        DK_UNUSED(pAllocator);
+        return;
+    }
+
     DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pDevice->logical != NULL);
     DK_ASSERT(pAllocator != NULL);
 
     if (pSwapChain->pImages != NULL)
@@ -1842,13 +1871,17 @@ exit:
 
 
 void
-dkDestroyRenderer(DkRenderer *pRenderer)
+dkDestroyRenderer(DkRenderer *pRenderer,
+                  const DkAllocator *pAllocator)
 {
     if (pRenderer == NULL)
         return;
 
+    if (pAllocator == NULL)
+        dkpGetDefaultAllocator(&pAllocator);
+
     dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
-                        pRenderer->pBackEndAllocator, pRenderer->pAllocator);
+                        pRenderer->pBackEndAllocator, pAllocator);
     dkpDestroySemaphores(&pRenderer->device, &pRenderer->semaphores,
                          pRenderer->pBackEndAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
@@ -1861,7 +1894,7 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                                   pRenderer->pBackEndAllocator);
 #endif /* DK_ENABLE_DEBUG_REPORT */
     dkpDestroyInstance(pRenderer->instance, pRenderer->pBackEndAllocator);
-    DK_FREE(pRenderer->pAllocator, pRenderer);
+    DK_FREE(pAllocator, pRenderer);
 }
 
 
