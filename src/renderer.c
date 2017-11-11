@@ -55,6 +55,13 @@ typedef struct DkpSemaphores {
 } DkpSemaphores;
 
 
+typedef struct DkpSwapChain {
+    VkSwapchainKHR handle;
+    uint32_t imageCount;
+    VkImage *pImages;
+} DkpSwapChain;
+
+
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
@@ -67,7 +74,7 @@ struct DkRenderer {
     DkpDevice device;
     DkpQueues queues;
     DkpSemaphores semaphores;
-    VkSwapchainKHR swapChain;
+    DkpSwapChain swapChain;
 };
 
 
@@ -1521,10 +1528,10 @@ static DkResult
 dkpCreateSwapChain(const DkpDevice *pDevice,
                    VkSurfaceKHR surface,
                    const VkExtent2D *pDesiredImageExtent,
-                   VkSwapchainKHR oldSwapChain,
+                   VkSwapchainKHR oldSwapChainHandle,
                    const VkAllocationCallbacks *pBackEndAllocator,
                    const DkAllocator *pAllocator,
-                   VkSwapchainKHR *pSwapChain)
+                   DkpSwapChain *pSwapChain)
 {
     DkResult out;
     DkpSwapChainProperties swapChainProperties;
@@ -1539,7 +1546,9 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     DK_ASSERT(pSwapChain != NULL);
 
     out = DK_SUCCESS;
-    *pSwapChain = VK_NULL_HANDLE;
+    pSwapChain->handle = VK_NULL_HANDLE;
+    pSwapChain->imageCount = 0;
+    pSwapChain->pImages = NULL;
 
     if (surface == VK_NULL_HANDLE)
         goto exit;
@@ -1598,10 +1607,10 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = swapChainProperties.presentMode;
     createInfo.clipped = VK_TRUE;
-    createInfo.oldSwapchain = oldSwapChain;
+    createInfo.oldSwapchain = oldSwapChainHandle;
 
     switch (vkCreateSwapchainKHR(pDevice->logical, &createInfo,
-                                 pBackEndAllocator, pSwapChain))
+                                 pBackEndAllocator, &pSwapChain->handle))
     {
         case VK_SUCCESS:
             break;
@@ -1623,13 +1632,31 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
             goto queue_family_indices_cleanup;
     }
 
+    if (vkGetSwapchainImagesKHR(pDevice->logical, pSwapChain->handle,
+                                &pSwapChain->imageCount, NULL)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the number of swap chain images "
+                        "available\n");
+        out = DK_ERROR;
+        goto queue_family_indices_cleanup;
+    }
+
+    pSwapChain->pImages = (VkImage *)
+        DK_ALLOCATE(pAllocator, pSwapChain->imageCount * sizeof(VkImage));
+    if (pSwapChain->pImages == NULL) {
+        fprintf(stderr, "failed to allocate the swap chain images\n");
+        out = DK_ERROR_ALLOCATION;
+        goto queue_family_indices_cleanup;
+    }
+
 queue_family_indices_cleanup:
     if (pQueueFamilyIndices != NULL)
         DK_FREE(pAllocator, pQueueFamilyIndices);
 
 exit:
-    if (oldSwapChain != VK_NULL_HANDLE) {
-        vkDestroySwapchainKHR(pDevice->logical, oldSwapChain,
+    if (oldSwapChainHandle != VK_NULL_HANDLE) {
+        vkDestroySwapchainKHR(pDevice->logical, oldSwapChainHandle,
                               pBackEndAllocator);
     }
 
@@ -1639,13 +1666,20 @@ exit:
 
 static void
 dkpDestroySwapChain(const DkpDevice *pDevice,
-                    VkSwapchainKHR swapChain,
-                    const VkAllocationCallbacks *pBackEndAllocator)
+                    DkpSwapChain *pSwapChain,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    const DkAllocator *pAllocator)
 {
     DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pAllocator != NULL);
 
-    if (swapChain != VK_NULL_HANDLE)
-        vkDestroySwapchainKHR(pDevice->logical, swapChain, pBackEndAllocator);
+    if (pSwapChain->pImages != NULL)
+        DK_FREE(pAllocator, pSwapChain->pImages);
+
+    if (pSwapChain->handle != VK_NULL_HANDLE)
+        vkDestroySwapchainKHR(pDevice->logical, pSwapChain->handle,
+                              pBackEndAllocator);
 }
 
 
@@ -1655,7 +1689,7 @@ dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
     if (dkpCreateSwapChain(&pRenderer->device,
                            pRenderer->surface,
                            &pRenderer->surfaceExtent,
-                           pRenderer->swapChain,
+                           pRenderer->swapChain.handle,
                            pRenderer->pBackEndAllocator,
                            pRenderer->pAllocator,
                            &pRenderer->swapChain)
@@ -1813,8 +1847,8 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     if (pRenderer == NULL)
         return;
 
-    dkpDestroySwapChain(&pRenderer->device, pRenderer->swapChain,
-                        pRenderer->pBackEndAllocator);
+    dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
+                        pRenderer->pBackEndAllocator, pRenderer->pAllocator);
     dkpDestroySemaphores(&pRenderer->device, &pRenderer->semaphores,
                          pRenderer->pBackEndAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
