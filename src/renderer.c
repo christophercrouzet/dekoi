@@ -67,7 +67,6 @@ struct DkRenderer {
     DkpDevice device;
     DkpQueues queues;
     DkpSemaphores semaphores;
-    DkpSwapChainProperties swapChainProperties;
     VkSwapchainKHR swapChain;
 };
 
