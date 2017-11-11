@@ -59,6 +59,7 @@ struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
     VkInstance instance;
+    VkExtent2D surfaceExtent;
     VkSurfaceKHR surface;
 #ifdef DK_ENABLE_DEBUG_REPORT
     VkDebugReportCallbackEXT debugReportCallback;
@@ -1655,7 +1656,6 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
-    VkExtent2D desiredImageExtent;
 
     DK_ASSERT(pCreateInfo != NULL);
     DK_ASSERT(ppRenderer != NULL);
@@ -1674,6 +1674,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
+    (*ppRenderer)->surfaceExtent.width = (uint32_t) pCreateInfo->surfaceWidth;
+    (*ppRenderer)->surfaceExtent.height = (uint32_t) pCreateInfo->surfaceHeight;
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
                           pCreateInfo->applicationMajorVersion,
@@ -1738,11 +1740,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_cleanup;
     }
 
-    desiredImageExtent.width = (uint32_t) pCreateInfo->surfaceWidth;
-    desiredImageExtent.height = (uint32_t) pCreateInfo->surfaceHeight;
     if (dkpCreateSwapChain(&(*ppRenderer)->device,
                            (*ppRenderer)->surface,
-                           &desiredImageExtent,
+                           &(*ppRenderer)->surfaceExtent,
                            VK_NULL_HANDLE,
                            (*ppRenderer)->pBackEndAllocator,
                            (*ppRenderer)->pAllocator,
@@ -1818,15 +1818,13 @@ dkResizeRendererSurface(DkRenderer *pRenderer,
                         DkUint32 width,
                         DkUint32 height)
 {
-    VkExtent2D desiredImageExtent;
-
     DK_ASSERT(pRenderer != NULL);
 
-    desiredImageExtent.width = (uint32_t) width;
-    desiredImageExtent.height = (uint32_t) height;
+    pRenderer->surfaceExtent.width = (uint32_t) width;
+    pRenderer->surfaceExtent.height = (uint32_t) height;
     if (dkpCreateSwapChain(&pRenderer->device,
                            pRenderer->surface,
-                           &desiredImageExtent,
+                           &pRenderer->surfaceExtent,
                            pRenderer->swapChain,
                            pRenderer->pBackEndAllocator,
                            pRenderer->pAllocator,
