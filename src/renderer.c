@@ -448,10 +448,6 @@ dkpCreateInstance(const char *pApplicationName,
     switch (vkCreateInstance(&createInfo, pBackEndAllocator, pInstance)) {
         case VK_SUCCESS:
             break;
-        case VK_ERROR_INITIALIZATION_FAILED:
-            fprintf(stderr, "failed to initialize the instance\n");
-            out = DK_ERROR;
-            goto extension_names_cleanup;
         case VK_ERROR_LAYER_NOT_PRESENT:
             fprintf(stderr, "some requested instance layers are not "
                             "supported\n");
@@ -464,6 +460,10 @@ dkpCreateInstance(const char *pApplicationName,
             goto extension_names_cleanup;
         case VK_ERROR_INCOMPATIBLE_DRIVER:
             fprintf(stderr, "the driver is incompatible\n");
+            out = DK_ERROR;
+            goto extension_names_cleanup;
+        case VK_ERROR_INITIALIZATION_FAILED:
+            fprintf(stderr, "failed to initialize the instance\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         default:
@@ -1606,16 +1606,16 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     {
         case VK_SUCCESS:
             break;
+        case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
+            fprintf(stderr, "the swap chain's surface is already in use\n");
+            out = DK_ERROR;
+            goto queue_family_indices_cleanup;
         case VK_ERROR_DEVICE_LOST:
             fprintf(stderr, "the swap chain's device has been lost\n");
             out = DK_ERROR;
             goto queue_family_indices_cleanup;
         case VK_ERROR_SURFACE_LOST_KHR:
             fprintf(stderr, "the swap chain's surface has been lost\n");
-            out = DK_ERROR;
-            goto queue_family_indices_cleanup;
-        case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
-            fprintf(stderr, "the swap chain's surface is already in use\n");
             out = DK_ERROR;
             goto queue_family_indices_cleanup;
         default:
