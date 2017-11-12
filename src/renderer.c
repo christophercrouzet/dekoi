@@ -73,6 +73,7 @@ typedef struct DkpSwapChain {
     VkSwapchainKHR handle;
     uint32_t imageCount;
     VkImage *pImageHandles;
+    VkImageView *pImageViewHandles;
 } DkpSwapChain;
 
 
@@ -1634,6 +1635,105 @@ dkpDestroySwapChainImages(VkImage *pImageHandles,
 
 
 static DkResult
+dkpCreateSwapChainImageViewHandles(
+    const DkpDevice *pDevice,
+    uint32_t imageCount,
+    const VkImage *pImageHandles,
+    VkFormat format,
+    const VkAllocationCallbacks *pBackEndAllocator,
+    const DkAllocator *pAllocator,
+    VkImageView **ppImageViewHandles)
+{
+    DkResult out;
+    uint32_t i;
+    VkImageViewCreateInfo createInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pImageHandles != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(ppImageViewHandles != NULL);
+
+    out = DK_SUCCESS;
+
+    *ppImageViewHandles = (VkImageView *)
+        DK_ALLOCATE(pAllocator, imageCount * sizeof(*ppImageViewHandles));
+    if (*ppImageViewHandles == NULL) {
+        fprintf(stderr, "failed to allocate the swap chain image views\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    for (i = 0; i < imageCount; ++i)
+        (*ppImageViewHandles)[i] = VK_NULL_HANDLE;
+
+    for (i = 0; i < imageCount; ++i) {
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext = NULL;
+        createInfo.flags = 0;
+        createInfo.image = pImageHandles[i];
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = format;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(pDevice->logicalHandle, &createInfo,
+                              pBackEndAllocator, &(*ppImageViewHandles)[i])
+            != VK_SUCCESS)
+        {
+            fprintf(stderr, "failed to create an image view\n");
+            out = DK_ERROR;
+            goto image_views_cleanup;
+        }
+    }
+
+    goto exit;
+
+image_views_cleanup:
+    for (i = 0; i < imageCount; ++i) {
+        if ((*ppImageViewHandles)[i] != VK_NULL_HANDLE)
+            vkDestroyImageView(pDevice->logicalHandle, (*ppImageViewHandles)[i],
+                               pBackEndAllocator);
+    }
+
+    DK_FREE(pAllocator, *ppImageViewHandles);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroySwapChainImageViewHandles(
+    const DkpDevice *pDevice,
+    uint32_t imageCount,
+    VkImageView *pImageViewHandles,
+    const VkAllocationCallbacks *pBackEndAllocator,
+    const DkAllocator *pAllocator)
+{
+    uint32_t i;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pImageViewHandles != NULL);
+    DK_ASSERT(pAllocator != NULL);
+
+    for (i = 0; i < imageCount; ++i) {
+        if (pImageViewHandles[i] != VK_NULL_HANDLE)
+            vkDestroyImageView(pDevice->logicalHandle, pImageViewHandles[i],
+                               pBackEndAllocator);
+    }
+
+    DK_FREE(pAllocator, pImageViewHandles);
+}
+
+
+static DkResult
 dkpCreateSwapChain(const DkpDevice *pDevice,
                    VkSurfaceKHR surfaceHandle,
                    const VkExtent2D *pDesiredImageExtent,
@@ -1658,6 +1758,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     pSwapChain->handle = VK_NULL_HANDLE;
     pSwapChain->imageCount = 0;
     pSwapChain->pImageHandles = NULL;
+    pSwapChain->pImageViewHandles = NULL;
 
     if (surfaceHandle == VK_NULL_HANDLE)
         goto exit;
@@ -1752,6 +1853,24 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         goto queue_family_indices_cleanup;
     }
 
+    if (dkpCreateSwapChainImageViewHandles(pDevice, pSwapChain->imageCount,
+                                           pSwapChain->pImageHandles,
+                                           swapChainProperties.format.format,
+                                           pBackEndAllocator, pAllocator,
+                                           &pSwapChain->pImageViewHandles)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto images_cleanup;
+    }
+
+    goto local_scope_cleanup;
+
+images_cleanup:
+    dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
+
+local_scope_cleanup: ;
+
 queue_family_indices_cleanup:
     if (pQueueFamilyIndices != NULL)
         DK_FREE(pAllocator, pQueueFamilyIndices);
@@ -1778,6 +1897,11 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
     DK_ASSERT(pAllocator != NULL);
+
+    if (pSwapChain->pImageViewHandles != NULL)
+        dkpDestroySwapChainImageViewHandles(pDevice, pSwapChain->imageCount,
+                                            pSwapChain->pImageViewHandles,
+                                            pBackEndAllocator, pAllocator);
 
     if (pSwapChain->pImageHandles != NULL)
         dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
