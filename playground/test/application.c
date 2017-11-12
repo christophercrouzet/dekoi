@@ -14,7 +14,7 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
 
-    *ppApplication = (Application *) malloc(sizeof(Application));
+    *ppApplication = (Application *) malloc(sizeof(**ppApplication));
     if (*ppApplication == NULL) {
         fprintf(stderr, "failed to allocate the application\n");
         return 1;

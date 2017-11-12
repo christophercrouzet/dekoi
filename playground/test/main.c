@@ -25,7 +25,7 @@ setup(Application **ppApplication,
     assert(ppApplication != NULL);
     assert(ppWindow != NULL);
 
-    memset(&applicationInfo, 0, sizeof(ApplicationCreateInfo));
+    memset(&applicationInfo, 0, sizeof(applicationInfo));
     applicationInfo.pName = pApplicationName;
     applicationInfo.majorVersion = majorVersion;
     applicationInfo.minorVersion = minorVersion;
@@ -35,7 +35,7 @@ setup(Application **ppApplication,
         return 1;
     }
 
-    memset(&windowInfo, 0, sizeof(WindowCreateInfo));
+    memset(&windowInfo, 0, sizeof(windowInfo));
     windowInfo.width = width;
     windowInfo.height = height;
     windowInfo.title = pApplicationName;
