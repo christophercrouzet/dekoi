@@ -1524,13 +1524,13 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
             fprintf(stderr, "failed to create the '%s' semaphores\n",
                 dkpGetSemaphoreIdString((DkpSemaphoreId) i));
             out = DK_ERROR;
-            goto cleanup;
+            goto semaphores_cleanup;
         }
     }
 
     goto exit;
 
-cleanup:
+semaphores_cleanup:
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         if ((*ppSemaphoreHandles)[i] != VK_NULL_HANDLE)
             vkDestroySemaphore(pDevice->logicalHandle, (*ppSemaphoreHandles)[i],
