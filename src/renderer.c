@@ -807,7 +807,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
             if (graphicsSupported) {
                 pQueueFamilyIndices->graphics = i;
-                goto properties_cleanup;
+                break;
             }
         } else {
             if (vkGetPhysicalDeviceSurfaceSupportKHR(physicalDeviceHandle, i,
@@ -824,7 +824,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
             if (graphicsSupported && presentSupported) {
                 pQueueFamilyIndices->graphics = i;
                 pQueueFamilyIndices->present = i;
-                goto properties_cleanup;
+                break;
             }
 
             if (graphicsSupported
