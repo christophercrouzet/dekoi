@@ -152,7 +152,7 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 
 static DkResult
 dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
-                              const char * const * ppRequiredLayerNames,
+                              const char * const *ppRequiredLayerNames,
                               const DkAllocator *pAllocator,
                               DkBool32 *pSupported)
 {
@@ -301,7 +301,7 @@ dkpDestroyInstanceExtensionNames(
 
 static DkResult
 dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
-                                  const char * const * ppRequiredExtensionNames,
+                                  const char * const *ppRequiredExtensionNames,
                                   const DkAllocator *pAllocator,
                                   DkBool32 *pSupported)
 {
@@ -690,7 +690,7 @@ dkpDestroyDeviceExtensionNames(const char **ppExtensionNames,
 static DkResult
 dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
                                 uint32_t requiredExtensionCount,
-                                const char * const * ppRequiredExtensionNames,
+                                const char * const *ppRequiredExtensionNames,
                                 const DkAllocator *pAllocator,
                                 DkBool32 *pSupported)
 {
@@ -1159,7 +1159,7 @@ static DkResult
 dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
                          VkSurfaceKHR surfaceHandle,
                          uint32_t extensionCount,
-                         const char * const * ppExtensionNames,
+                         const char * const *ppExtensionNames,
                          const DkAllocator *pAllocator,
                          DkpQueueFamilyIndices *pQueueFamilyIndices,
                          DkBool32 *pSuitable)
@@ -1223,7 +1223,7 @@ static DkResult
 dkpPickPhysicalDevice(VkInstance instanceHandle,
                       VkSurfaceKHR surfaceHandle,
                       uint32_t extensionCount,
-                      const char * const * ppExtensionNames,
+                      const char * const *ppExtensionNames,
                       const DkAllocator *pAllocator,
                       DkpQueueFamilyIndices *pQueueFamilyIndices,
                       VkPhysicalDevice *pPhysicalDeviceHandle)
