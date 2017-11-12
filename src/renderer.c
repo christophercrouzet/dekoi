@@ -1591,6 +1591,72 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 
 
 static DkResult
+dkpCreateSwapChainImages(const DkpDevice *pDevice,
+                         VkSwapchainKHR swapChainHandle,
+                         const DkAllocator *pAllocator,
+                         uint32_t *pImageCount,
+                         VkImage **ppImageHandles)
+{
+    DkResult out;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(swapChainHandle != VK_NULL_HANDLE);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pImageCount != NULL);
+    DK_ASSERT(ppImageHandles != NULL);
+
+    out = DK_SUCCESS;
+
+    if (vkGetSwapchainImagesKHR(pDevice->logicalHandle, swapChainHandle,
+                                pImageCount, NULL)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the number of swap chain images\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    *ppImageHandles = (VkImage *)
+        DK_ALLOCATE(pAllocator, *pImageCount * sizeof(**ppImageHandles));
+    if (*ppImageHandles == NULL) {
+        fprintf(stderr, "failed to allocate the swap chain images\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    if (vkGetSwapchainImagesKHR(pDevice->logicalHandle, swapChainHandle,
+                                pImageCount, *ppImageHandles)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not retrieve the swap chain images\n");
+        out = DK_ERROR;
+        goto images_cleanup;
+    }
+
+    goto exit;
+
+images_cleanup:
+    DK_FREE(pAllocator, *ppImageHandles);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroySwapChainImages(VkImage *pImageHandles,
+                          const DkAllocator *pAllocator)
+{
+    DK_ASSERT(pAllocator != NULL);
+
+    if (pImageHandles == NULL)
+        return;
+
+    DK_FREE(pAllocator, pImageHandles);
+}
+
+
+static DkResult
 dkpCreateSwapChain(const DkpDevice *pDevice,
                    VkSurfaceKHR surfaceHandle,
                    const VkExtent2D *pDesiredImageExtent,
@@ -1700,22 +1766,12 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
             goto queue_family_indices_cleanup;
     }
 
-    if (vkGetSwapchainImagesKHR(pDevice->logicalHandle, pSwapChain->handle,
-                                &pSwapChain->imageCount, NULL)
-        != VK_SUCCESS)
+    if (dkpCreateSwapChainImages(pDevice, pSwapChain->handle, pAllocator,
+                                 &pSwapChain->imageCount,
+                                 &pSwapChain->pImageHandles)
+        != DK_SUCCESS)
     {
-        fprintf(stderr, "could not retrieve the number of swap chain images "
-                        "available\n");
         out = DK_ERROR;
-        goto queue_family_indices_cleanup;
-    }
-
-    pSwapChain->pImageHandles = (VkImage *)
-        DK_ALLOCATE(pAllocator, pSwapChain->imageCount
-                                * sizeof(*pSwapChain->pImageHandles));
-    if (pSwapChain->pImageHandles == NULL) {
-        fprintf(stderr, "failed to allocate the swap chain images\n");
-        out = DK_ERROR_ALLOCATION;
         goto queue_family_indices_cleanup;
     }
 
@@ -1751,7 +1807,7 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     DK_ASSERT(pAllocator != NULL);
 
     if (pSwapChain->pImageHandles != NULL)
-        DK_FREE(pAllocator, pSwapChain->pImageHandles);
+        dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
 
     vkDestroySwapchainKHR(pDevice->logicalHandle, pSwapChain->handle,
                           pBackEndAllocator);
