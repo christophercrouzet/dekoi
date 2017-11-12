@@ -6,12 +6,12 @@ dkGetResultString(DkResult result)
 {
     switch (result) {
         case DK_SUCCESS:
-            return "Success";
+            return "success";
         case DK_ERROR:
-            return "Error";
+            return "error";
         case DK_ERROR_ALLOCATION:
-            return "ErrorAallocation";
+            return "allocation error";
         default:
-            return "Invalid";
+            return "invalid";
     }
 }
