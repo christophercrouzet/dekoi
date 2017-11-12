@@ -510,10 +510,8 @@ static void
 dkpDestroyInstance(VkInstance instanceHandle,
                    const VkAllocationCallbacks *pBackEndAllocator)
 {
-    if (instanceHandle == NULL) {
-        DK_UNUSED(pBackEndAllocator);
+    if (instanceHandle == NULL)
         return;
-    }
 
     vkDestroyInstance(instanceHandle, pBackEndAllocator);
 }
@@ -590,12 +588,8 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
 
-    if (callbackHandle == VK_NULL_HANDLE) {
-        DK_UNUSED(instanceHandle);
-        DK_UNUSED(pBackEndAllocator);
-        DK_UNUSED(function);
+    if (callbackHandle == VK_NULL_HANDLE)
         return;
-    }
 
     DK_ASSERT(instanceHandle != NULL);
 
@@ -622,12 +616,9 @@ dkpCreateSurface(VkInstance instanceHandle,
     DK_ASSERT(instanceHandle != NULL);
     DK_ASSERT(pSurfaceHandle != NULL);
 
-    if (pWindowManagerInterface == NULL) {
-        DK_UNUSED(instanceHandle);
-        DK_UNUSED(pBackEndAllocator);
-
+    if (pWindowManagerInterface == NULL)
         *pSurfaceHandle = VK_NULL_HANDLE;
-    } else if (pWindowManagerInterface->pfnCreateSurface(
+    else if (pWindowManagerInterface->pfnCreateSurface(
                    pWindowManagerInterface->pContext,
                    instanceHandle,
                    pBackEndAllocator,
@@ -648,11 +639,8 @@ dkpDestroySurface(VkInstance instanceHandle,
                   VkSurfaceKHR surfaceHandle,
                   const VkAllocationCallbacks *pBackEndAllocator)
 {
-    if (surfaceHandle == VK_NULL_HANDLE) {
-        DK_UNUSED(instanceHandle);
-        DK_UNUSED(pBackEndAllocator);
+    if (surfaceHandle == VK_NULL_HANDLE)
         return;
-    }
 
     DK_ASSERT(instanceHandle != NULL);
 
@@ -671,8 +659,6 @@ dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
     DK_ASSERT(pppExtensionNames != NULL);
 
     if (presentSupport == DKP_PRESENT_SUPPORT_DISABLED) {
-        DK_UNUSED(pAllocator);
-
         *pExtensionCount = 0;
         *pppExtensionNames = NULL;
         return DK_SUCCESS;
@@ -819,8 +805,6 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
             && pProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT;
 
         if (surfaceHandle == VK_NULL_HANDLE) {
-            DK_UNUSED(presentSupported);
-
             if (graphicsSupported) {
                 pQueueFamilyIndices->graphics = i;
                 break;
@@ -1462,10 +1446,8 @@ static void
 dkpDestroyDevice(DkpDevice *pDevice,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
-    if (pDevice == NULL || pDevice->logicalHandle == NULL) {
-        DK_UNUSED(pBackEndAllocator);
+    if (pDevice == NULL || pDevice->logicalHandle == NULL)
         return;
-    }
 
     vkDestroyDevice(pDevice->logicalHandle, pBackEndAllocator);
 }
@@ -1569,13 +1551,8 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 {
     int i;
 
-    if (pSemaphores == NULL) {
-        DK_UNUSED(pDevice);
-        DK_UNUSED(pBackEndAllocator);
-        DK_UNUSED(pAllocator);
-        DK_UNUSED(i);
+    if (pSemaphores == NULL)
         return;
-    }
 
     DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
@@ -1795,12 +1772,8 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocator *pAllocator)
 {
-    if (pSwapChain == NULL || pSwapChain->handle == VK_NULL_HANDLE) {
-        DK_UNUSED(pDevice);
-        DK_UNUSED(pBackEndAllocator);
-        DK_UNUSED(pAllocator);
+    if (pSwapChain == NULL || pSwapChain->handle == VK_NULL_HANDLE)
         return;
-    }
 
     DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
