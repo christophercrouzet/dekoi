@@ -1643,6 +1643,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         pQueueFamilyIndices = (uint32_t *)
             DK_ALLOCATE(pAllocator, queueFamilyIndexCount * sizeof (uint32_t));
         if (pQueueFamilyIndices == NULL) {
+            fprintf(stderr, "failed to allocate the queue family indices\n");
             out = DK_ERROR_ALLOCATION;
             goto exit;
         }
