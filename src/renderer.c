@@ -1739,7 +1739,7 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocator *pAllocator)
 {
-    if (pSwapChain == NULL) {
+    if (pSwapChain == NULL || pSwapChain->handle == VK_NULL_HANDLE) {
         DK_UNUSED(pDevice);
         DK_UNUSED(pBackEndAllocator);
         DK_UNUSED(pAllocator);
@@ -1753,9 +1753,8 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     if (pSwapChain->pImageHandles != NULL)
         DK_FREE(pAllocator, pSwapChain->pImageHandles);
 
-    if (pSwapChain->handle != VK_NULL_HANDLE)
-        vkDestroySwapchainKHR(pDevice->logicalHandle, pSwapChain->handle,
-                              pBackEndAllocator);
+    vkDestroySwapchainKHR(pDevice->logicalHandle, pSwapChain->handle,
+                          pBackEndAllocator);
 }
 
 
