@@ -88,7 +88,7 @@ struct DkRenderer {
 #endif /* DK_ENABLE_DEBUG_REPORT */
     DkpDevice device;
     DkpQueues queues;
-    VkSemaphore *pSemaphores;
+    VkSemaphore *pSemaphoreHandles;
     DkpSwapChain swapChain;
 };
 
@@ -1489,13 +1489,13 @@ static DkResult
 dkpCreateSemaphores(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocator *pAllocator,
-                    VkSemaphore **ppSemaphores)
+                    VkSemaphore **ppSemaphoreHandles)
 {
     DkResult out;
     int i;
     VkSemaphoreCreateInfo createInfo;
 
-    DK_ASSERT(ppSemaphores != NULL);
+    DK_ASSERT(ppSemaphoreHandles != NULL);
 
     out = DK_SUCCESS;
 
@@ -1504,21 +1504,21 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
     createInfo.pNext = NULL;
     createInfo.flags = 0;
 
-    *ppSemaphores = (VkSemaphore *)
+    *ppSemaphoreHandles = (VkSemaphore *)
         DK_ALLOCATE(pAllocator,
-                    DKP_SEMAPHORE_ID_ENUM_COUNT * sizeof(**ppSemaphores));
-    if (*ppSemaphores == NULL) {
+                    DKP_SEMAPHORE_ID_ENUM_COUNT * sizeof(**ppSemaphoreHandles));
+    if (*ppSemaphoreHandles == NULL) {
         fprintf(stderr, "failed to allocate the semaphores\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i)
-        (*ppSemaphores)[i] = VK_NULL_HANDLE;
+        (*ppSemaphoreHandles)[i] = VK_NULL_HANDLE;
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         if (vkCreateSemaphore(pDevice->logicalHandle, &createInfo,
-                              pBackEndAllocator, &(*ppSemaphores)[i])
+                              pBackEndAllocator, &(*ppSemaphoreHandles)[i])
             != VK_SUCCESS)
         {
             fprintf(stderr, "failed to create the '%s' semaphores\n",
@@ -1532,12 +1532,12 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
 
 cleanup:
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
-        if ((*ppSemaphores)[i] != VK_NULL_HANDLE)
-            vkDestroySemaphore(pDevice->logicalHandle, (*ppSemaphores)[i],
+        if ((*ppSemaphoreHandles)[i] != VK_NULL_HANDLE)
+            vkDestroySemaphore(pDevice->logicalHandle, (*ppSemaphoreHandles)[i],
                                pBackEndAllocator);
     }
 
-    DK_FREE(pAllocator, *ppSemaphores);
+    DK_FREE(pAllocator, *ppSemaphoreHandles);
 
 exit:
     return out;
@@ -1546,25 +1546,25 @@ exit:
 
 static void
 dkpDestroySemaphores(const DkpDevice *pDevice,
-                     VkSemaphore *pSemaphores,
+                     VkSemaphore *pSemaphoreHandles,
                      const VkAllocationCallbacks *pBackEndAllocator,
                      const DkAllocator *pAllocator)
 {
     int i;
 
-    if (pSemaphores == NULL)
+    if (pSemaphoreHandles == NULL)
         return;
 
     DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
-        if (pSemaphores[i] != VK_NULL_HANDLE)
-            vkDestroySemaphore(pDevice->logicalHandle, pSemaphores[i],
+        if (pSemaphoreHandles[i] != VK_NULL_HANDLE)
+            vkDestroySemaphore(pDevice->logicalHandle, pSemaphoreHandles[i],
                                pBackEndAllocator);
     }
 
-    DK_FREE(pAllocator, pSemaphores);
+    DK_FREE(pAllocator, pSemaphoreHandles);
 }
 
 
@@ -2014,7 +2014,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     if (dkpCreateSemaphores(&(*ppRenderer)->device,
                             (*ppRenderer)->pBackEndAllocator,
                             (*ppRenderer)->pAllocator,
-                            &(*ppRenderer)->pSemaphores)
+                            &(*ppRenderer)->pSemaphoreHandles)
         != DK_SUCCESS)
     {
         out = DK_ERROR;
@@ -2037,7 +2037,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     goto exit;
 
 semaphores_cleanup:
-    dkpDestroySemaphores(&(*ppRenderer)->device, (*ppRenderer)->pSemaphores,
+    dkpDestroySemaphores(&(*ppRenderer)->device,
+                         (*ppRenderer)->pSemaphoreHandles,
                          (*ppRenderer)->pBackEndAllocator,
                          (*ppRenderer)->pAllocator);
 
@@ -2083,7 +2084,7 @@ dkDestroyRenderer(DkRenderer *pRenderer,
 
     dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
                         pRenderer->pBackEndAllocator, pAllocator);
-    dkpDestroySemaphores(&pRenderer->device, pRenderer->pSemaphores,
+    dkpDestroySemaphores(&pRenderer->device, pRenderer->pSemaphoreHandles,
                          pRenderer->pBackEndAllocator, pRenderer->pAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
     dkpDestroySurface(pRenderer->instanceHandle,
