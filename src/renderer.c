@@ -244,7 +244,7 @@ dkpCreateInstanceExtensionNames(
     } else if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
                    pWindowManagerInterface->pContext,
                    (uint32_t *) pExtensionCount,
-                   &(*pppExtensionNames))
+                   pppExtensionNames)
                != DK_SUCCESS)
     {
         return DK_ERROR;
