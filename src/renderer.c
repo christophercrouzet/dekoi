@@ -120,7 +120,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     *pLayerCount = 1;
     *pppLayerNames = (const char **)
-        DK_ALLOCATE(pAllocator, (*pLayerCount) * sizeof(**pppLayerNames));
+        DK_ALLOCATE(pAllocator, *pLayerCount * sizeof(**pppLayerNames));
     if (*pppLayerNames == NULL) {
         fprintf(stderr, "failed to allocate the instance layer names\n");
         return DK_ERROR_ALLOCATION;
@@ -252,7 +252,7 @@ dkpCreateInstanceExtensionNames(
 
 #ifdef DK_ENABLE_DEBUG_REPORT
     ppBuffer = (const char **)
-        DK_ALLOCATE(pAllocator, ((*pExtensionCount) + 1) * sizeof(*ppBuffer));
+        DK_ALLOCATE(pAllocator, (*pExtensionCount + 1) * sizeof(*ppBuffer));
     if (ppBuffer == NULL) {
         fprintf(stderr, "failed to allocate the instance extension names\n");
         return DK_ERROR_ALLOCATION;
@@ -260,7 +260,7 @@ dkpCreateInstanceExtensionNames(
 
     if (*pppExtensionNames != NULL)
         memcpy(ppBuffer, *pppExtensionNames,
-               (*pExtensionCount) * sizeof(*ppBuffer));
+               *pExtensionCount * sizeof(*ppBuffer));
 
     ppBuffer[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
@@ -665,8 +665,7 @@ dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
 
     *pExtensionCount = 1;
     *pppExtensionNames = (const char **)
-        DK_ALLOCATE(pAllocator,
-                    (*pExtensionCount) * sizeof(**pppExtensionNames));
+        DK_ALLOCATE(pAllocator, *pExtensionCount * sizeof(**pppExtensionNames));
     if (*pppExtensionNames == NULL) {
         fprintf(stderr, "failed to allocate the device extension names\n");
         return DK_ERROR_ALLOCATION;
