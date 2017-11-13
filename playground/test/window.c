@@ -98,6 +98,8 @@ createWindow(Application *pApplication,
     assert(pCreateInfo != NULL);
     assert(ppWindow != NULL);
 
+    out = 0;
+
     *ppWindow = (Window *) malloc(sizeof(**ppWindow));
     if (*ppWindow == NULL) {
         fprintf(stderr, "failed to allocate the window\n");
@@ -105,7 +107,6 @@ createWindow(Application *pApplication,
         goto exit;
     }
 
-    out = 0;
     if (glfwInit() != GLFW_TRUE) {
         fprintf(stderr, "failed to initialize GLFW\n");
         out = 1;

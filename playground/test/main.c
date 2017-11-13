@@ -25,6 +25,8 @@ setup(Application **ppApplication,
     assert(ppApplication != NULL);
     assert(ppWindow != NULL);
 
+    out = 0;
+
     memset(&applicationInfo, 0, sizeof(applicationInfo));
     applicationInfo.pName = pApplicationName;
     applicationInfo.majorVersion = majorVersion;
@@ -32,7 +34,8 @@ setup(Application **ppApplication,
     applicationInfo.patchVersion = patchVersion;
 
     if (createApplication(&applicationInfo, ppApplication)) {
-        return 1;
+        out = 1;
+        goto exit;
     }
 
     memset(&windowInfo, 0, sizeof(windowInfo));
@@ -40,16 +43,17 @@ setup(Application **ppApplication,
     windowInfo.height = height;
     windowInfo.title = pApplicationName;
 
-    out = 0;
     if (createWindow(*ppApplication, &windowInfo, ppWindow)) {
         out = 1;
         goto application_cleanup;
     }
 
-    return out;
+    goto exit;
 
 application_cleanup:
     destroyApplication(*ppApplication);
+
+exit:
     return out;
 }
 
@@ -70,17 +74,21 @@ main(void)
     Application *pApplication;
     Window *pWindow;
 
+    out = 0;
+
     if (setup(&pApplication, &pWindow)) {
-        return EXIT_FAILURE;
+        out = 1;
+        goto exit;
     }
 
-    out = EXIT_SUCCESS;
     if (runApplication(pApplication)) {
-        out = EXIT_FAILURE;
+        out = 1;
         goto cleanup;
     }
 
 cleanup:
     cleanup(pApplication, pWindow);
+
+exit:
     return out;
 }
