@@ -512,8 +512,7 @@ static void
 dkpDestroyInstance(VkInstance instanceHandle,
                    const VkAllocationCallbacks *pBackEndAllocator)
 {
-    if (instanceHandle == NULL)
-        return;
+    DK_ASSERT(instanceHandle != NULL);
 
     vkDestroyInstance(instanceHandle, pBackEndAllocator);
 }
@@ -590,10 +589,8 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
 
-    if (callbackHandle == VK_NULL_HANDLE)
-        return;
-
     DK_ASSERT(instanceHandle != NULL);
+    DK_ASSERT(callbackHandle != VK_NULL_HANDLE);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)
         vkGetInstanceProcAddr(instanceHandle,
@@ -641,10 +638,10 @@ dkpDestroySurface(VkInstance instanceHandle,
                   VkSurfaceKHR surfaceHandle,
                   const VkAllocationCallbacks *pBackEndAllocator)
 {
+    DK_ASSERT(instanceHandle != NULL);
+
     if (surfaceHandle == VK_NULL_HANDLE)
         return;
-
-    DK_ASSERT(instanceHandle != NULL);
 
     vkDestroySurfaceKHR(instanceHandle, surfaceHandle, pBackEndAllocator);
 }
@@ -1448,8 +1445,8 @@ static void
 dkpDestroyDevice(DkpDevice *pDevice,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
-    if (pDevice == NULL || pDevice->logicalHandle == NULL)
-        return;
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
 
     vkDestroyDevice(pDevice->logicalHandle, pBackEndAllocator);
 }
@@ -1553,11 +1550,9 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 {
     int i;
 
-    if (pSemaphoreHandles == NULL)
-        return;
-
     DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pSemaphoreHandles != NULL);
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         if (pSemaphoreHandles[i] != VK_NULL_HANDLE)
@@ -1626,10 +1621,8 @@ static void
 dkpDestroySwapChainImages(VkImage *pImageHandles,
                           const DkAllocator *pAllocator)
 {
+    DK_ASSERT(pImageHandles != NULL);
     DK_ASSERT(pAllocator != NULL);
-
-    if (pImageHandles == NULL)
-        return;
 
     DK_FREE(pAllocator, pImageHandles);
 }
@@ -1892,21 +1885,21 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocator *pAllocator)
 {
-    if (pSwapChain == NULL || pSwapChain->handle == VK_NULL_HANDLE)
-        return;
-
     DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pSwapChain != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
     DK_ASSERT(pAllocator != NULL);
 
-    if (pSwapChain->pImageViewHandles != NULL)
-        dkpDestroySwapChainImageViewHandles(pDevice, pSwapChain->imageCount,
-                                            pSwapChain->pImageViewHandles,
-                                            pBackEndAllocator, pAllocator);
+    if (pSwapChain->handle == VK_NULL_HANDLE)
+        return;
 
-    if (pSwapChain->pImageHandles != NULL)
-        dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
+    DK_ASSERT(pSwapChain->pImageHandles != NULL);
+    DK_ASSERT(pSwapChain->pImageViewHandles != NULL);
 
+    dkpDestroySwapChainImageViewHandles(pDevice, pSwapChain->imageCount,
+                                        pSwapChain->pImageViewHandles,
+                                        pBackEndAllocator, pAllocator);
+    dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
     vkDestroySwapchainKHR(pDevice->logicalHandle, pSwapChain->handle,
                           pBackEndAllocator);
 }
