@@ -109,7 +109,7 @@ createWindow(Application *pApplication,
     if (glfwInit() != GLFW_TRUE) {
         fprintf(stderr, "failed to initialize GLFW\n");
         out = 1;
-        goto window_cleanup;
+        goto window_undo;
     }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -120,7 +120,7 @@ createWindow(Application *pApplication,
     if ((*ppWindow)->pHandle == NULL) {
         fprintf(stderr, "failed to create the window\n");
         out = 1;
-        goto glfw_cleanup;
+        goto glfw_undo;
     }
 
     windowManagerInterfaceContext.pWindowHandle = (*ppWindow)->pHandle;
@@ -150,7 +150,7 @@ createWindow(Application *pApplication,
     {
         fprintf(stderr, "failed to create the renderer\n");
         out = 1;
-        goto glfw_window_cleanup;
+        goto glfw_window_undo;
     }
 
     glfwSetWindowUserPointer((*ppWindow)->pHandle, *ppWindow);
@@ -161,13 +161,13 @@ createWindow(Application *pApplication,
     pApplication->pWindow = *ppWindow;
     goto exit;
 
-glfw_window_cleanup:
+glfw_window_undo:
     glfwDestroyWindow((*ppWindow)->pHandle);
 
-glfw_cleanup:
+glfw_undo:
     glfwTerminate();
 
-window_cleanup:
+window_undo:
     free(*ppWindow);
 
 exit:

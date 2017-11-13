@@ -1525,13 +1525,13 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
             fprintf(stderr, "failed to create the '%s' semaphores\n",
                 dkpGetSemaphoreIdString((DkpSemaphoreId) i));
             out = DK_ERROR;
-            goto semaphores_cleanup;
+            goto semaphores_undo;
         }
     }
 
     goto exit;
 
-semaphores_cleanup:
+semaphores_undo:
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         if ((*ppSemaphoreHandles)[i] != VK_NULL_HANDLE)
             vkDestroySemaphore(pDevice->logicalHandle, (*ppSemaphoreHandles)[i],
@@ -1609,12 +1609,12 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
     {
         fprintf(stderr, "could not retrieve the swap chain images\n");
         out = DK_ERROR;
-        goto images_cleanup;
+        goto images_undo;
     }
 
     goto exit;
 
-images_cleanup:
+images_undo:
     DK_FREE(pAllocator, *ppImageHandles);
 
 exit:
@@ -1690,13 +1690,13 @@ dkpCreateSwapChainImageViewHandles(
         {
             fprintf(stderr, "failed to create an image view\n");
             out = DK_ERROR;
-            goto image_views_cleanup;
+            goto image_views_undo;
         }
     }
 
     goto exit;
 
-image_views_cleanup:
+image_views_undo:
     for (i = 0; i < imageCount; ++i) {
         if ((*ppImageViewHandles)[i] != VK_NULL_HANDLE)
             vkDestroyImageView(pDevice->logicalHandle, (*ppImageViewHandles)[i],
@@ -1862,15 +1862,15 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto images_cleanup;
+        goto images_undo;
     }
 
-    goto local_scope_cleanup;
+    goto cleanup;
 
-images_cleanup:
+images_undo:
     dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
 
-local_scope_cleanup: ;
+cleanup: ;
 
 queue_family_indices_cleanup:
     if (pQueueFamilyIndices != NULL)
@@ -1969,7 +1969,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto renderer_cleanup;
+        goto renderer_undo;
     }
 
 #ifdef DK_ENABLE_DEBUG_REPORT
@@ -1979,7 +1979,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto instance_cleanup;
+        goto instance_undo;
     }
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
@@ -1990,7 +1990,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto debug_report_callback_cleanup;
+        goto debug_report_callback_undo;
     }
 
     if (dkpCreateDevice((*ppRenderer)->instanceHandle,
@@ -2001,7 +2001,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto surface_cleanup;
+        goto surface_undo;
     }
 
     if (dkpGetDeviceQueues(&(*ppRenderer)->device,
@@ -2009,7 +2009,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto device_cleanup;
+        goto device_undo;
     }
 
     if (dkpCreateSemaphores(&(*ppRenderer)->device,
@@ -2019,7 +2019,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto device_cleanup;
+        goto device_undo;
     }
 
     if (dkpCreateSwapChain(&(*ppRenderer)->device,
@@ -2032,39 +2032,39 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         != DK_SUCCESS)
     {
         out = DK_ERROR;
-        goto semaphores_cleanup;
+        goto semaphores_undo;
     }
 
     goto exit;
 
-semaphores_cleanup:
+semaphores_undo:
     dkpDestroySemaphores(&(*ppRenderer)->device,
                          (*ppRenderer)->pSemaphoreHandles,
                          (*ppRenderer)->pBackEndAllocator,
                          (*ppRenderer)->pAllocator);
 
-device_cleanup:
+device_undo:
     dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
 
-surface_cleanup:
+surface_undo:
     dkpDestroySurface((*ppRenderer)->instanceHandle,
                       (*ppRenderer)->surfaceHandle,
                       (*ppRenderer)->pBackEndAllocator);
 
-debug_report_callback_cleanup:
+debug_report_callback_undo:
 #ifdef DK_ENABLE_DEBUG_REPORT
     dkpDestroyDebugReportCallback((*ppRenderer)->instanceHandle,
                                   (*ppRenderer)->debugReportCallbackHandle,
                                   (*ppRenderer)->pBackEndAllocator);
 #else
-    goto instance_cleanup;
+    goto instance_undo;
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
-instance_cleanup:
+instance_undo:
     dkpDestroyInstance((*ppRenderer)->instanceHandle,
                        (*ppRenderer)->pBackEndAllocator);
 
-renderer_cleanup:
+renderer_undo:
     DK_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
     *ppRenderer = NULL;
 
