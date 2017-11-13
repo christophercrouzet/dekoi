@@ -44,7 +44,7 @@ $(RELEASEOBJECTS): $(RELEASEOBJECTDIR)/%.o: $(SOURCEDIR)/%.c
 	@$(CC) -c $(CFLAGS) $(RELEASECFLAGS) $(CPPFLAGS) $(RELEASECPPFLAGS) -o $@ $<
 
 $(SHADEROBJECTS): $(SHADERDIR)/%.spv: $(SHADERDIR)/%
-	@glslangValidator -V -o $@ -s $<
+	@glslangValidator -H -o $@ -s $< > $@.txt
 
 
 .PHONY: playground test testdebug testrelease runtestdebug runtestrelease
@@ -102,3 +102,4 @@ shaders: $(SHADEROBJECTS)
 clean:
 	@-rm -rf $(OBJECTDIR)
 	@-rm -rf $(TARGETDIR)
+	@-rm -f $(SHADEROBJECTS:%=%.txt)
