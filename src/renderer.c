@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "renderer.h"
 #include "internal/assert.h"
+#include "internal/dekoi.h"
 #include "internal/memory.h"
 
 
@@ -127,7 +128,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
 
     (*pppLayerNames)[0] = "VK_LAYER_LUNARG_standard_validation";
 #else
-    DK_UNUSED(pAllocator);
+    DKP_UNUSED(pAllocator);
 
     *pLayerCount = 0;
     *pppLayerNames = NULL;
@@ -144,8 +145,8 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     DK_FREE(pAllocator, ppLayerNames);
 #else
-    DK_UNUSED(ppLayerNames);
-    DK_UNUSED(pAllocator);
+    DKP_UNUSED(ppLayerNames);
+    DKP_UNUSED(pAllocator);
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 }
 
@@ -230,7 +231,7 @@ dkpCreateInstanceExtensionNames(
 #ifdef DK_ENABLE_DEBUG_REPORT
     const char **ppBuffer;
 #else
-    DK_UNUSED(pAllocator);
+    DKP_UNUSED(pAllocator);
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
     DK_ASSERT(pAllocator != NULL);
@@ -283,13 +284,13 @@ dkpDestroyInstanceExtensionNames(
     const DkAllocator *pAllocator)
 {
 #ifdef DK_ENABLE_DEBUG_REPORT
-    DK_UNUSED(pWindowManagerInterface);
+    DKP_UNUSED(pWindowManagerInterface);
 
     DK_ASSERT(pAllocator != NULL);
 
     DK_FREE(pAllocator, ppExtensionNames);
 #else
-    DK_UNUSED(pAllocator);
+    DKP_UNUSED(pAllocator);
 
     if (pWindowManagerInterface != NULL)
         pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
@@ -529,13 +530,13 @@ dkpDebugReportCallback(VkDebugReportFlagsEXT flags,
                        const char *pMessage,
                        void *pUserData)
 {
-    DK_UNUSED(flags);
-    DK_UNUSED(objectType);
-    DK_UNUSED(object);
-    DK_UNUSED(location);
-    DK_UNUSED(messageCode);
-    DK_UNUSED(pLayerPrefix);
-    DK_UNUSED(pUserData);
+    DKP_UNUSED(flags);
+    DKP_UNUSED(objectType);
+    DKP_UNUSED(object);
+    DKP_UNUSED(location);
+    DKP_UNUSED(messageCode);
+    DKP_UNUSED(pLayerPrefix);
+    DKP_UNUSED(pUserData);
 
     fprintf(stderr, "validation layer: %s\n", pMessage);
     return VK_FALSE;

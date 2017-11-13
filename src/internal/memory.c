@@ -3,6 +3,7 @@
 #include "../dekoi.h"
 #include "../memory.h"
 #include "assert.h"
+#include "dekoi.h"
 #include "memory.h"
 
 #ifndef DK_DEFAULT_ALLOCATION_CALLBACK
@@ -12,7 +13,7 @@ static void *
 dkpAllocate(void *pContext,
             DkSize size)
 {
-    DK_UNUSED(pContext);
+    DKP_UNUSED(pContext);
     return malloc(size);
 }
 
@@ -26,7 +27,7 @@ static void
 dkpFree(void *pContext,
         void *pMemory)
 {
-    DK_UNUSED(pContext);
+    DKP_UNUSED(pContext);
     free(pMemory);
 }
 

@@ -11,12 +11,11 @@
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
- #define DK_C_EXTENSION __extension__
+ #define DKP_C_EXTENSION __extension__
 #else
- #define DK_C_EXTENSION
+ #define DKP_C_EXTENSION
 #endif
 
-#define DK_UNUSED(x) (void)(x)
 #define DK_STATIC_ASSERT(x, msg) \
     typedef char dk_static_assertion_failed_##msg[(x) ? 1 : -1]
 
@@ -117,8 +116,8 @@ typedef DK_INT16 DkInt16;
 typedef DK_UINT16 DkUint16;
 typedef DK_INT32 DkInt32;
 typedef DK_UINT32 DkUint32;
-DK_C_EXTENSION typedef DK_INT64 DkInt64;
-DK_C_EXTENSION typedef DK_UINT64 DkUint64;
+DKP_C_EXTENSION typedef DK_INT64 DkInt64;
+DKP_C_EXTENSION typedef DK_UINT64 DkUint64;
 typedef DK_SIZE_T DkSize;
 
 DK_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
