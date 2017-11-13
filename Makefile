@@ -32,7 +32,7 @@ RELEASEOBJECTS := $(SOURCES:$(SOURCEDIR)/%.c=$(RELEASEOBJECTDIR)/%.o)
 
 SHADEROBJECTS := $(SHADERS:$(SHADERDIR)/%=$(SHADERDIR)/%.spv)
 
-VULKANLAYERPATH = /usr/share/vulkan/explicit_layer.d
+VULKANLAYERPATH := /usr/share/vulkan/explicit_layer.d
 
 
 $(DEBUGOBJECTS): $(DEBUGOBJECTDIR)/%.o: $(SOURCEDIR)/%.c
