@@ -14,7 +14,7 @@ dkpAllocate(void *pContext,
             DkSize size)
 {
     DKP_UNUSED(pContext);
-    return malloc(size);
+    return malloc((size_t) size);
 }
 
 #define DK_DEFAULT_ALLOCATION_CALLBACK dkpAllocate
