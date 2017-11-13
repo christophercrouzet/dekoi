@@ -9,10 +9,16 @@ LDFLAGS :=
 LDLIBS := -lvulkan
 
 SOURCEDIR := src
+SHADERDIR := shaders
 OBJECTDIR := build
 TARGETDIR := bin
 
 SOURCES := $(shell find $(SOURCEDIR) -name '*.c')
+SHADERS := $(shell find $(SHADERDIR) -name '*.vert' \
+									 -o -name '*.tesc' \
+									 -o -name '*.geom' \
+									 -o -name '*.frag' \
+									 -o -name '*.comp')
 
 DEBUGCFLAGS := -O0 -g
 DEBUGCPPFLAGS := -DDEBUG 
@@ -24,6 +30,8 @@ RELEASECPPFLAGS := -DNDEBUG
 RELEASEOBJECTDIR := $(OBJECTDIR)/release
 RELEASEOBJECTS := $(SOURCES:$(SOURCEDIR)/%.c=$(RELEASEOBJECTDIR)/%.o)
 
+SHADEROBJECTS := $(SHADERS:$(SHADERDIR)/%=$(SHADERDIR)/%.spv)
+
 VULKANLAYERPATH = /usr/share/vulkan/explicit_layer.d
 
 
@@ -34,6 +42,9 @@ $(DEBUGOBJECTS): $(DEBUGOBJECTDIR)/%.o: $(SOURCEDIR)/%.c
 $(RELEASEOBJECTS): $(RELEASEOBJECTDIR)/%.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(@D)
 	@$(CC) -c $(CFLAGS) $(RELEASECFLAGS) $(CPPFLAGS) $(RELEASECPPFLAGS) -o $@ $<
+
+$(SHADEROBJECTS): $(SHADERDIR)/%.spv: $(SHADERDIR)/%
+	@glslangValidator -V -o $@ -s $<
 
 
 .PHONY: playground test testdebug testrelease runtestdebug runtestrelease
@@ -82,9 +93,11 @@ test: testdebug testrelease
 playground: test
 
 
-.PHONY: all clean
+.PHONY: all shaders clean
 
 all: playground
+
+shaders: $(SHADEROBJECTS)
 
 clean:
 	@-rm -rf $(OBJECTDIR)
