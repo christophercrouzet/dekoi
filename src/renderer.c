@@ -1905,7 +1905,7 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
 }
 
 
-DkResult
+static DkResult
 dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
 {
     if (dkpCreateSwapChain(&pRenderer->device,
