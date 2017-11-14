@@ -20,6 +20,7 @@ dkpAllocate(void *pContext,
 #define DK_DEFAULT_ALLOCATION_CALLBACK dkpAllocate
 #endif /* DK_DEFAULT_ALLOCATION_CALLBACK */
 
+
 #ifndef DK_DEFAULT_FREE_CALLBACK
 #include <stdlib.h>
 
