@@ -17,8 +17,9 @@
 #define DK_ENABLE_VALIDATION_LAYERS
 #endif /* DK_DEBUG */
 
-#define DK_MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define DK_MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+#define DKP_CLAMP(x, low, high) \
+    (((x) > (high)) ? (high) : (x) < (low) ? (low) : (x))
 
 
 typedef enum DkpLogging {
@@ -940,12 +941,12 @@ dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
     if (capabilities.currentExtent.width == UINT32_MAX
         || capabilities.currentExtent.height == UINT32_MAX)
     {
-        pImageExtent->width = DK_MAX(capabilities.minImageExtent.width,
-                                     DK_MIN(capabilities.maxImageExtent.width,
-                                            pDesiredImageExtent->width));
-        pImageExtent->height = DK_MAX(capabilities.minImageExtent.height,
-                                      DK_MIN(capabilities.maxImageExtent.height,
-                                             pDesiredImageExtent->height));
+        pImageExtent->width = DKP_CLAMP(pDesiredImageExtent->width,
+                                        capabilities.minImageExtent.width,
+                                        capabilities.maxImageExtent.width);
+        pImageExtent->height = DKP_CLAMP(pDesiredImageExtent->height,
+                                         capabilities.minImageExtent.height,
+                                         capabilities.maxImageExtent.height);
         return;
     }
 
