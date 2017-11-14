@@ -100,16 +100,16 @@ DKP_C_EXTENSION typedef DK_INT64 DkInt64;
 DKP_C_EXTENSION typedef DK_UINT64 DkUint64;
 typedef DK_SIZE_T DkSize;
 
-DK_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
-DK_STATIC_ASSERT(sizeof(DkInt8) == 1, invalid_int8_type);
-DK_STATIC_ASSERT(sizeof(DkUint8) == 1, invalid_uint8_type);
-DK_STATIC_ASSERT(sizeof(DkInt16) == 2, invalid_int16_type);
-DK_STATIC_ASSERT(sizeof(DkUint16) == 2, invalid_uint16_type);
-DK_STATIC_ASSERT(sizeof(DkInt32) == 4, invalid_int32_type);
-DK_STATIC_ASSERT(sizeof(DkUint32) == 4, invalid_uint32_type);
-DK_STATIC_ASSERT(sizeof(DkInt64) == 8, invalid_int64_type);
-DK_STATIC_ASSERT(sizeof(DkUint64) == 8, invalid_uint64_type);
-DK_STATIC_ASSERT(sizeof(DkSize) == sizeof(void *), invalid_size_type);
+DK_STATIC_ASSERT(sizeof (DkBool32) == 4, invalid_bool32_type);
+DK_STATIC_ASSERT(sizeof (DkInt8) == 1, invalid_int8_type);
+DK_STATIC_ASSERT(sizeof (DkUint8) == 1, invalid_uint8_type);
+DK_STATIC_ASSERT(sizeof (DkInt16) == 2, invalid_int16_type);
+DK_STATIC_ASSERT(sizeof (DkUint16) == 2, invalid_uint16_type);
+DK_STATIC_ASSERT(sizeof (DkInt32) == 4, invalid_int32_type);
+DK_STATIC_ASSERT(sizeof (DkUint32) == 4, invalid_uint32_type);
+DK_STATIC_ASSERT(sizeof (DkInt64) == 8, invalid_int64_type);
+DK_STATIC_ASSERT(sizeof (DkUint64) == 8, invalid_uint64_type);
+DK_STATIC_ASSERT(sizeof (DkSize) == sizeof (void *), invalid_size_type);
 
 #define DK_FALSE ((DkBool32) 0)
 #define DK_TRUE ((DkBool32) 1)

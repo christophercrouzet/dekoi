@@ -100,7 +100,7 @@ createWindow(Application *pApplication,
 
     out = 0;
 
-    *ppWindow = (Window *) malloc(sizeof(**ppWindow));
+    *ppWindow = (Window *) malloc(sizeof **ppWindow);
     if (*ppWindow == NULL) {
         fprintf(stderr, "failed to allocate the window\n");
         out = 1;
@@ -133,7 +133,7 @@ createWindow(Application *pApplication,
         destroyVulkanInstanceExtensionNames;
     windowManagerInterface.pfnCreateSurface = createVulkanSurface;
 
-    memset(&rendererInfo, 0, sizeof(rendererInfo));
+    memset(&rendererInfo, 0, sizeof rendererInfo);
     rendererInfo.pApplicationName = pApplication->pName;
     rendererInfo.applicationMajorVersion =
         (DkUint32) pApplication->majorVersion;
