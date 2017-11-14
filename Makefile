@@ -5,7 +5,7 @@ CFLAGS := -std=c89 \
           -Wstrict-overflow=5 -Wstrict-prototypes -Wswitch -Wswitch-default \
           -Wundef -Wunreachable-code -Wwrite-strings
 CPPFLAGS := -Iinclude
-LDFLAGS := 
+LDFLAGS :=
 LDLIBS := -lvulkan
 
 SOURCEDIR := src
@@ -21,7 +21,7 @@ SHADERS := $(shell find $(SHADERDIR) -name '*.vert' \
 									 -o -name '*.comp')
 
 DEBUGCFLAGS := -O0 -g
-DEBUGCPPFLAGS := -DDEBUG 
+DEBUGCPPFLAGS := -DDEBUG
 DEBUGOBJECTDIR := $(OBJECTDIR)/debug
 DEBUGOBJECTS := $(SOURCES:$(SOURCEDIR)/%.c=$(DEBUGOBJECTDIR)/%.o)
 
