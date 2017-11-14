@@ -120,7 +120,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
 #ifdef DK_ENABLE_VALIDATION_LAYERS
     *pLayerCount = 1;
     *pppLayerNames = (const char **)
-        DK_ALLOCATE(pAllocator, *pLayerCount * sizeof **pppLayerNames);
+        DK_ALLOCATE(pAllocator, sizeof **pppLayerNames * *pLayerCount);
     if (*pppLayerNames == NULL) {
         fprintf(stderr, "failed to allocate the instance layer names\n");
         return DK_ERROR_ALLOCATION;
@@ -179,7 +179,7 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
     }
 
     pLayers = (VkLayerProperties *)
-        DK_ALLOCATE(pAllocator, layerCount * sizeof *pLayers);
+        DK_ALLOCATE(pAllocator, sizeof *pLayers * layerCount);
     if (pLayers == NULL) {
         fprintf(stderr, "failed to allocate the instance layer properties\n");
         out = DK_ERROR_ALLOCATION;
@@ -252,7 +252,7 @@ dkpCreateInstanceExtensionNames(
 
 #ifdef DK_ENABLE_DEBUG_REPORT
     ppBuffer = (const char **)
-        DK_ALLOCATE(pAllocator, (*pExtensionCount + 1) * sizeof *ppBuffer);
+        DK_ALLOCATE(pAllocator, sizeof *ppBuffer * (*pExtensionCount + 1));
     if (ppBuffer == NULL) {
         fprintf(stderr, "failed to allocate the instance extension names\n");
         return DK_ERROR_ALLOCATION;
@@ -260,7 +260,7 @@ dkpCreateInstanceExtensionNames(
 
     if (*pppExtensionNames != NULL)
         memcpy(ppBuffer, *pppExtensionNames,
-               *pExtensionCount * sizeof *ppBuffer);
+               sizeof *ppBuffer * *pExtensionCount);
 
     ppBuffer[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
@@ -328,7 +328,7 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
     }
 
     pExtensions = (VkExtensionProperties *)
-        DK_ALLOCATE(pAllocator, extensionCount * sizeof *pExtensions);
+        DK_ALLOCATE(pAllocator, sizeof *pExtensions * extensionCount);
     if (pExtensions == NULL) {
         fprintf(stderr, "failed to allocate the instance extension "
                         "properties\n");
@@ -665,7 +665,7 @@ dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
 
     *pExtensionCount = 1;
     *pppExtensionNames = (const char **)
-        DK_ALLOCATE(pAllocator, *pExtensionCount * sizeof **pppExtensionNames);
+        DK_ALLOCATE(pAllocator, sizeof **pppExtensionNames * *pExtensionCount);
     if (*pppExtensionNames == NULL) {
         fprintf(stderr, "failed to allocate the device extension names\n");
         return DK_ERROR_ALLOCATION;
@@ -714,7 +714,7 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
     }
 
     pExtensions = (VkExtensionProperties *)
-        DK_ALLOCATE(pAllocator, extensionCount * sizeof *pExtensions);
+        DK_ALLOCATE(pAllocator, sizeof *pExtensions * extensionCount);
     if (pExtensions == NULL) {
         fprintf(stderr, "failed to allocate the device extension properties\n");
         out = DK_ERROR_ALLOCATION;
@@ -786,7 +786,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
         goto exit;
 
     pProperties = (VkQueueFamilyProperties *)
-        DK_ALLOCATE(pAllocator, propertyCount * sizeof *pProperties);
+        DK_ALLOCATE(pAllocator, sizeof *pProperties * propertyCount);
     if (pProperties == NULL) {
         fprintf(stderr, "failed to allocate the queue family properties\n");
         out = DK_ERROR_ALLOCATION;
@@ -1019,7 +1019,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     }
 
     pFormats = (VkSurfaceFormatKHR *)
-        DK_ALLOCATE(pAllocator, formatCount * sizeof *pFormats);
+        DK_ALLOCATE(pAllocator, sizeof *pFormats * formatCount);
     if (pFormats == NULL) {
         fprintf(stderr, "failed to allocate the surface formats\n");
         out = DK_ERROR_ALLOCATION;
@@ -1048,7 +1048,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     }
 
     pPresentModes = (VkPresentModeKHR *)
-        DK_ALLOCATE(pAllocator, presentModeCount * sizeof *pPresentModes);
+        DK_ALLOCATE(pAllocator, sizeof *pPresentModes * presentModeCount);
     if (pPresentModes == NULL) {
         fprintf(stderr, "failed to allocate the surface present modes\n");
         out = DK_ERROR_ALLOCATION;
@@ -1247,7 +1247,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
 
     pPhysicalDeviceHandles = (VkPhysicalDevice *)
         DK_ALLOCATE(pAllocator,
-                    physicalDeviceCount * sizeof *pPhysicalDeviceHandles);
+                    sizeof *pPhysicalDeviceHandles * physicalDeviceCount);
     if (pPhysicalDeviceHandles == NULL) {
         fprintf(stderr, "failed to allocate the physical devices\n");
         out = DK_ERROR_ALLOCATION;
@@ -1345,7 +1345,7 @@ dkpCreateDevice(VkInstance instanceHandle,
 
     queueCount = 1;
     pQueuePriorities = (float *)
-        DK_ALLOCATE(pAllocator, queueCount * sizeof *pQueuePriorities);
+        DK_ALLOCATE(pAllocator, sizeof *pQueuePriorities * queueCount);
     if (pQueuePriorities == NULL) {
         fprintf(stderr, "failed to allocate the device queue priorities\n");
         out = DK_ERROR_ALLOCATION;
@@ -1360,7 +1360,7 @@ dkpCreateDevice(VkInstance instanceHandle,
                          != pDevice->queueFamilyIndices.present)
         ? 2 : 1;
     pQueueInfos = (VkDeviceQueueCreateInfo *)
-        DK_ALLOCATE(pAllocator, queueInfoCount * sizeof *pQueueInfos);
+        DK_ALLOCATE(pAllocator, sizeof *pQueueInfos * queueInfoCount);
     if (pQueueInfos == NULL) {
         fprintf(stderr, "failed to allocate the device queue infos\n");
         out = DK_ERROR_ALLOCATION;
@@ -1503,7 +1503,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
 
     *ppSemaphoreHandles = (VkSemaphore *)
         DK_ALLOCATE(pAllocator,
-                    DKP_SEMAPHORE_ID_ENUM_COUNT * sizeof **ppSemaphoreHandles);
+                    sizeof **ppSemaphoreHandles * DKP_SEMAPHORE_ID_ENUM_COUNT);
     if (*ppSemaphoreHandles == NULL) {
         fprintf(stderr, "failed to allocate the semaphores\n");
         out = DK_ERROR_ALLOCATION;
@@ -1590,7 +1590,7 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
     }
 
     *ppImageHandles = (VkImage *)
-        DK_ALLOCATE(pAllocator, *pImageCount * sizeof **ppImageHandles);
+        DK_ALLOCATE(pAllocator, sizeof **ppImageHandles * *pImageCount);
     if (*ppImageHandles == NULL) {
         fprintf(stderr, "failed to allocate the swap chain images\n");
         out = DK_ERROR_ALLOCATION;
@@ -1649,7 +1649,7 @@ dkpCreateSwapChainImageViewHandles(
     out = DK_SUCCESS;
 
     *ppImageViewHandles = (VkImageView *)
-        DK_ALLOCATE(pAllocator, imageCount * sizeof *ppImageViewHandles);
+        DK_ALLOCATE(pAllocator, sizeof *ppImageViewHandles * imageCount);
     if (*ppImageViewHandles == NULL) {
         fprintf(stderr, "failed to allocate the swap chain image views\n");
         out = DK_ERROR_ALLOCATION;
@@ -1779,7 +1779,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         queueFamilyIndexCount = 2;
         pQueueFamilyIndices = (uint32_t *)
             DK_ALLOCATE(pAllocator,
-                        queueFamilyIndexCount * sizeof *pQueueFamilyIndices);
+                        sizeof *pQueueFamilyIndices * queueFamilyIndexCount);
         if (pQueueFamilyIndices == NULL) {
             fprintf(stderr, "failed to allocate the queue family indices\n");
             out = DK_ERROR_ALLOCATION;
