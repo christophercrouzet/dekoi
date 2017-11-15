@@ -16,6 +16,7 @@ TARGETDIR := bin
 SOURCES := $(shell find $(SOURCEDIR) -name '*.c')
 SHADERS := $(shell find $(SHADERDIR) -name '*.vert' \
 									 -o -name '*.tesc' \
+									 -o -name '*.tese' \
 									 -o -name '*.geom' \
 									 -o -name '*.frag' \
 									 -o -name '*.comp')
