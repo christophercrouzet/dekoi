@@ -1422,7 +1422,7 @@ dkpCreateDevice(VkInstance instanceHandle,
             out = DK_ERROR;
             goto queue_infos_cleanup;
         default:
-            fprintf(stderr, "failed to create the device\n");
+            fprintf(stderr, "failed to create a device\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
     }
