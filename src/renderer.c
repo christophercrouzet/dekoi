@@ -9,6 +9,7 @@
 #include "renderer.h"
 #include "internal/assert.h"
 #include "internal/dekoi.h"
+#include "internal/io.h"
 #include "internal/memory.h"
 
 
@@ -1921,6 +1922,141 @@ dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
     }
 
     return DK_SUCCESS;
+}
+
+
+static DkResult
+dkpCreateShaderCode(const char *pFilePath,
+                    const DkAllocator *pAllocator,
+                    size_t *pShaderCodeSize,
+                    uint32_t **ppShaderCode)
+{
+    DkResult out;
+    DkpFile file;
+
+    DK_ASSERT(pFilePath != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(ppShaderCode != NULL);
+
+    out = DK_SUCCESS;
+
+    if (dkpOpenFile(&file, pFilePath, "rb") != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    if (dkpGetFileSize(&file, pShaderCodeSize) != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto file_closing;
+    }
+
+    DK_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
+
+    *ppShaderCode = DK_ALLOCATE(pAllocator, *pShaderCodeSize);
+    if (*ppShaderCode == NULL) {
+        fprintf(stderr, "failed to allocate the shader code for the file "
+                        "'%s'\n", pFilePath);
+        out = DK_ERROR_ALLOCATION;
+        goto file_closing;
+    }
+
+    if (dkpReadFile(&file, *pShaderCodeSize, (void *) *ppShaderCode)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto code_undo;
+    }
+
+    goto cleanup;
+
+code_undo:
+    DK_FREE(pAllocator, *ppShaderCode);
+
+cleanup: ;
+
+file_closing:
+    if (dkpCloseFile(&file) != DK_SUCCESS)
+        out = DK_ERROR;
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyShaderCode(uint32_t *pShaderCode,
+                     const DkAllocator *pAllocator)
+{
+    DK_ASSERT(pShaderCode != NULL);
+    DK_ASSERT(pAllocator != NULL);
+
+    DK_FREE(pAllocator, pShaderCode);
+}
+
+
+static DkResult
+dkpCreateShaderModule(const DkpDevice *pDevice,
+                      const char *pFilePath,
+                      const VkAllocationCallbacks *pBackEndAllocator,
+                      const DkAllocator *pAllocator,
+                      VkShaderModule *pShaderModuleHandle)
+{
+    DkResult out;
+    size_t codeSize;
+    uint32_t *pCode;
+    VkShaderModuleCreateInfo createInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pFilePath != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pShaderModuleHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    if (dkpCreateShaderCode(pFilePath, pAllocator, &codeSize, &pCode)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    memset(&createInfo, 0, sizeof createInfo);
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.codeSize = codeSize;
+    createInfo.pCode = pCode;
+
+    if (vkCreateShaderModule(pDevice->logicalHandle, &createInfo,
+                             pBackEndAllocator, pShaderModuleHandle)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the shader module from the file "
+                        "'%s'\n", pFilePath);
+        out = DK_ERROR;
+        goto code_cleanup;
+    }
+
+code_cleanup:
+    dkpDestroyShaderCode(pCode, pAllocator);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyShaderModule(const DkpDevice *pDevice,
+                       VkShaderModule shaderModuleHandle,
+                       const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(shaderModuleHandle != VK_NULL_HANDLE);
+
+    vkDestroyShaderModule(pDevice->logicalHandle, shaderModuleHandle,
+                          pBackEndAllocator);
 }
 
 
