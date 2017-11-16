@@ -46,6 +46,9 @@ createVulkanInstanceExtensionNames(void *pContext,
                                    DkUint32 *pExtensionCount,
                                    const char ***pppExtensionNames)
 {
+    assert(pExtensionCount != NULL);
+    assert(pppExtensionNames != NULL);
+
     UNUSED(pContext);
 
     *pppExtensionNames = glfwGetRequiredInstanceExtensions(
@@ -64,6 +67,8 @@ void
 destroyVulkanInstanceExtensionNames(void *pContext,
                                     const char **ppExtensionNames)
 {
+    assert(ppExtensionNames != NULL);
+
     UNUSED(pContext);
     UNUSED(ppExtensionNames);
 }
@@ -75,6 +80,10 @@ createVulkanSurface(void *pContext,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     VkSurfaceKHR *pSurface)
 {
+    assert(pContext != NULL);
+    assert(instance != NULL);
+    assert(pSurface != NULL);
+
     if (glfwCreateWindowSurface(
             instance,
             ((WindowRendererCallbacksContext *) pContext)->pWindowHandle,

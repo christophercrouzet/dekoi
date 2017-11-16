@@ -62,6 +62,9 @@ void
 cleanup(Application *pApplication,
         Window *pWindow)
 {
+    assert(pApplication != NULL);
+    assert(pWindow != NULL);
+
     destroyWindow(pApplication, pWindow);
     destroyApplication(pApplication);
 }

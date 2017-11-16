@@ -42,6 +42,8 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
 void
 destroyApplication(Application *pApplication)
 {
+    assert(pApplication != NULL);
+
     free(pApplication);
 }
 
