@@ -15,9 +15,9 @@
 #include "window.h"
 
 
-typedef struct WindowManagerInterfaceContext {
+typedef struct WindowRendererCallbacksContext {
     GLFWwindow *pWindowHandle;
-} WindowManagerInterfaceContext;
+} WindowRendererCallbacksContext;
 
 
 struct Window {
@@ -77,7 +77,7 @@ createVulkanSurface(void *pContext,
 {
     if (glfwCreateWindowSurface(
             instance,
-            ((WindowManagerInterfaceContext *) pContext)->pWindowHandle,
+            ((WindowRendererCallbacksContext *) pContext)->pWindowHandle,
             pBackEndAllocator,
             pSurface)
         != VK_SUCCESS)
@@ -96,8 +96,8 @@ createWindow(Application *pApplication,
              Window **ppWindow)
 {
     int out;
-    WindowManagerInterfaceContext windowManagerInterfaceContext;
-    DkWindowManagerInterface windowManagerInterface;
+    WindowRendererCallbacksContext windowRendererCallbacksContext;
+    DkWindowCallbacks windowRendererCallbacks;
     DkRendererCreateInfo rendererInfo;
 
     assert(pApplication != NULL);
@@ -130,14 +130,14 @@ createWindow(Application *pApplication,
         goto glfw_undo;
     }
 
-    windowManagerInterfaceContext.pWindowHandle = (*ppWindow)->pHandle;
+    windowRendererCallbacksContext.pWindowHandle = (*ppWindow)->pHandle;
 
-    windowManagerInterface.pContext = (void *) &windowManagerInterfaceContext;
-    windowManagerInterface.pfnCreateInstanceExtensionNames =
+    windowRendererCallbacks.pContext = (void *) &windowRendererCallbacksContext;
+    windowRendererCallbacks.pfnCreateInstanceExtensionNames =
         createVulkanInstanceExtensionNames;
-    windowManagerInterface.pfnDestroyInstanceExtensionNames =
+    windowRendererCallbacks.pfnDestroyInstanceExtensionNames =
         destroyVulkanInstanceExtensionNames;
-    windowManagerInterface.pfnCreateSurface = createVulkanSurface;
+    windowRendererCallbacks.pfnCreateSurface = createVulkanSurface;
 
     memset(&rendererInfo, 0, sizeof rendererInfo);
     rendererInfo.pApplicationName = pApplication->pName;
@@ -149,7 +149,7 @@ createWindow(Application *pApplication,
         (DkUint32) pApplication->patchVersion;
     rendererInfo.surfaceWidth = (DkUint32) pCreateInfo->width;
     rendererInfo.surfaceHeight = (DkUint32) pCreateInfo->height;
-    rendererInfo.pWindowManagerInterface = &windowManagerInterface;
+    rendererInfo.pWindowCallbacks = &windowRendererCallbacks;
     rendererInfo.pBackEndAllocator = NULL;
 
     if (dkCreateRenderer(&rendererInfo, NULL, &(*ppWindow)->pRenderer)

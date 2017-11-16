@@ -14,7 +14,7 @@ typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)
 typedef DkResult (*DkPfnCreateSurfaceCallback)
     (void *, VkInstance, const VkAllocationCallbacks *, VkSurfaceKHR *);
 
-struct DkWindowManagerInterface {
+struct DkWindowCallbacks {
     void *pContext;
     DkPfnCreateInstanceExtensionNamesCallback pfnCreateInstanceExtensionNames;
     DkPfnDestroyInstanceExtensionNamesCallback pfnDestroyInstanceExtensionNames;
@@ -28,7 +28,7 @@ struct DkRendererCreateInfo {
     DkUint32 applicationPatchVersion;
     DkUint32 surfaceWidth;
     DkUint32 surfaceHeight;
-    const DkWindowManagerInterface *pWindowManagerInterface;
+    const DkWindowCallbacks *pWindowCallbacks;
     const VkAllocationCallbacks *pBackEndAllocator;
 };
 

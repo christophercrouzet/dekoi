@@ -224,11 +224,10 @@ exit:
 
 
 static DkResult
-dkpCreateInstanceExtensionNames(
-    const DkWindowManagerInterface *pWindowManagerInterface,
-    const DkAllocator *pAllocator,
-    uint32_t *pExtensionCount,
-    const char ***pppExtensionNames)
+dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
+                                const DkAllocator *pAllocator,
+                                uint32_t *pExtensionCount,
+                                const char ***pppExtensionNames)
 {
 #ifdef DK_ENABLE_DEBUG_REPORT
     const char **ppBuffer;
@@ -240,11 +239,11 @@ dkpCreateInstanceExtensionNames(
     DK_ASSERT(pExtensionCount != NULL);
     DK_ASSERT(pppExtensionNames != NULL);
 
-    if (pWindowManagerInterface == NULL) {
+    if (pWindowCallbacks == NULL) {
         *pExtensionCount = 0;
         *pppExtensionNames = NULL;
-    } else if (pWindowManagerInterface->pfnCreateInstanceExtensionNames(
-                   pWindowManagerInterface->pContext,
+    } else if (pWindowCallbacks->pfnCreateInstanceExtensionNames(
+                   pWindowCallbacks->pContext,
                    (uint32_t *) pExtensionCount,
                    pppExtensionNames)
                != DK_SUCCESS)
@@ -266,9 +265,9 @@ dkpCreateInstanceExtensionNames(
 
     ppBuffer[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
-    if (pWindowManagerInterface != NULL)
-        pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
-            pWindowManagerInterface->pContext,
+    if (pWindowCallbacks != NULL)
+        pWindowCallbacks->pfnDestroyInstanceExtensionNames(
+            pWindowCallbacks->pContext,
             *pppExtensionNames);
 
     *pExtensionCount += 1;
@@ -280,13 +279,12 @@ dkpCreateInstanceExtensionNames(
 
 
 static void
-dkpDestroyInstanceExtensionNames(
-    const char **ppExtensionNames,
-    const DkWindowManagerInterface *pWindowManagerInterface,
-    const DkAllocator *pAllocator)
+dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
+                                 const DkWindowCallbacks *pWindowCallbacks,
+                                 const DkAllocator *pAllocator)
 {
 #ifdef DK_ENABLE_DEBUG_REPORT
-    DKP_UNUSED(pWindowManagerInterface);
+    DKP_UNUSED(pWindowCallbacks);
 
     DK_ASSERT(pAllocator != NULL);
 
@@ -294,9 +292,9 @@ dkpDestroyInstanceExtensionNames(
 #else
     DKP_UNUSED(pAllocator);
 
-    if (pWindowManagerInterface != NULL)
-        pWindowManagerInterface->pfnDestroyInstanceExtensionNames(
-            pWindowManagerInterface->pContext,
+    if (pWindowCallbacks != NULL)
+        pWindowCallbacks->pfnDestroyInstanceExtensionNames(
+            pWindowCallbacks->pContext,
             ppExtensionNames);
 #endif /* DK_ENABLE_DEBUG_REPORT */
 }
@@ -382,7 +380,7 @@ dkpCreateInstance(const char *pApplicationName,
                   DkUint32 applicationMajorVersion,
                   DkUint32 applicationMinorVersion,
                   DkUint32 applicationPatchVersion,
-                  const DkWindowManagerInterface *pWindowManagerInterface,
+                  const DkWindowCallbacks *pWindowCallbacks,
                   const VkAllocationCallbacks *pBackEndAllocator,
                   const DkAllocator *pAllocator,
                   VkInstance *pInstanceHandle)
@@ -424,7 +422,7 @@ dkpCreateInstance(const char *pApplicationName,
         goto layer_names_cleanup;
     }
 
-    if (dkpCreateInstanceExtensionNames(pWindowManagerInterface, pAllocator,
+    if (dkpCreateInstanceExtensionNames(pWindowCallbacks, pAllocator,
                                         &extensionCount, &ppExtensionNames)
         != DK_SUCCESS)
     {
@@ -499,7 +497,7 @@ dkpCreateInstance(const char *pApplicationName,
     }
 
 extension_names_cleanup:
-    dkpDestroyInstanceExtensionNames(ppExtensionNames, pWindowManagerInterface,
+    dkpDestroyInstanceExtensionNames(ppExtensionNames, pWindowCallbacks,
                                      pAllocator);
 
 layer_names_cleanup:
@@ -610,21 +608,20 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 
 static DkResult
 dkpCreateSurface(VkInstance instanceHandle,
-                 const DkWindowManagerInterface *pWindowManagerInterface,
+                 const DkWindowCallbacks *pWindowCallbacks,
                  const VkAllocationCallbacks *pBackEndAllocator,
                  VkSurfaceKHR *pSurfaceHandle)
 {
     DK_ASSERT(instanceHandle != NULL);
     DK_ASSERT(pSurfaceHandle != NULL);
 
-    if (pWindowManagerInterface == NULL)
+    if (pWindowCallbacks == NULL)
         *pSurfaceHandle = VK_NULL_HANDLE;
-    else if (pWindowManagerInterface->pfnCreateSurface(
-                   pWindowManagerInterface->pContext,
-                   instanceHandle,
-                   pBackEndAllocator,
-                   pSurfaceHandle)
-               != DK_SUCCESS)
+    else if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pContext,
+                                                instanceHandle,
+                                                pBackEndAllocator,
+                                                pSurfaceHandle)
+             != DK_SUCCESS)
     {
         fprintf(stderr, "the window manager interface's 'createSurface' "
                         "callback returned an error\n");
@@ -2091,7 +2088,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           pCreateInfo->applicationMajorVersion,
                           pCreateInfo->applicationMinorVersion,
                           pCreateInfo->applicationPatchVersion,
-                          pCreateInfo->pWindowManagerInterface,
+                          pCreateInfo->pWindowCallbacks,
                           (*ppRenderer)->pBackEndAllocator,
                           (*ppRenderer)->pAllocator,
                           &(*ppRenderer)->instanceHandle)
@@ -2113,7 +2110,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
     if (dkpCreateSurface((*ppRenderer)->instanceHandle,
-                         pCreateInfo->pWindowManagerInterface,
+                         pCreateInfo->pWindowCallbacks,
                          (*ppRenderer)->pBackEndAllocator,
                          &(*ppRenderer)->surfaceHandle)
         != DK_SUCCESS)
