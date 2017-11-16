@@ -76,19 +76,19 @@ destroyVulkanInstanceExtensionNames(void *pContext,
 
 DkResult
 createVulkanSurface(void *pContext,
-                    VkInstance instance,
+                    VkInstance instanceHandle,
                     const VkAllocationCallbacks *pBackEndAllocator,
-                    VkSurfaceKHR *pSurface)
+                    VkSurfaceKHR *pSurfaceHandle)
 {
     assert(pContext != NULL);
-    assert(instance != NULL);
-    assert(pSurface != NULL);
+    assert(instanceHandle != NULL);
+    assert(pSurfaceHandle != NULL);
 
     if (glfwCreateWindowSurface(
-            instance,
+            instanceHandle,
             ((WindowRendererCallbacksContext *) pContext)->pWindowHandle,
             pBackEndAllocator,
-            pSurface)
+            pSurfaceHandle)
         != VK_SUCCESS)
     {
         fprintf(stderr, "failed to create the Vulkan surface\n");
