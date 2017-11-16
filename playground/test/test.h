@@ -1,7 +1,6 @@
 #ifndef DEKOI_PLAYGROUND_TEST_TEST_H
 #define DEKOI_PLAYGROUND_TEST_TEST_H
 
-#include <dekoi/dekoi>
 #include <dekoi/renderer>
 
 #define UNUSED(x) (void)(x)

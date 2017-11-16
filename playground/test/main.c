@@ -4,6 +4,7 @@
 
 #include "application.h"
 #include "renderer.h"
+#include "test.h"
 #include "window.h"
 
 
