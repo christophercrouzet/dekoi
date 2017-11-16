@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "application.h"
+#include "renderer.h"
 #include "window.h"
 
 
@@ -16,14 +17,17 @@ const unsigned int height = 720;
 
 int
 setup(Application **ppApplication,
-      Window **ppWindow)
+      Window **ppWindow,
+      Renderer **ppRenderer)
 {
     int out;
     ApplicationCreateInfo applicationInfo;
     WindowCreateInfo windowInfo;
+    RendererCreateInfo rendererInfo;
 
     assert(ppApplication != NULL);
     assert(ppWindow != NULL);
+    assert(ppRenderer != NULL);
 
     out = 0;
 
@@ -48,7 +52,26 @@ setup(Application **ppApplication,
         goto application_undo;
     }
 
+    memset(&rendererInfo, 0, sizeof rendererInfo);
+    rendererInfo.pApplicationName = pApplicationName;
+    rendererInfo.applicationMajorVersion = majorVersion;
+    rendererInfo.applicationMinorVersion = minorVersion;
+    rendererInfo.applicationPatchVersion = patchVersion;
+    rendererInfo.surfaceWidth = width;
+    rendererInfo.surfaceHeight = height;
+    rendererInfo.pBackEndAllocator = NULL;
+
+    getWindowRendererCallbacks(*ppWindow, &rendererInfo.pWindowCallbacks);
+
+    if (createRenderer(*ppWindow, &rendererInfo, ppRenderer)) {
+        out = 1;
+        goto window_undo;
+    }
+
     goto exit;
+
+window_undo:
+    destroyWindow(*ppApplication, *ppWindow);
 
 application_undo:
     destroyApplication(*ppApplication);
@@ -60,11 +83,14 @@ exit:
 
 void
 cleanup(Application *pApplication,
-        Window *pWindow)
+        Window *pWindow,
+        Renderer *pRenderer)
 {
     assert(pApplication != NULL);
     assert(pWindow != NULL);
+    assert(pRenderer != NULL);
 
+    destroyRenderer(pWindow, pRenderer);
     destroyWindow(pApplication, pWindow);
     destroyApplication(pApplication);
 }
@@ -76,10 +102,11 @@ main(void)
     int out;
     Application *pApplication;
     Window *pWindow;
+    Renderer *pRenderer;
 
     out = 0;
 
-    if (setup(&pApplication, &pWindow)) {
+    if (setup(&pApplication, &pWindow, &pRenderer)) {
         out = 1;
         goto exit;
     }
@@ -90,7 +117,7 @@ main(void)
     }
 
 cleanup:
-    cleanup(pApplication, pWindow);
+    cleanup(pApplication, pWindow, pRenderer);
 
 exit:
     return out;

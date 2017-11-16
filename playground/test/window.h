@@ -3,7 +3,7 @@
 
 #include "test.h"
 
-typedef struct GLFWwindow GLFWwindow;
+struct DkWindowCallbacks;
 
 struct WindowCreateInfo {
     unsigned int width;
@@ -16,6 +16,11 @@ int createWindow(Application *pApplication,
                  Window **ppWindow);
 void destroyWindow(Application *pApplication,
                    Window *pWindow);
+void getWindowRendererCallbacks(
+    Window *pWindow,
+    const DkWindowCallbacks **ppWindowRendererCallbacks);
+int bindWindowRenderer(Window *pWindow,
+                       Renderer *pRenderer);
 void getWindowCloseFlag(const Window *pWindow,
                         int *pCloseFlag);
 int pollWindowEvents(const Window *pWindow);

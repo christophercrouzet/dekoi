@@ -12,6 +12,7 @@
 #include <dekoi/renderer>
 
 #include "application.h"
+#include "renderer.h"
 #include "window.h"
 
 
@@ -22,7 +23,8 @@ typedef struct WindowRendererCallbacksContext {
 
 struct Window {
     GLFWwindow *pHandle;
-    DkRenderer *pRenderer;
+    DkWindowCallbacks windowRendererCallbacks;
+    Renderer *pRenderer;
 };
 
 
@@ -36,8 +38,9 @@ onFramebufferSizeChanged(GLFWwindow *pWindowHandle,
     assert(pWindowHandle != NULL);
 
     pWindow = (Window *) glfwGetWindowUserPointer(pWindowHandle);
-    dkResizeRendererSurface(pWindow->pRenderer,
-                            (DkUint32) width, (DkUint32) height);
+    resizeRendererSurface(pWindow->pRenderer,
+                          (unsigned int) width,
+                          (unsigned int) height);
 }
 
 
@@ -105,9 +108,7 @@ createWindow(Application *pApplication,
              Window **ppWindow)
 {
     int out;
-    WindowRendererCallbacksContext windowRendererCallbacksContext;
-    DkWindowCallbacks windowRendererCallbacks;
-    DkRendererCreateInfo rendererInfo;
+    WindowRendererCallbacksContext *pWindowRendererCallbacksContext;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
@@ -139,35 +140,24 @@ createWindow(Application *pApplication,
         goto glfw_undo;
     }
 
-    windowRendererCallbacksContext.pWindowHandle = (*ppWindow)->pHandle;
-
-    windowRendererCallbacks.pContext = (void *) &windowRendererCallbacksContext;
-    windowRendererCallbacks.pfnCreateInstanceExtensionNames =
-        createVulkanInstanceExtensionNames;
-    windowRendererCallbacks.pfnDestroyInstanceExtensionNames =
-        destroyVulkanInstanceExtensionNames;
-    windowRendererCallbacks.pfnCreateSurface = createVulkanSurface;
-
-    memset(&rendererInfo, 0, sizeof rendererInfo);
-    rendererInfo.pApplicationName = pApplication->pName;
-    rendererInfo.applicationMajorVersion =
-        (DkUint32) pApplication->majorVersion;
-    rendererInfo.applicationMinorVersion =
-        (DkUint32) pApplication->minorVersion;
-    rendererInfo.applicationPatchVersion =
-        (DkUint32) pApplication->patchVersion;
-    rendererInfo.surfaceWidth = (DkUint32) pCreateInfo->width;
-    rendererInfo.surfaceHeight = (DkUint32) pCreateInfo->height;
-    rendererInfo.pWindowCallbacks = &windowRendererCallbacks;
-    rendererInfo.pBackEndAllocator = NULL;
-
-    if (dkCreateRenderer(&rendererInfo, NULL, &(*ppWindow)->pRenderer)
-        != DK_SUCCESS)
-    {
-        fprintf(stderr, "failed to create the renderer\n");
+    pWindowRendererCallbacksContext = (WindowRendererCallbacksContext *)
+        malloc(sizeof *pWindowRendererCallbacksContext);
+    if (pWindowRendererCallbacksContext == NULL) {
+        fprintf(stderr, "failed to allocate the window renderer callbacks "
+                        "context\n");
         out = 1;
         goto glfw_window_undo;
     }
+
+    pWindowRendererCallbacksContext->pWindowHandle = (*ppWindow)->pHandle;
+
+    (*ppWindow)->windowRendererCallbacks.pContext = (void *)
+        pWindowRendererCallbacksContext;
+    (*ppWindow)->windowRendererCallbacks.pfnCreateInstanceExtensionNames =
+        createVulkanInstanceExtensionNames;
+    (*ppWindow)->windowRendererCallbacks.pfnDestroyInstanceExtensionNames =
+        destroyVulkanInstanceExtensionNames;
+    (*ppWindow)->windowRendererCallbacks.pfnCreateSurface = createVulkanSurface;
 
     glfwSetWindowUserPointer((*ppWindow)->pHandle, *ppWindow);
 
@@ -175,12 +165,15 @@ createWindow(Application *pApplication,
                                    onFramebufferSizeChanged);
 
     if (bindApplicationWindow(pApplication, *ppWindow)) {
-        fprintf(stderr, "could not bind the window with the application\n");
         out = 1;
-        goto glfw_window_undo;
+        goto window_renderer_callbacks_context_undo;
     }
 
+    (*ppWindow)->pRenderer = NULL;
     goto exit;
+
+window_renderer_callbacks_context_undo:
+    free((*ppWindow)->windowRendererCallbacks.pContext);
 
 glfw_window_undo:
     glfwDestroyWindow((*ppWindow)->pHandle);
@@ -203,11 +196,33 @@ destroyWindow(Application *pApplication,
     assert(pApplication != NULL);
     assert(pWindow != NULL);
 
-    dkDestroyRenderer(pWindow->pRenderer, NULL);
     bindApplicationWindow(pApplication, NULL);
+    free(pWindow->windowRendererCallbacks.pContext);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
     free(pWindow);
+}
+
+
+void
+getWindowRendererCallbacks(Window *pWindow,
+                           const DkWindowCallbacks **ppWindowRendererCallbacks)
+{
+    assert(pWindow != NULL);
+    assert(ppWindowRendererCallbacks != NULL);
+
+    *ppWindowRendererCallbacks = &pWindow->windowRendererCallbacks;
+}
+
+
+int
+bindWindowRenderer(Window *pWindow,
+                   Renderer *pRenderer)
+{
+    assert(pWindow != NULL);
+
+    pWindow->pRenderer = pRenderer;
+    return 0;
 }
 
 
