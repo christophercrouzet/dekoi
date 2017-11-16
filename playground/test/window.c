@@ -188,11 +188,14 @@ exit:
 
 
 void
-destroyWindow(Window *pWindow)
+destroyWindow(Application *pApplication,
+              Window *pWindow)
 {
+    assert(pApplication != NULL);
     assert(pWindow != NULL);
 
     dkDestroyRenderer(pWindow->pRenderer, NULL);
+    bindApplicationWindow(pApplication, NULL);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
     free(pWindow);

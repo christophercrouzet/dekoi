@@ -62,7 +62,7 @@ void
 cleanup(Application *pApplication,
         Window *pWindow)
 {
-    destroyWindow(pWindow);
+    destroyWindow(pApplication, pWindow);
     destroyApplication(pApplication);
 }
 
