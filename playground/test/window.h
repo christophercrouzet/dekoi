@@ -5,11 +5,6 @@
 
 typedef struct GLFWwindow GLFWwindow;
 
-struct Window {
-    GLFWwindow *pHandle;
-    DkRenderer *pRenderer;
-};
-
 struct WindowCreateInfo {
     unsigned int width;
     unsigned int height;

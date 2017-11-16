@@ -20,6 +20,12 @@ typedef struct WindowManagerInterfaceContext {
 } WindowManagerInterfaceContext;
 
 
+struct Window {
+    GLFWwindow *pHandle;
+    DkRenderer *pRenderer;
+};
+
+
 void
 onFramebufferSizeChanged(GLFWwindow *pWindowHandle,
                          int width,
@@ -159,7 +165,12 @@ createWindow(Application *pApplication,
     glfwSetFramebufferSizeCallback((*ppWindow)->pHandle,
                                    onFramebufferSizeChanged);
 
-    pApplication->pWindow = *ppWindow;
+    if (bindApplicationWindow(pApplication, *ppWindow)) {
+        fprintf(stderr, "could not bind the window with the application\n");
+        out = 1;
+        goto glfw_window_undo;
+    }
+
     goto exit;
 
 glfw_window_undo:

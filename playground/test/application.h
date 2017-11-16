@@ -3,15 +3,6 @@
 
 #include "test.h"
 
-struct Application {
-    const char *pName;
-    unsigned int majorVersion;
-    unsigned int minorVersion;
-    unsigned int patchVersion;
-    Window *pWindow;
-    int stopFlag;
-};
-
 struct ApplicationCreateInfo {
     const char *pName;
     unsigned int majorVersion;
@@ -22,6 +13,8 @@ struct ApplicationCreateInfo {
 int createApplication(const ApplicationCreateInfo *pCreateInfo,
                       Application **ppApplication);
 void destroyApplication(Application *pApplication);
+int bindApplicationWindow(Application *pApplication,
+                          Window *pWindow);
 int runApplication(Application *pApplication);
 
 #endif /* DEKOI_PLAYGROUND_TEST_APPLICATION_H */

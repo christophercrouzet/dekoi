@@ -7,6 +7,16 @@
 #include "window.h"
 
 
+struct Application {
+    const char *pName;
+    unsigned int majorVersion;
+    unsigned int minorVersion;
+    unsigned int patchVersion;
+    Window *pWindow;
+    int stopFlag;
+};
+
+
 int
 createApplication(const ApplicationCreateInfo *pCreateInfo,
                   Application **ppApplication)
@@ -33,6 +43,17 @@ void
 destroyApplication(Application *pApplication)
 {
     free(pApplication);
+}
+
+
+int
+bindApplicationWindow(Application *pApplication,
+                      Window *pWindow)
+{
+    assert(pApplication != NULL);
+
+    pApplication->pWindow = pWindow;
+    return 0;
 }
 
 
