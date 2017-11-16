@@ -45,12 +45,12 @@ setup(Application **ppApplication,
 
     if (createWindow(*ppApplication, &windowInfo, ppWindow)) {
         out = 1;
-        goto application_cleanup;
+        goto application_undo;
     }
 
     goto exit;
 
-application_cleanup:
+application_undo:
     destroyApplication(*ppApplication);
 
 exit:
