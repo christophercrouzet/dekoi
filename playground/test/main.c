@@ -24,6 +24,7 @@ setup(Application **ppApplication,
     int out;
     ApplicationCreateInfo applicationInfo;
     WindowCreateInfo windowInfo;
+    const DkWindowCallbacks *pWindowRendererCallbacks;
     RendererCreateInfo rendererInfo;
 
     assert(ppApplication != NULL);
@@ -53,6 +54,8 @@ setup(Application **ppApplication,
         goto application_undo;
     }
 
+    getWindowRendererCallbacks(*ppWindow, &pWindowRendererCallbacks);
+
     memset(&rendererInfo, 0, sizeof rendererInfo);
     rendererInfo.pApplicationName = pApplicationName;
     rendererInfo.applicationMajorVersion = majorVersion;
@@ -60,9 +63,8 @@ setup(Application **ppApplication,
     rendererInfo.applicationPatchVersion = patchVersion;
     rendererInfo.surfaceWidth = width;
     rendererInfo.surfaceHeight = height;
+    rendererInfo.pWindowCallbacks = pWindowRendererCallbacks;
     rendererInfo.pBackEndAllocator = NULL;
-
-    getWindowRendererCallbacks(*ppWindow, &rendererInfo.pWindowCallbacks);
 
     if (createRenderer(*ppWindow, &rendererInfo, ppRenderer)) {
         out = 1;
