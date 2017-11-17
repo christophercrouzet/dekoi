@@ -157,7 +157,7 @@ static DkResult
 dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
                               const char * const *ppRequiredLayerNames,
                               const DkAllocator *pAllocator,
-                              DkBool32 *pSupported)
+                              int *pSupported)
 {
     DkResult out;
     uint32_t i;
@@ -197,14 +197,14 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
         goto layers_cleanup;
     }
 
-    *pSupported = DK_FALSE;
+    *pSupported = DKP_FALSE;
     for (i = 0; i < requiredLayerCount; ++i) {
-        DkBool32 found;
+        int found;
 
-        found = DK_FALSE;
+        found = DKP_FALSE;
         for (j = 0; j < layerCount; ++j) {
             if (strcmp(pLayers[j].layerName, ppRequiredLayerNames[i]) == 0) {
-                found = DK_TRUE;
+                found = DKP_TRUE;
                 break;
             }
         }
@@ -213,7 +213,7 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
             goto layers_cleanup;
     }
 
-    *pSupported = DK_TRUE;
+    *pSupported = DKP_TRUE;
 
 layers_cleanup:
     DK_FREE(pAllocator, pLayers);
@@ -304,7 +304,7 @@ static DkResult
 dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
                                   const char * const *ppRequiredExtensionNames,
                                   const DkAllocator *pAllocator,
-                                  DkBool32 *pSupported)
+                                  int *pSupported)
 {
     DkResult out;
     uint32_t i;
@@ -346,17 +346,17 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
         goto extensions_cleanup;
     }
 
-    *pSupported = DK_FALSE;
+    *pSupported = DKP_FALSE;
     for (i = 0; i < requiredExtensionCount; ++i) {
-        DkBool32 found;
+        int found;
 
-        found = DK_FALSE;
+        found = DKP_FALSE;
         for (j = 0; j < extensionCount; ++j) {
             if (strcmp(pExtensions[j].extensionName,
                        ppRequiredExtensionNames[i])
                 == 0)
             {
-                found = DK_TRUE;
+                found = DKP_TRUE;
                 break;
             }
         }
@@ -365,7 +365,7 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
             goto extensions_cleanup;
     }
 
-    *pSupported = DK_TRUE;
+    *pSupported = DKP_TRUE;
 
 extensions_cleanup:
     DK_FREE(pAllocator, pExtensions);
@@ -377,9 +377,9 @@ exit:
 
 static DkResult
 dkpCreateInstance(const char *pApplicationName,
-                  DkUint32 applicationMajorVersion,
-                  DkUint32 applicationMinorVersion,
-                  DkUint32 applicationPatchVersion,
+                  unsigned int applicationMajorVersion,
+                  unsigned int applicationMinorVersion,
+                  unsigned int applicationPatchVersion,
                   const DkWindowCallbacks *pWindowCallbacks,
                   const VkAllocationCallbacks *pBackEndAllocator,
                   const DkAllocator *pAllocator,
@@ -388,10 +388,10 @@ dkpCreateInstance(const char *pApplicationName,
     DkResult out;
     uint32_t layerCount;
     const char **ppLayerNames;
-    DkBool32 layersSupported;
+    int layersSupported;
     uint32_t extensionCount;
     const char **ppExtensionNames;
-    DkBool32 extensionsSupported;
+    int extensionsSupported;
     VkApplicationInfo applicationInfo;
     VkInstanceCreateInfo createInfo;
 
@@ -688,7 +688,7 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
                                 uint32_t requiredExtensionCount,
                                 const char * const *ppRequiredExtensionNames,
                                 const DkAllocator *pAllocator,
-                                DkBool32 *pSupported)
+                                int *pSupported)
 {
     DkResult out;
     uint32_t i;
@@ -730,17 +730,17 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
         goto extensions_cleanup;
     }
 
-    *pSupported = DK_FALSE;
+    *pSupported = DKP_FALSE;
     for (i = 0; i < requiredExtensionCount; ++i) {
-        DkBool32 found;
+        int found;
 
-        found = DK_FALSE;
+        found = DKP_FALSE;
         for (j = 0; j < extensionCount; ++j) {
             if (strcmp(pExtensions[j].extensionName,
                        ppRequiredExtensionNames[i])
                 == 0)
             {
-                found = DK_TRUE;
+                found = DKP_TRUE;
                 break;
             }
         }
@@ -749,7 +749,7 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
             goto extensions_cleanup;
     }
 
-    *pSupported = DK_TRUE;
+    *pSupported = DKP_TRUE;
 
 extensions_cleanup:
     DK_FREE(pAllocator, pExtensions);
@@ -795,7 +795,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDeviceHandle,
                                              &propertyCount, pProperties);
     for (i = 0; i < propertyCount; ++i) {
-        DkBool32 graphicsSupported;
+        int graphicsSupported;
         VkBool32 presentSupported;
 
         graphicsSupported = pProperties[i].queueCount > 0
@@ -1093,11 +1093,11 @@ exit:
 static void
 dkpCheckSwapChainProperties(const DkpSwapChainProperties *pSwapChainProperties,
                             DkpLogging logging,
-                            DkBool32 *pValid)
+                            int *pValid)
 {
     DK_ASSERT(pSwapChainProperties != NULL);
 
-    *pValid = DK_FALSE;
+    *pValid = DKP_FALSE;
 
     if (pSwapChainProperties->imageUsage == (VkImageUsageFlags) -1) {
         if (logging == DKP_LOGGING_ENABLED)
@@ -1113,7 +1113,7 @@ dkpCheckSwapChainProperties(const DkpSwapChainProperties *pSwapChainProperties,
         return;
     }
 
-    *pValid = DK_TRUE;
+    *pValid = DKP_TRUE;
 }
 
 
@@ -1121,12 +1121,12 @@ static DkResult
 dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
                          VkSurfaceKHR surfaceHandle,
                          const DkAllocator *pAllocator,
-                         DkBool32 *pSupported)
+                         int *pSupported)
 {
     VkExtent2D imageExtent;
     DkpSwapChainProperties swapChainProperties;
 
-    *pSupported = DK_FALSE;
+    *pSupported = DKP_FALSE;
 
     if (surfaceHandle == VK_NULL_HANDLE)
         return DK_SUCCESS;
@@ -1158,18 +1158,18 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
                          const char * const *ppExtensionNames,
                          const DkAllocator *pAllocator,
                          DkpQueueFamilyIndices *pQueueFamilyIndices,
-                         DkBool32 *pSuitable)
+                         int *pSuitable)
 {
     VkPhysicalDeviceProperties properties;
-    DkBool32 extensionsSupported;
-    DkBool32 swapChainSupported;
+    int extensionsSupported;
+    int swapChainSupported;
 
     DK_ASSERT(physicalDeviceHandle != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pQueueFamilyIndices != NULL);
     DK_ASSERT(pSuitable != NULL);
 
-    *pSuitable = DK_FALSE;
+    *pSuitable = DKP_FALSE;
 
     vkGetPhysicalDeviceProperties(physicalDeviceHandle, &properties);
     if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
@@ -1210,7 +1210,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
     if (surfaceHandle != VK_NULL_HANDLE && !swapChainSupported)
         return DK_SUCCESS;
 
-    *pSuitable = DK_TRUE;
+    *pSuitable = DKP_TRUE;
     return DK_SUCCESS;
 }
 
@@ -1264,7 +1264,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
 
     *pPhysicalDeviceHandle = NULL;
     for (i = 0; i < physicalDeviceCount; ++i) {
-        DkBool32 suitable;
+        int suitable;
 
         if (dkpInspectPhysicalDevice(pPhysicalDeviceHandles[i], surfaceHandle,
                                      extensionCount, ppExtensionNames,
@@ -1310,7 +1310,7 @@ dkpCreateDevice(VkInstance instanceHandle,
     const char **ppExtensionNames;
     uint32_t queueCount;
     float *pQueuePriorities;
-    DkUint32 queueInfoCount;
+    uint32_t queueInfoCount;
     VkDeviceQueueCreateInfo *pQueueInfos;
     VkDeviceCreateInfo createInfo;
 
@@ -1736,7 +1736,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
 {
     DkResult out;
     DkpSwapChainProperties swapChainProperties;
-    DkBool32 valid;
+    int valid;
     VkSharingMode imageSharingMode;
     uint32_t queueFamilyIndexCount;
     uint32_t *pQueueFamilyIndices;
@@ -2063,6 +2063,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
+    int valid;
 
     out = DK_SUCCESS;
 
@@ -2094,9 +2095,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->surfaceExtent.height = (uint32_t) pCreateInfo->surfaceHeight;
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
-                          pCreateInfo->applicationMajorVersion,
-                          pCreateInfo->applicationMinorVersion,
-                          pCreateInfo->applicationPatchVersion,
+                          (unsigned int) pCreateInfo->applicationMajorVersion,
+                          (unsigned int) pCreateInfo->applicationMinorVersion,
+                          (unsigned int) pCreateInfo->applicationPatchVersion,
                           pCreateInfo->pWindowCallbacks,
                           (*ppRenderer)->pBackEndAllocator,
                           (*ppRenderer)->pAllocator,
