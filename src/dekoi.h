@@ -122,7 +122,8 @@ typedef struct DkWindowCallbacks DkWindowCallbacks;
 typedef enum DkResult {
     DK_SUCCESS = 0,
     DK_ERROR = -1,
-    DK_ERROR_ALLOCATION = -2
+    DK_ERROR_INVALID_VALUE = -2,
+    DK_ERROR_ALLOCATION = -3
 } DkResult;
 
 const char * dkGetResultString(DkResult result);

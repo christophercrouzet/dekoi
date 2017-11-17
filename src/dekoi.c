@@ -9,6 +9,8 @@ dkGetResultString(DkResult result)
             return "success";
         case DK_ERROR:
             return "error";
+        case DK_ERROR_INVALID_VALUE:
+            return "invalid value";
         case DK_ERROR_ALLOCATION:
             return "allocation error";
         default:

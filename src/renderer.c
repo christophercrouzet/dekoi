@@ -2064,10 +2064,19 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 {
     DkResult out;
 
-    DK_ASSERT(pCreateInfo != NULL);
-    DK_ASSERT(ppRenderer != NULL);
-
     out = DK_SUCCESS;
+
+    if (pCreateInfo == NULL) {
+        fprintf(stderr, "invalid argument 'pCreateInfo' (NULL)\n");
+        out = DK_ERROR_INVALID_VALUE;
+        goto exit;
+    }
+
+    if (ppRenderer == NULL) {
+        fprintf(stderr, "invalid argument 'ppRenderer' (NULL)\n");
+        out = DK_ERROR_INVALID_VALUE;
+        goto exit;
+    }
 
     if (pAllocator == NULL)
         dkpGetDefaultAllocator(&pAllocator);
