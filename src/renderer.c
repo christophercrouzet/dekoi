@@ -613,14 +613,13 @@ dkpCreateSurface(VkInstance instanceHandle,
                  VkSurfaceKHR *pSurfaceHandle)
 {
     DK_ASSERT(instanceHandle != NULL);
+    DK_ASSERT(pWindowCallbacks != NULL);
     DK_ASSERT(pSurfaceHandle != NULL);
 
-    if (pWindowCallbacks == NULL)
-        *pSurfaceHandle = VK_NULL_HANDLE;
-    else if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pContext,
-                                                instanceHandle,
-                                                pBackEndAllocator,
-                                                pSurfaceHandle)
+    if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pContext,
+                                           instanceHandle,
+                                           pBackEndAllocator,
+                                           pSurfaceHandle)
              != DK_SUCCESS)
     {
         fprintf(stderr, "the window manager interface's 'createSurface' "
@@ -638,9 +637,7 @@ dkpDestroySurface(VkInstance instanceHandle,
                   const VkAllocationCallbacks *pBackEndAllocator)
 {
     DK_ASSERT(instanceHandle != NULL);
-
-    if (surfaceHandle == VK_NULL_HANDLE)
-        return;
+    DK_ASSERT(surfaceHandle != VK_NULL_HANDLE);
 
     vkDestroySurfaceKHR(instanceHandle, surfaceHandle, pBackEndAllocator);
 }
@@ -1128,9 +1125,6 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
 
     *pSupported = DKP_FALSE;
 
-    if (surfaceHandle == VK_NULL_HANDLE)
-        return DK_SUCCESS;
-
     /*
        Use dummy image extent values here as we're only interested in checking
        swap chain support rather than actually creating a valid swap chain.
@@ -1200,15 +1194,17 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
         return DK_SUCCESS;
     }
 
-    if (dkpCheckSwapChainSupport(physicalDeviceHandle, surfaceHandle,
-                                 pAllocator, &swapChainSupported)
-        != DK_SUCCESS)
-    {
-        return DK_ERROR;
-    }
+    if (surfaceHandle != VK_NULL_HANDLE) {
+        if (dkpCheckSwapChainSupport(physicalDeviceHandle, surfaceHandle,
+                                     pAllocator, &swapChainSupported)
+            != DK_SUCCESS)
+        {
+            return DK_ERROR;
+        }
 
-    if (surfaceHandle != VK_NULL_HANDLE && !swapChainSupported)
-        return DK_SUCCESS;
+        if (!swapChainSupported)
+            return DK_SUCCESS;
+    }
 
     *pSuitable = DKP_TRUE;
     return DK_SUCCESS;
@@ -1747,13 +1743,6 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     DK_ASSERT(pSwapChain != NULL);
 
     out = DK_SUCCESS;
-    pSwapChain->handle = VK_NULL_HANDLE;
-    pSwapChain->imageCount = 0;
-    pSwapChain->pImageHandles = NULL;
-    pSwapChain->pImageViewHandles = NULL;
-
-    if (surfaceHandle == VK_NULL_HANDLE)
-        goto exit;
 
     if (dkpPickSwapChainProperties(pDevice->physicalHandle, surfaceHandle,
                                    pDesiredImageExtent, pAllocator,
@@ -2064,6 +2053,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 {
     DkResult out;
     int valid;
+    int headless;
 
     out = DK_SUCCESS;
 
@@ -2081,6 +2071,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     if (pAllocator == NULL)
         dkpGetDefaultAllocator(&pAllocator);
+
+    headless = pCreateInfo->pWindowCallbacks == NULL;
 
     *ppRenderer = (DkRenderer *) DK_ALLOCATE(pAllocator, sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
@@ -2119,15 +2111,18 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
-    if (dkpCreateSurface((*ppRenderer)->instanceHandle,
-                         pCreateInfo->pWindowCallbacks,
-                         (*ppRenderer)->pBackEndAllocator,
-                         &(*ppRenderer)->surfaceHandle)
-        != DK_SUCCESS)
-    {
-        out = DK_ERROR;
-        goto debug_report_callback_undo;
-    }
+    if (!headless) {
+        if (dkpCreateSurface((*ppRenderer)->instanceHandle,
+                             pCreateInfo->pWindowCallbacks,
+                             (*ppRenderer)->pBackEndAllocator,
+                             &(*ppRenderer)->surfaceHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto debug_report_callback_undo;
+        }
+    } else
+        (*ppRenderer)->surfaceHandle = VK_NULL_HANDLE;
 
     if (dkpCreateDevice((*ppRenderer)->instanceHandle,
                         (*ppRenderer)->surfaceHandle,
@@ -2158,17 +2153,19 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_undo;
     }
 
-    if (dkpCreateSwapChain(&(*ppRenderer)->device,
-                           (*ppRenderer)->surfaceHandle,
-                           &(*ppRenderer)->surfaceExtent,
-                           VK_NULL_HANDLE,
-                           (*ppRenderer)->pBackEndAllocator,
-                           (*ppRenderer)->pAllocator,
-                           &(*ppRenderer)->swapChain)
-        != DK_SUCCESS)
-    {
-        out = DK_ERROR;
-        goto semaphores_undo;
+    if (!headless) {
+        if (dkpCreateSwapChain(&(*ppRenderer)->device,
+                               (*ppRenderer)->surfaceHandle,
+                               &(*ppRenderer)->surfaceExtent,
+                               VK_NULL_HANDLE,
+                               (*ppRenderer)->pBackEndAllocator,
+                               (*ppRenderer)->pAllocator,
+                               &(*ppRenderer)->swapChain)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto semaphores_undo;
+        }
     }
 
     goto exit;
@@ -2183,9 +2180,10 @@ device_undo:
     dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
 
 surface_undo:
-    dkpDestroySurface((*ppRenderer)->instanceHandle,
-                      (*ppRenderer)->surfaceHandle,
-                      (*ppRenderer)->pBackEndAllocator);
+    if (!headless)
+        dkpDestroySurface((*ppRenderer)->instanceHandle,
+                          (*ppRenderer)->surfaceHandle,
+                          (*ppRenderer)->pBackEndAllocator);
 
 debug_report_callback_undo:
 #ifdef DK_ENABLE_DEBUG_REPORT
@@ -2213,20 +2211,29 @@ void
 dkDestroyRenderer(DkRenderer *pRenderer,
                   const DkAllocator *pAllocator)
 {
+    int headless;
+
     if (pRenderer == NULL)
         return;
 
     if (pAllocator == NULL)
         dkpGetDefaultAllocator(&pAllocator);
 
-    dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
-                        pRenderer->pBackEndAllocator, pAllocator);
+    headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
+
+    if (!headless)
+        dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
+                            pRenderer->pBackEndAllocator, pAllocator);
+
     dkpDestroySemaphores(&pRenderer->device, pRenderer->pSemaphoreHandles,
                          pRenderer->pBackEndAllocator, pRenderer->pAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
-    dkpDestroySurface(pRenderer->instanceHandle,
-                      pRenderer->surfaceHandle,
-                      pRenderer->pBackEndAllocator);
+
+    if (!headless)
+        dkpDestroySurface(pRenderer->instanceHandle,
+                          pRenderer->surfaceHandle,
+                          pRenderer->pBackEndAllocator);
+
 #ifdef DK_ENABLE_DEBUG_REPORT
     dkpDestroyDebugReportCallback(pRenderer->instanceHandle,
                                   pRenderer->debugReportCallbackHandle,
