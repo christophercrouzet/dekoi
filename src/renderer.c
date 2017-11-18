@@ -95,6 +95,7 @@ struct DkRenderer {
     DkpQueues queues;
     VkSemaphore *pSemaphoreHandles;
     DkpSwapChain swapChain;
+    VkRenderPass renderPassHandle;
 };
 
 
@@ -1892,6 +1893,132 @@ dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
 
 
 static DkResult
+dkpCreateRenderPass(const DkpDevice *pDevice,
+                    const DkpSwapChain *pSwapChain,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    const DkAllocator *pAllocator,
+                    VkRenderPass *pRenderPassHandle)
+{
+    DkResult out;
+    uint32_t i;
+    uint32_t colorAttachmentCount;
+    VkAttachmentDescription *pColorAttachments;
+    VkAttachmentReference *pColorAttachmentReferences;
+    uint32_t subpassCount;
+    VkSubpassDescription *pSubpasses;
+    VkRenderPassCreateInfo renderPassInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pRenderPassHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    colorAttachmentCount = 1;
+    pColorAttachments = (VkAttachmentDescription *)
+        DK_ALLOCATE(pAllocator,
+                    sizeof *pColorAttachments * colorAttachmentCount);
+    if (pColorAttachments == NULL) {
+        fprintf(stderr, "failed to allocate the color attachments\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    pColorAttachmentReferences = (VkAttachmentReference *)
+        DK_ALLOCATE(pAllocator,
+                    sizeof *pColorAttachmentReferences * colorAttachmentCount);
+    if (pColorAttachmentReferences == NULL) {
+        fprintf(stderr, "failed to allocate the color attachment references\n");
+        out = DK_ERROR_ALLOCATION;
+        goto color_attachments_cleanup;
+    }
+
+    for (i = 0; i < colorAttachmentCount; ++i) {
+        pColorAttachments[i].flags = 0;
+        pColorAttachments[i].format = pSwapChain->format.format;
+        pColorAttachments[i].samples = VK_SAMPLE_COUNT_1_BIT;
+        pColorAttachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        pColorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        pColorAttachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        pColorAttachments[i].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        pColorAttachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        pColorAttachments[i].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        pColorAttachmentReferences[i].attachment = i;
+        pColorAttachmentReferences[i].layout =
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    }
+
+    subpassCount = 1;
+    pSubpasses = (VkSubpassDescription *)
+        DK_ALLOCATE(pAllocator, sizeof *pSubpasses * subpassCount);
+    if (pSubpasses == NULL) {
+        fprintf(stderr, "failed to allocate the subpasses\n");
+        out = DK_ERROR_ALLOCATION;
+        goto color_attachment_references_cleanup;
+    }
+
+    pSubpasses[0].flags = 0;
+    pSubpasses[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    pSubpasses[0].inputAttachmentCount = 0;
+    pSubpasses[0].pInputAttachments = NULL;
+    pSubpasses[0].colorAttachmentCount = colorAttachmentCount;
+    pSubpasses[0].pColorAttachments = pColorAttachmentReferences;
+    pSubpasses[0].pResolveAttachments = NULL;
+    pSubpasses[0].pDepthStencilAttachment = NULL;
+    pSubpasses[0].preserveAttachmentCount = 0;
+    pSubpasses[0].pPreserveAttachments = NULL;
+
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    renderPassInfo.pNext = NULL;
+    renderPassInfo.flags = 0;
+    renderPassInfo.attachmentCount = colorAttachmentCount;
+    renderPassInfo.pAttachments = pColorAttachments;
+    renderPassInfo.subpassCount = subpassCount;
+    renderPassInfo.pSubpasses = pSubpasses;
+    renderPassInfo.dependencyCount = 0;
+    renderPassInfo.pDependencies = NULL;
+
+    if (vkCreateRenderPass(pDevice->logicalHandle, &renderPassInfo,
+                           pBackEndAllocator, pRenderPassHandle)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to created the render pass\n");
+        out = DK_ERROR;
+        goto subpasses_cleanup;
+    }
+
+subpasses_cleanup:
+    DK_FREE(pAllocator, pSubpasses);
+
+color_attachment_references_cleanup:
+    DK_FREE(pAllocator, pColorAttachmentReferences);
+
+color_attachments_cleanup:
+    DK_FREE(pAllocator, pColorAttachments);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyRenderPass(const DkpDevice *pDevice,
+                     VkRenderPass renderPassHandle,
+                     const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+
+    vkDestroyRenderPass(pDevice->logicalHandle, renderPassHandle,
+                        pBackEndAllocator);
+}
+
+
+static DkResult
 dkpCreateShaderCode(const char *pFilePath,
                     const DkAllocator *pAllocator,
                     size_t *pShaderCodeSize,
@@ -2147,9 +2274,27 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto semaphores_undo;
         }
+
+        if (dkpCreateRenderPass(&(*ppRenderer)->device,
+                                &(*ppRenderer)->swapChain,
+                                (*ppRenderer)->pBackEndAllocator,
+                                (*ppRenderer)->pAllocator,
+                                &(*ppRenderer)->renderPassHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto swap_chain_undo;
+        }
     }
 
     goto exit;
+
+swap_chain_undo:
+    if (!headless)
+        dkpDestroySwapChain(&(*ppRenderer)->device,
+                            &(*ppRenderer)->swapChain,
+                            (*ppRenderer)->pBackEndAllocator,
+                            (*ppRenderer)->pAllocator);
 
 semaphores_undo:
     dkpDestroySemaphores(&(*ppRenderer)->device,
@@ -2199,9 +2344,13 @@ dkDestroyRenderer(DkRenderer *pRenderer,
 
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
-    if (!headless)
+    if (!headless) {
+        dkpDestroyRenderPass(&pRenderer->device,
+                             pRenderer->renderPassHandle,
+                             pRenderer->pBackEndAllocator);
         dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
                             pRenderer->pBackEndAllocator, pAllocator);
+    }
 
     dkpDestroySemaphores(&pRenderer->device, pRenderer->pSemaphoreHandles,
                          pRenderer->pBackEndAllocator, pRenderer->pAllocator);
