@@ -96,6 +96,7 @@ struct DkRenderer {
     VkSemaphore *pSemaphoreHandles;
     DkpSwapChain swapChain;
     VkRenderPass renderPassHandle;
+    VkPipelineLayout pipelineLayoutHandle;
 };
 
 
@@ -2019,6 +2020,56 @@ dkpDestroyRenderPass(const DkpDevice *pDevice,
 
 
 static DkResult
+dkpCreatePipelineLayout(const DkpDevice *pDevice,
+                        const VkAllocationCallbacks *pBackEndAllocator,
+                        VkPipelineLayout *pPipelineLayoutHandle)
+{
+    DkResult out;
+    VkPipelineLayoutCreateInfo layoutInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pPipelineLayoutHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    layoutInfo.pNext = NULL;
+    layoutInfo.flags = 0;
+    layoutInfo.setLayoutCount = 0;
+    layoutInfo.pSetLayouts = NULL;
+    layoutInfo.pushConstantRangeCount = 0;
+    layoutInfo.pPushConstantRanges = 0;
+
+    if (vkCreatePipelineLayout(pDevice->logicalHandle, &layoutInfo,
+                               pBackEndAllocator, pPipelineLayoutHandle)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the pipeline layout\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyPipelineLayout(const DkpDevice *pDevice,
+                         VkPipelineLayout pipelineLayoutHandle,
+                         const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
+
+    vkDestroyPipelineLayout(pDevice->logicalHandle, pipelineLayoutHandle,
+                            pBackEndAllocator);
+}
+
+
+static DkResult
 dkpCreateShaderCode(const char *pFilePath,
                     const DkAllocator *pAllocator,
                     size_t *pShaderCodeSize,
@@ -2285,9 +2336,24 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto swap_chain_undo;
         }
+
+        if (dkpCreatePipelineLayout(&(*ppRenderer)->device,
+                                    (*ppRenderer)->pBackEndAllocator,
+                                    &(*ppRenderer)->pipelineLayoutHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto render_pass_undo;
+        }
     }
 
     goto exit;
+
+render_pass_undo:
+    if (!headless)
+        dkpDestroyRenderPass(&(*ppRenderer)->device,
+                             (*ppRenderer)->renderPassHandle,
+                             (*ppRenderer)->pBackEndAllocator);
 
 swap_chain_undo:
     if (!headless)
@@ -2345,6 +2411,9 @@ dkDestroyRenderer(DkRenderer *pRenderer,
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
     if (!headless) {
+        dkpDestroyPipelineLayout(&pRenderer->device,
+                                 pRenderer->pipelineLayoutHandle,
+                                 pRenderer->pBackEndAllocator);
         dkpDestroyRenderPass(&pRenderer->device,
                              pRenderer->renderPassHandle,
                              pRenderer->pBackEndAllocator);
