@@ -1535,9 +1535,9 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
     DK_ASSERT(pSemaphoreHandles != NULL);
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
-        if (pSemaphoreHandles[i] != VK_NULL_HANDLE)
-            vkDestroySemaphore(pDevice->logicalHandle, pSemaphoreHandles[i],
-                               pBackEndAllocator);
+        DK_ASSERT(pSemaphoreHandles[i] != VK_NULL_HANDLE);
+        vkDestroySemaphore(pDevice->logicalHandle, pSemaphoreHandles[i],
+                           pBackEndAllocator);
     }
 
     DK_FREE(pAllocator, pSemaphoreHandles);
@@ -1698,9 +1698,9 @@ dkpDestroySwapChainImageViewHandles(
     DK_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < imageCount; ++i) {
-        if (pImageViewHandles[i] != VK_NULL_HANDLE)
-            vkDestroyImageView(pDevice->logicalHandle, pImageViewHandles[i],
-                               pBackEndAllocator);
+        DK_ASSERT(pImageViewHandles[i] != VK_NULL_HANDLE);
+        vkDestroyImageView(pDevice->logicalHandle, pImageViewHandles[i],
+                           pBackEndAllocator);
     }
 
     DK_FREE(pAllocator, pImageViewHandles);
