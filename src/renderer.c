@@ -77,6 +77,7 @@ typedef struct DkpQueues {
 
 typedef struct DkpSwapChain {
     VkSwapchainKHR handle;
+    VkSurfaceFormatKHR format;
     uint32_t imageCount;
     VkImage *pImageHandles;
     VkImageView *pImageViewHandles;
@@ -1823,6 +1824,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         goto images_undo;
     }
 
+    pSwapChain->format = swapChainProperties.format;
     goto cleanup;
 
 images_undo:
