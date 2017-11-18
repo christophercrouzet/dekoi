@@ -117,6 +117,7 @@ DK_STATIC_ASSERT(sizeof (DkSize) == sizeof (void *), invalid_size_type);
 typedef struct DkAllocator DkAllocator;
 typedef struct DkRenderer DkRenderer;
 typedef struct DkRendererCreateInfo DkRendererCreateInfo;
+typedef struct DkShaderCreateInfo DkShaderCreateInfo;
 typedef struct DkWindowCallbacks DkWindowCallbacks;
 
 typedef enum DkResult {

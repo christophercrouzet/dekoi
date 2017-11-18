@@ -3,6 +3,15 @@
 
 #include "dekoi.h"
 
+typedef enum DkShaderStage {
+    DK_SHADER_STAGE_VERTEX = 0,
+    DK_SHADER_STAGE_TESSELLATION_CONTROL = 1,
+    DK_SHADER_STAGE_TESSELLATION_EVALUATION = 2,
+    DK_SHADER_STAGE_GEOMETRY = 3,
+    DK_SHADER_STAGE_FRAGMENT = 4,
+    DK_SHADER_STAGE_COMPUTE = 5
+} DkShaderStage;
+
 typedef struct VkAllocationCallbacks VkAllocationCallbacks;
 typedef struct VkInstance_T * VkInstance;
 typedef struct VkSurfaceKHR_T * VkSurfaceKHR;
@@ -21,6 +30,12 @@ struct DkWindowCallbacks {
     DkPfnCreateSurfaceCallback pfnCreateSurface;
 };
 
+struct DkShaderCreateInfo {
+    DkShaderStage stage;
+    const char *pFilePath;
+    const char *pEntryPointName;
+};
+
 struct DkRendererCreateInfo {
     const char *pApplicationName;
     DkUint32 applicationMajorVersion;
@@ -29,6 +44,8 @@ struct DkRendererCreateInfo {
     DkUint32 surfaceWidth;
     DkUint32 surfaceHeight;
     const DkWindowCallbacks *pWindowCallbacks;
+    DkUint32 shaderCount;
+    const DkShaderCreateInfo *pShaderInfos;
     const VkAllocationCallbacks *pBackEndAllocator;
 };
 

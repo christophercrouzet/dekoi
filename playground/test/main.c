@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <dekoi/renderer>
+
 #include "application.h"
 #include "renderer.h"
 #include "test.h"
@@ -13,6 +15,10 @@ const unsigned int minorVersion = 0;
 const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
+const DkShaderCreateInfo pShaderInfos[] = {
+    { DK_SHADER_STAGE_VERTEX, "shaders/shader.vert.spv", "main" },
+    { DK_SHADER_STAGE_FRAGMENT, "shaders/shader.frag.spv", "main" }
+};
 
 
 int
@@ -60,6 +66,8 @@ setup(Application **ppApplication,
     rendererInfo.surfaceWidth = width;
     rendererInfo.surfaceHeight = height;
     rendererInfo.pWindowCallbacks = pWindowRendererCallbacks;
+    rendererInfo.shaderCount = sizeof pShaderInfos / sizeof *pShaderInfos;
+    rendererInfo.pShaderInfos = pShaderInfos;
     rendererInfo.pBackEndAllocator = NULL;
 
     if (createRenderer(*ppWindow, &rendererInfo, ppRenderer)) {

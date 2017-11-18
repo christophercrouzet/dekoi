@@ -97,6 +97,7 @@ struct DkRenderer {
     DkpSwapChain swapChain;
     VkRenderPass renderPassHandle;
     VkPipelineLayout pipelineLayoutHandle;
+    VkPipeline graphicsPipelineHandle;
 };
 
 
@@ -110,6 +111,46 @@ dkpGetSemaphoreIdString(DkpSemaphoreId semaphoreId)
             return "present completed";
         default:
             return "invalid";
+    }
+}
+
+
+static int
+dkpCheckShaderStage(DkShaderStage shaderStage)
+{
+    switch (shaderStage) {
+        case DK_SHADER_STAGE_VERTEX:
+        case DK_SHADER_STAGE_TESSELLATION_CONTROL:
+        case DK_SHADER_STAGE_TESSELLATION_EVALUATION:
+        case DK_SHADER_STAGE_GEOMETRY:
+        case DK_SHADER_STAGE_FRAGMENT:
+        case DK_SHADER_STAGE_COMPUTE:
+            return DKP_TRUE;
+        default:
+            return DKP_FALSE;
+    }
+}
+
+
+static VkShaderStageFlagBits
+dkpTranslateShaderStage(DkShaderStage shaderStage)
+{
+    switch (shaderStage) {
+        case DK_SHADER_STAGE_VERTEX:
+            return VK_SHADER_STAGE_VERTEX_BIT;
+        case DK_SHADER_STAGE_TESSELLATION_CONTROL:
+            return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        case DK_SHADER_STAGE_TESSELLATION_EVALUATION:
+            return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        case DK_SHADER_STAGE_GEOMETRY:
+            return VK_SHADER_STAGE_GEOMETRY_BIT;
+        case DK_SHADER_STAGE_FRAGMENT:
+            return VK_SHADER_STAGE_FRAGMENT_BIT;
+        case DK_SHADER_STAGE_COMPUTE:
+            return VK_SHADER_STAGE_COMPUTE_BIT;
+        default:
+            DK_ASSERT(1);
+            return (VkShaderStageFlagBits) -1;
     }
 }
 
@@ -2203,6 +2244,316 @@ dkpDestroyShaderModule(const DkpDevice *pDevice,
 }
 
 
+static DkResult
+dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
+                          VkPipelineLayout pipelineLayoutHandle,
+                          VkRenderPass renderPassHandle,
+                          uint32_t shaderCount,
+                          const DkShaderCreateInfo *pShaderInfos,
+                          const VkExtent2D *pSurfaceExtent,
+                          const VkAllocationCallbacks *pBackEndAllocator,
+                          const DkAllocator *pAllocator,
+                          VkPipeline *pPipelineHandle)
+{
+    DkResult out;
+    uint32_t i;
+    VkShaderModule *pShaderModuleHandles;
+    VkPipelineShaderStageCreateInfo *pShaderStageInfos;
+    uint32_t viewportCount;
+    VkViewport *pViewports;
+    uint32_t scissorCount;
+    VkRect2D *pScissors;
+    uint32_t colorBlendAttachmentStateCount;
+    VkPipelineColorBlendAttachmentState *pColorBlendAttachmentStates;
+    VkPipelineVertexInputStateCreateInfo vertexInputStateInfo;
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo;
+    VkPipelineViewportStateCreateInfo viewportStateInfo;
+    VkPipelineRasterizationStateCreateInfo rasterizationStateInfo;
+    VkPipelineMultisampleStateCreateInfo multisampleStateInfo;
+    VkPipelineColorBlendStateCreateInfo colorBlendStateInfo;
+    uint32_t createInfoCount;
+    VkGraphicsPipelineCreateInfo *pCreateInfos;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
+    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DK_ASSERT(pShaderInfos != NULL);
+    DK_ASSERT(pSurfaceExtent != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pPipelineHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    pShaderModuleHandles = (VkShaderModule *)
+        DK_ALLOCATE(pAllocator, sizeof *pShaderModuleHandles * shaderCount);
+    if (pShaderModuleHandles == NULL) {
+        fprintf(stderr, "failed to allocate the shader modules\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    for (i = 0; i < shaderCount; ++i)
+        pShaderModuleHandles[i] = VK_NULL_HANDLE;
+
+    for (i = 0; i < shaderCount; ++i) {
+        if (dkpCreateShaderModule(pDevice, pShaderInfos[i].pFilePath,
+                                  pBackEndAllocator, pAllocator,
+                                  &pShaderModuleHandles[i])
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto shader_modules_cleanup;
+        }
+    }
+
+    pShaderStageInfos = (VkPipelineShaderStageCreateInfo *)
+        DK_ALLOCATE(pAllocator, sizeof *pShaderStageInfos * shaderCount);
+    if (pShaderStageInfos == NULL) {
+        fprintf(stderr, "failed to allocate the shader stage infos\n");
+        out = DK_ERROR_ALLOCATION;
+        goto shader_modules_cleanup;
+    }
+
+    for (i = 0; i < shaderCount; ++i) {
+        VkShaderStageFlagBits shaderStage;
+
+        shaderStage = dkpTranslateShaderStage(pShaderInfos[i].stage);
+
+        pShaderStageInfos[i].sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        pShaderStageInfos[i].pNext = NULL;
+        pShaderStageInfos[i].flags = 0;
+        pShaderStageInfos[i].stage = shaderStage;
+        pShaderStageInfos[i].module = pShaderModuleHandles[i];
+        pShaderStageInfos[i].pName = pShaderInfos[i].pEntryPointName;
+        pShaderStageInfos[i].pSpecializationInfo = NULL;
+    }
+
+    viewportCount = 1;
+    pViewports = (VkViewport *)
+        DK_ALLOCATE(pAllocator, sizeof *pViewports * viewportCount);
+    if (pViewports == NULL) {
+        fprintf(stderr, "failed to allocate the viewports\n");
+        out = DK_ERROR_ALLOCATION;
+        goto shader_stage_infos_cleanup;
+    }
+
+    pViewports[0].x = 0.0f;
+    pViewports[0].y = 0.0f;
+    pViewports[0].width = (float) pSurfaceExtent->width;
+    pViewports[0].height = (float) pSurfaceExtent->height;
+    pViewports[0].minDepth = 0.0f;
+    pViewports[0].maxDepth = 1.0f;
+
+    scissorCount = 1;
+    pScissors = (VkRect2D *)
+        DK_ALLOCATE(pAllocator, sizeof *pScissors * scissorCount);
+    if (pScissors == NULL) {
+        fprintf(stderr, "failed to allocate the scissors\n");
+        out = DK_ERROR_ALLOCATION;
+        goto viewports_cleanup;
+    }
+
+    pScissors[0].offset.x = 0;
+    pScissors[0].offset.y = 0;
+    pScissors[0].extent = *pSurfaceExtent;
+
+    colorBlendAttachmentStateCount = 1;
+    pColorBlendAttachmentStates = (VkPipelineColorBlendAttachmentState *)
+        DK_ALLOCATE(pAllocator,
+                    (sizeof *pColorBlendAttachmentStates
+                     * colorBlendAttachmentStateCount));
+    if (pColorBlendAttachmentStates == NULL) {
+        fprintf(stderr, "failed to allocate the color blend attachment "
+                        "states\n");
+        out = DK_ERROR_ALLOCATION;
+        goto scissors_cleanup;
+    }
+
+    pColorBlendAttachmentStates[0].blendEnable = VK_FALSE;
+    pColorBlendAttachmentStates[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+    pColorBlendAttachmentStates[0].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+    pColorBlendAttachmentStates[0].colorBlendOp = VK_BLEND_OP_ADD;
+    pColorBlendAttachmentStates[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    pColorBlendAttachmentStates[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    pColorBlendAttachmentStates[0].alphaBlendOp = VK_BLEND_OP_ADD;
+    pColorBlendAttachmentStates[0].colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT
+        | VK_COLOR_COMPONENT_G_BIT
+        | VK_COLOR_COMPONENT_B_BIT
+        | VK_COLOR_COMPONENT_A_BIT;
+
+    vertexInputStateInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInputStateInfo.pNext = NULL;
+    vertexInputStateInfo.flags = 0;
+    vertexInputStateInfo.vertexBindingDescriptionCount = 0;
+    vertexInputStateInfo.pVertexBindingDescriptions = NULL;
+    vertexInputStateInfo.vertexAttributeDescriptionCount = 0;
+    vertexInputStateInfo.pVertexAttributeDescriptions = NULL;
+
+    inputAssemblyStateInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssemblyStateInfo.pNext = NULL;
+    inputAssemblyStateInfo.flags = 0;
+    inputAssemblyStateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssemblyStateInfo.primitiveRestartEnable = VK_FALSE;
+
+    viewportStateInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportStateInfo.pNext = NULL;
+    viewportStateInfo.flags = 0;
+    viewportStateInfo.viewportCount = viewportCount;
+    viewportStateInfo.pViewports = pViewports;
+    viewportStateInfo.scissorCount = scissorCount;
+    viewportStateInfo.pScissors = pScissors;
+
+    rasterizationStateInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizationStateInfo.pNext = NULL;
+    rasterizationStateInfo.flags = 0;
+    rasterizationStateInfo.depthClampEnable = VK_FALSE;
+    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
+    rasterizationStateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizationStateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizationStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationStateInfo.depthBiasEnable = VK_FALSE;
+    rasterizationStateInfo.depthBiasConstantFactor = 0.0f;
+    rasterizationStateInfo.depthBiasClamp = 0.0f;
+    rasterizationStateInfo.depthBiasSlopeFactor = 0.0f;
+    rasterizationStateInfo.lineWidth = 1.0f;
+
+    multisampleStateInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampleStateInfo.pNext = NULL;
+    multisampleStateInfo.flags = 0;
+    multisampleStateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampleStateInfo.sampleShadingEnable = VK_FALSE;
+    multisampleStateInfo.minSampleShading = 1.0;
+    multisampleStateInfo.pSampleMask = NULL;
+    multisampleStateInfo.alphaToCoverageEnable = VK_FALSE;
+    multisampleStateInfo.alphaToOneEnable = VK_FALSE;
+
+    colorBlendStateInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlendStateInfo.pNext = NULL;
+    colorBlendStateInfo.flags = 0;
+    colorBlendStateInfo.logicOpEnable = VK_FALSE;
+    colorBlendStateInfo.logicOp = VK_LOGIC_OP_COPY;
+    colorBlendStateInfo.attachmentCount = colorBlendAttachmentStateCount;
+    colorBlendStateInfo.pAttachments = pColorBlendAttachmentStates;
+    colorBlendStateInfo.blendConstants[0] = 0.0f;
+    colorBlendStateInfo.blendConstants[1] = 0.0f;
+    colorBlendStateInfo.blendConstants[2] = 0.0f;
+    colorBlendStateInfo.blendConstants[3] = 0.0f;
+
+    createInfoCount = 1;
+    pCreateInfos = (VkGraphicsPipelineCreateInfo *)
+        DK_ALLOCATE(pAllocator, sizeof *pCreateInfos * createInfoCount);
+    if (pCreateInfos == NULL) {
+        fprintf(stderr, "failed to allocate the graphics pipeline create "
+                        "infos\n");
+        out = DK_ERROR_ALLOCATION;
+        goto color_blend_attachment_states_cleanup;
+    }
+
+    pCreateInfos[0].sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pCreateInfos[0].pNext = NULL;
+    pCreateInfos[0].flags = 0;
+    pCreateInfos[0].stageCount = shaderCount;
+    pCreateInfos[0].pStages = pShaderStageInfos;
+    pCreateInfos[0].pVertexInputState = &vertexInputStateInfo;
+    pCreateInfos[0].pInputAssemblyState = &inputAssemblyStateInfo;
+    pCreateInfos[0].pTessellationState = NULL;
+    pCreateInfos[0].pViewportState = &viewportStateInfo;
+    pCreateInfos[0].pRasterizationState = &rasterizationStateInfo;
+    pCreateInfos[0].pMultisampleState = &multisampleStateInfo;
+    pCreateInfos[0].pDepthStencilState = NULL;
+    pCreateInfos[0].pColorBlendState = &colorBlendStateInfo;
+    pCreateInfos[0].pDynamicState = NULL;
+    pCreateInfos[0].layout = pipelineLayoutHandle;
+    pCreateInfos[0].renderPass = renderPassHandle;
+    pCreateInfos[0].subpass = 0;
+    pCreateInfos[0].basePipelineHandle = VK_NULL_HANDLE;
+    pCreateInfos[0].basePipelineIndex = -1;
+
+    if (vkCreateGraphicsPipelines(pDevice->logicalHandle, VK_NULL_HANDLE,
+                                  createInfoCount, pCreateInfos,
+                                  pBackEndAllocator, pPipelineHandle)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the graphics pipelines\n");
+        out = DK_ERROR;
+        goto create_infos_cleanup;
+    }
+
+create_infos_cleanup:
+    DK_FREE(pAllocator, pCreateInfos);
+
+color_blend_attachment_states_cleanup:
+    DK_FREE(pAllocator, pColorBlendAttachmentStates);
+
+scissors_cleanup:
+    DK_FREE(pAllocator, pScissors);
+
+viewports_cleanup:
+    DK_FREE(pAllocator, pViewports);
+
+shader_stage_infos_cleanup:
+    DK_FREE(pAllocator, pShaderStageInfos);
+
+shader_modules_cleanup:
+    for (i = 0; i < shaderCount; ++i) {
+        if (pShaderModuleHandles[i] != VK_NULL_HANDLE)
+            dkpDestroyShaderModule(pDevice, pShaderModuleHandles[i],
+                                   pBackEndAllocator);
+    }
+
+    DK_FREE(pAllocator, pShaderModuleHandles);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyGraphicsPipeline(const DkpDevice *pDevice,
+                           VkPipeline pipelineHandle,
+                           const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pipelineHandle != VK_NULL_HANDLE);
+
+    vkDestroyPipeline(pDevice->logicalHandle, pipelineHandle,
+                      pBackEndAllocator);
+}
+
+
+static void
+dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
+                           int *pValid)
+{
+    uint32_t i;
+
+    DK_ASSERT(pCreateInfo != NULL);
+    DK_ASSERT(pValid != NULL);
+
+    *pValid = DKP_FALSE;
+
+    for (i = 0; i < pCreateInfo->shaderCount; ++i) {
+        if (!dkpCheckShaderStage(pCreateInfo->pShaderInfos[i].stage)) {
+            fprintf(stderr, "invalid enum value for 'pCreateInfo->"
+                            "pShaderInfos[%d].stage'\n", i);
+            return;
+        }
+    }
+
+    *pValid = DKP_TRUE;
+}
+
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocator *pAllocator,
@@ -2222,6 +2573,12 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     if (ppRenderer == NULL) {
         fprintf(stderr, "invalid argument 'ppRenderer' (NULL)\n");
+        out = DK_ERROR_INVALID_VALUE;
+        goto exit;
+    }
+
+    dkpCheckRendererCreateInfo(pCreateInfo, &valid);
+    if (!valid) {
         out = DK_ERROR_INVALID_VALUE;
         goto exit;
     }
@@ -2345,9 +2702,30 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto render_pass_undo;
         }
+
+        if (dkpCreateGraphicsPipeline(&(*ppRenderer)->device,
+                                      (*ppRenderer)->pipelineLayoutHandle,
+                                      (*ppRenderer)->renderPassHandle,
+                                      (uint32_t) pCreateInfo->shaderCount,
+                                      pCreateInfo->pShaderInfos,
+                                      &(*ppRenderer)->surfaceExtent,
+                                      (*ppRenderer)->pBackEndAllocator,
+                                      (*ppRenderer)->pAllocator,
+                                      &(*ppRenderer)->graphicsPipelineHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto pipeline_layout_undo;
+        }
     }
 
     goto exit;
+
+pipeline_layout_undo:
+    if (!headless)
+        dkpDestroyPipelineLayout(&(*ppRenderer)->device,
+                                 (*ppRenderer)->pipelineLayoutHandle,
+                                 (*ppRenderer)->pBackEndAllocator);
 
 render_pass_undo:
     if (!headless)
@@ -2411,6 +2789,9 @@ dkDestroyRenderer(DkRenderer *pRenderer,
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
     if (!headless) {
+        dkpDestroyGraphicsPipeline(&pRenderer->device,
+                                   pRenderer->graphicsPipelineHandle,
+                                   pRenderer->pBackEndAllocator);
         dkpDestroyPipelineLayout(&pRenderer->device,
                                  pRenderer->pipelineLayoutHandle,
                                  pRenderer->pBackEndAllocator);
