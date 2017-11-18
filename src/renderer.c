@@ -432,7 +432,6 @@ dkpCreateInstance(const char *pApplicationName,
         goto extension_names_cleanup;
     }
 
-    memset(&applicationInfo, 0, sizeof applicationInfo);
     applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     applicationInfo.pNext = NULL;
     applicationInfo.pApplicationName = pApplicationName;
@@ -447,7 +446,6 @@ dkpCreateInstance(const char *pApplicationName,
         DK_PATCH_VERSION);
     applicationInfo.apiVersion = VK_API_VERSION_1_0;
 
-    memset(&createInfo, 0, sizeof createInfo);
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
@@ -540,7 +538,6 @@ dkpCreateDebugReportCallback(VkInstance instanceHandle,
     DK_ASSERT(instanceHandle != NULL);
     DK_ASSERT(pCallbackHandle != NULL);
 
-    memset(&createInfo, 0, sizeof createInfo);
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfo.pNext = NULL;
     createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT
@@ -1348,7 +1345,6 @@ dkpCreateDevice(VkInstance instanceHandle,
         goto queue_priorities_cleanup;
     }
 
-    memset(&pQueueInfos[0], 0, sizeof *pQueueInfos);
     pQueueInfos[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     pQueueInfos[0].pNext = NULL;
     pQueueInfos[0].flags = 0;
@@ -1357,7 +1353,6 @@ dkpCreateDevice(VkInstance instanceHandle,
     pQueueInfos[0].pQueuePriorities = pQueuePriorities;
 
     if (queueInfoCount == 2) {
-        memset(&pQueueInfos[1], 0, sizeof *pQueueInfos);
         pQueueInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         pQueueInfos[1].pNext = NULL;
         pQueueInfos[1].flags = 0;
@@ -1366,7 +1361,6 @@ dkpCreateDevice(VkInstance instanceHandle,
         pQueueInfos[1].pQueuePriorities = pQueuePriorities;
     }
 
-    memset(&createInfo, 0, sizeof createInfo);
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
@@ -1477,7 +1471,6 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
 
     out = DK_SUCCESS;
 
-    memset(&createInfo, 0, sizeof createInfo);
     createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
@@ -1768,7 +1761,6 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         pQueueFamilyIndices = NULL;
     }
 
-    memset(&createInfo, 0, sizeof createInfo);
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
@@ -1993,7 +1985,6 @@ dkpCreateShaderModule(const DkpDevice *pDevice,
         goto exit;
     }
 
-    memset(&createInfo, 0, sizeof createInfo);
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;

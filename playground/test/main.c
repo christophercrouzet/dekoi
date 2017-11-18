@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "application.h"
 #include "renderer.h"
@@ -33,7 +32,6 @@ setup(Application **ppApplication,
 
     out = 0;
 
-    memset(&applicationInfo, 0, sizeof applicationInfo);
     applicationInfo.pName = pApplicationName;
     applicationInfo.majorVersion = majorVersion;
     applicationInfo.minorVersion = minorVersion;
@@ -44,7 +42,6 @@ setup(Application **ppApplication,
         goto exit;
     }
 
-    memset(&windowInfo, 0, sizeof windowInfo);
     windowInfo.width = width;
     windowInfo.height = height;
     windowInfo.title = pApplicationName;
@@ -56,7 +53,6 @@ setup(Application **ppApplication,
 
     getWindowRendererCallbacks(*ppWindow, &pWindowRendererCallbacks);
 
-    memset(&rendererInfo, 0, sizeof rendererInfo);
     rendererInfo.pApplicationName = pApplicationName;
     rendererInfo.applicationMajorVersion = majorVersion;
     rendererInfo.applicationMinorVersion = minorVersion;
