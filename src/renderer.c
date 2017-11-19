@@ -1897,8 +1897,9 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
                     const DkAllocator *pAllocator)
 {
     DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pSwapChain != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
 
     if (pSwapChain->handle == VK_NULL_HANDLE)
@@ -1954,6 +1955,7 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     DK_ASSERT(pDevice != NULL);
     DK_ASSERT(pDevice->logicalHandle != NULL);
     DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pRenderPassHandle != NULL);
 
