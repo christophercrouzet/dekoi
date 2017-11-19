@@ -98,6 +98,7 @@ struct DkRenderer {
     VkRenderPass renderPassHandle;
     VkPipelineLayout pipelineLayoutHandle;
     VkPipeline graphicsPipelineHandle;
+    VkFramebuffer *pFramebufferHandles;
 };
 
 
@@ -2531,6 +2532,106 @@ dkpDestroyGraphicsPipeline(const DkpDevice *pDevice,
 }
 
 
+static DkResult
+dkpCreateFramebuffers(const DkpDevice *pDevice,
+                      const DkpSwapChain *pSwapChain,
+                      VkRenderPass renderPassHandle,
+                      const VkExtent2D *pSurfaceExtent,
+                      const VkAllocationCallbacks *pBackEndAllocator,
+                      const DkAllocator *pAllocator,
+                      VkFramebuffer **ppFramebufferHandles)
+{
+    DkResult out;
+    uint32_t i;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DK_ASSERT(pSurfaceExtent != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(ppFramebufferHandles != NULL);
+
+    out = DK_SUCCESS;
+
+    *ppFramebufferHandles = (VkFramebuffer *)
+        DK_ALLOCATE(pAllocator,
+                    sizeof **ppFramebufferHandles * pSwapChain->imageCount);
+    if (*ppFramebufferHandles == NULL) {
+        fprintf(stderr, "failed to allocate the frame buffers\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    for (i = 0; i < pSwapChain->imageCount; ++i)
+        (*ppFramebufferHandles)[i] = VK_NULL_HANDLE;
+
+    for (i = 0; i < pSwapChain->imageCount; ++i) {
+        VkImageView pAttachments[1];
+        VkFramebufferCreateInfo framebufferInfo;
+
+        pAttachments[0] = pSwapChain->pImageViewHandles[i];
+
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.pNext = NULL;
+        framebufferInfo.flags = 0;
+        framebufferInfo.renderPass = renderPassHandle;
+        framebufferInfo.attachmentCount = (uint32_t)
+            sizeof pAttachments / sizeof *pAttachments;
+        framebufferInfo.pAttachments = pAttachments;
+        framebufferInfo.width = pSurfaceExtent->width;
+        framebufferInfo.height = pSurfaceExtent->height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(pDevice->logicalHandle, &framebufferInfo,
+                                pBackEndAllocator, &(*ppFramebufferHandles)[i])
+            != VK_SUCCESS)
+        {
+            fprintf(stderr, "failed to create a frame buffer\n");
+            out = DK_ERROR;
+            goto frame_buffers_undo;
+        }
+    }
+
+    goto exit;
+
+frame_buffers_undo:
+    for (i = 0; i < pSwapChain->imageCount; ++i) {
+        if ((*ppFramebufferHandles)[i] != VK_NULL_HANDLE)
+            vkDestroyFramebuffer(pDevice->logicalHandle,
+                                 (*ppFramebufferHandles)[i], pBackEndAllocator);
+    }
+
+    DK_FREE(pAllocator, *ppFramebufferHandles);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyFramebuffers(const DkpDevice *pDevice,
+                       const DkpSwapChain *pSwapChain,
+                       VkFramebuffer *pFramebufferHandles,
+                       const VkAllocationCallbacks *pBackEndAllocator,
+                       const DkAllocator *pAllocator)
+{
+    uint32_t i;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+
+    for (i = 0; i < pSwapChain->imageCount; ++i) {
+        DK_ASSERT(pFramebufferHandles[i] != VK_NULL_HANDLE);
+        vkDestroyFramebuffer(pDevice->logicalHandle, pFramebufferHandles[i],
+                             pBackEndAllocator);
+    }
+
+    DK_FREE(pAllocator, pFramebufferHandles);
+}
+
+
 static void
 dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
                            int *pValid)
@@ -2717,9 +2818,28 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto pipeline_layout_undo;
         }
+
+        if (dkpCreateFramebuffers(&(*ppRenderer)->device,
+                                  &(*ppRenderer)->swapChain,
+                                  (*ppRenderer)->renderPassHandle,
+                                  &(*ppRenderer)->surfaceExtent,
+                                  (*ppRenderer)->pBackEndAllocator,
+                                  (*ppRenderer)->pAllocator,
+                                  &(*ppRenderer)->pFramebufferHandles)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto graphics_pipeline_undo;
+        }
     }
 
     goto exit;
+
+graphics_pipeline_undo:
+    if (!headless)
+        dkpDestroyGraphicsPipeline(&(*ppRenderer)->device,
+                                   (*ppRenderer)->graphicsPipelineHandle,
+                                   (*ppRenderer)->pBackEndAllocator);
 
 pipeline_layout_undo:
     if (!headless)
@@ -2789,6 +2909,11 @@ dkDestroyRenderer(DkRenderer *pRenderer,
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
     if (!headless) {
+        dkpDestroyFramebuffers(&pRenderer->device,
+                               &pRenderer->swapChain,
+                               pRenderer->pFramebufferHandles,
+                               pRenderer->pBackEndAllocator,
+                               pRenderer->pAllocator);
         dkpDestroyGraphicsPipeline(&pRenderer->device,
                                    pRenderer->graphicsPipelineHandle,
                                    pRenderer->pBackEndAllocator);
