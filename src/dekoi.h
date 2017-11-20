@@ -72,20 +72,22 @@
  #include <stddef.h>
  #define DK_SIZE_T size_t
 #else
- #if defined(__GNUC__) || defined(__clang__)
-  #if !defined(__x86_64__) && !defined(__ppc64__)
-   #define DK_SIZE_T unsigned int
+ #ifndef DK_SIZE_T
+  #if defined(__GNUC__) || defined(__clang__)
+   #if !defined(__x86_64__) && !defined(__ppc64__)
+    #define DK_SIZE_T unsigned int
+   #else
+    #define DK_SIZE_T unsigned long
+   #endif
+  #elif defined(_MSC_VER)
+   #if !defined(_WIN64)
+    #define DK_SIZE_T unsigned __int32
+   #else
+    #define DK_SIZE_T unsigned __int64
+   #endif
   #else
    #define DK_SIZE_T unsigned long
   #endif
- #elif defined(_MSC_VER)
-  #if !defined(_WIN64)
-   #define DK_SIZE_T unsigned __int32
-  #else
-   #define DK_SIZE_T unsigned __int64
-  #endif
- #else
-  #define DK_SIZE_T unsigned long
  #endif
 #endif
 
