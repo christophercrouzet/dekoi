@@ -2984,7 +2984,7 @@ dkDestroyRenderer(DkRenderer *pRenderer,
                                &pRenderer->swapChain,
                                pRenderer->pFramebufferHandles,
                                pRenderer->pBackEndAllocator,
-                               pRenderer->pAllocator);
+                               pAllocator);
         dkpDestroyGraphicsPipeline(&pRenderer->device,
                                    pRenderer->graphicsPipelineHandle,
                                    pRenderer->pBackEndAllocator);
@@ -2999,7 +2999,7 @@ dkDestroyRenderer(DkRenderer *pRenderer,
     }
 
     dkpDestroySemaphores(&pRenderer->device, pRenderer->pSemaphoreHandles,
-                         pRenderer->pBackEndAllocator, pRenderer->pAllocator);
+                         pRenderer->pBackEndAllocator, pAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
 
     if (!headless)
