@@ -2658,7 +2658,7 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
                             pBackEndAllocator, pCommandPoolHandle)
         != VK_SUCCESS)
     {
-        fprintf(stderr, "failed to create the command pool\n");
+        fprintf(stderr, "failed to create the graphics command pool\n");
         out = DK_ERROR;
         goto exit;
     }
