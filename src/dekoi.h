@@ -91,6 +91,13 @@
  #endif
 #endif
 
+#ifndef DK_FLOAT32
+ #define DK_FLOAT32 float
+#endif
+#ifndef DK_FLOAT64
+ #define DK_FLOAT64 double
+#endif
+
 typedef DK_INT32 DkBool32;
 typedef DK_INT8 DkInt8;
 typedef DK_UINT8 DkUint8;
@@ -101,6 +108,8 @@ typedef DK_UINT32 DkUint32;
 DKP_C_EXTENSION typedef DK_INT64 DkInt64;
 DKP_C_EXTENSION typedef DK_UINT64 DkUint64;
 typedef DK_SIZE_T DkSize;
+typedef DK_FLOAT32 DkFloat32;
+typedef DK_FLOAT64 DkFloat64;
 
 DK_STATIC_ASSERT(sizeof (DkBool32) == 4, invalid_bool32_type);
 DK_STATIC_ASSERT(sizeof (DkInt8) == 1, invalid_int8_type);
@@ -112,6 +121,8 @@ DK_STATIC_ASSERT(sizeof (DkUint32) == 4, invalid_uint32_type);
 DK_STATIC_ASSERT(sizeof (DkInt64) == 8, invalid_int64_type);
 DK_STATIC_ASSERT(sizeof (DkUint64) == 8, invalid_uint64_type);
 DK_STATIC_ASSERT(sizeof (DkSize) == sizeof (void *), invalid_size_type);
+DK_STATIC_ASSERT(sizeof (DkFloat32) == 4, invalid_float32_type);
+DK_STATIC_ASSERT(sizeof (DkFloat64) == 8, invalid_float64_type);
 
 #define DK_FALSE ((DkBool32) 0)
 #define DK_TRUE ((DkBool32) 1)
