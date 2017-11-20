@@ -99,6 +99,7 @@ struct DkRenderer {
     VkPipelineLayout pipelineLayoutHandle;
     VkPipeline graphicsPipelineHandle;
     VkFramebuffer *pFramebufferHandles;
+    VkCommandPool graphicsCommandPoolHandle;
 };
 
 
@@ -2634,6 +2635,53 @@ dkpDestroyFramebuffers(const DkpDevice *pDevice,
 }
 
 
+static DkResult
+dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
+                             const VkAllocationCallbacks *pBackEndAllocator,
+                             VkCommandPool *pCommandPoolHandle)
+{
+    DkResult out;
+    VkCommandPoolCreateInfo createInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pCommandPoolHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.queueFamilyIndex = pDevice->queueFamilyIndices.graphics;
+
+    if (vkCreateCommandPool(pDevice->logicalHandle, &createInfo,
+                            pBackEndAllocator, pCommandPoolHandle)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the command pool\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyGraphicsCommandPool(const DkpDevice *pDevice,
+                              VkCommandPool commandPoolHandle,
+                              const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+
+    vkDestroyCommandPool(pDevice->logicalHandle, commandPoolHandle,
+                         pBackEndAllocator);
+}
+
+
 static void
 dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
                            int *pValid)
@@ -2833,9 +2881,27 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto graphics_pipeline_undo;
         }
+
+        if (dkpCreateGraphicsCommandPool(
+                &(*ppRenderer)->device,
+                (*ppRenderer)->pBackEndAllocator,
+                &(*ppRenderer)->graphicsCommandPoolHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto framebuffers_undo;
+        }
     }
 
     goto exit;
+
+framebuffers_undo:
+    if (!headless)
+        dkpDestroyFramebuffers(&(*ppRenderer)->device,
+                               &(*ppRenderer)->swapChain,
+                               (*ppRenderer)->pFramebufferHandles,
+                               (*ppRenderer)->pBackEndAllocator,
+                               (*ppRenderer)->pAllocator);
 
 graphics_pipeline_undo:
     if (!headless)
@@ -2911,6 +2977,9 @@ dkDestroyRenderer(DkRenderer *pRenderer,
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
     if (!headless) {
+        dkpDestroyGraphicsCommandPool(&pRenderer->device,
+                                      pRenderer->graphicsCommandPoolHandle,
+                                      pRenderer->pBackEndAllocator),
         dkpDestroyFramebuffers(&pRenderer->device,
                                &pRenderer->swapChain,
                                pRenderer->pFramebufferHandles,
