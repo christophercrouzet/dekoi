@@ -19,6 +19,7 @@ const DkShaderCreateInfo pShaderInfos[] = {
     { DK_SHADER_STAGE_VERTEX, "shaders/shader.vert.spv", "main" },
     { DK_SHADER_STAGE_FRAGMENT, "shaders/shader.frag.spv", "main" }
 };
+const DkFloat32 clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 
 
 int
@@ -68,6 +69,7 @@ setup(Application **ppApplication,
     rendererInfo.pWindowCallbacks = pWindowRendererCallbacks;
     rendererInfo.shaderCount = sizeof pShaderInfos / sizeof *pShaderInfos;
     rendererInfo.pShaderInfos = pShaderInfos;
+    rendererInfo.pClearColor = &clearColor;
     rendererInfo.pBackEndAllocator = NULL;
 
     if (createRenderer(*ppWindow, &rendererInfo, ppRenderer)) {

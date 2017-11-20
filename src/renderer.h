@@ -46,6 +46,7 @@ struct DkRendererCreateInfo {
     const DkWindowCallbacks *pWindowCallbacks;
     DkUint32 shaderCount;
     const DkShaderCreateInfo *pShaderInfos;
+    const DkFloat32 (*pClearColor)[4];
     const VkAllocationCallbacks *pBackEndAllocator;
 };
 

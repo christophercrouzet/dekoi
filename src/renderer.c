@@ -94,6 +94,7 @@ typedef struct DkpSwapChain {
 struct DkRenderer {
     const DkAllocator *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
+    VkClearValue clearColor;
     VkInstance instanceHandle;
     VkExtent2D surfaceExtent;
     VkSurfaceKHR surfaceHandle;
@@ -2843,6 +2844,75 @@ dkpDestroyGraphicsCommandBuffers(const DkpDevice *pDevice,
 }
 
 
+static DkResult
+dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
+                                VkRenderPass renderPassHandle,
+                                VkPipeline pipelineHandle,
+                                VkFramebuffer *pFramebufferHandles,
+                                VkCommandBuffer *pCommandBufferHandles,
+                                const VkExtent2D *pSurfaceExtent,
+                                const VkClearValue *pClearColor)
+{
+    DkResult out;
+    uint32_t i;
+
+    DK_ASSERT(pSwapChain != NULL);
+    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DK_ASSERT(pipelineHandle != VK_NULL_HANDLE);
+    DK_ASSERT(pFramebufferHandles != NULL);
+    DK_ASSERT(pCommandBufferHandles != NULL);
+    DK_ASSERT(pSurfaceExtent != NULL);
+
+    out = DK_SUCCESS;
+
+    for (i = 0; i < pSwapChain->imageCount; ++i) {
+        VkCommandBufferBeginInfo beginInfo;
+        VkRenderPassBeginInfo renderPassBeginInfo;
+
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.pNext = NULL;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        beginInfo.pInheritanceInfo = NULL;
+
+        if (vkBeginCommandBuffer(pCommandBufferHandles[i], &beginInfo)
+            != VK_SUCCESS)
+        {
+            fprintf(stderr, "could not begin the command buffer recording\n");
+            out = DK_ERROR;
+            goto exit;
+        }
+
+        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassBeginInfo.pNext = NULL;
+        renderPassBeginInfo.renderPass = renderPassHandle;
+        renderPassBeginInfo.framebuffer = pFramebufferHandles[i];
+        renderPassBeginInfo.renderArea.offset.x = 0;
+        renderPassBeginInfo.renderArea.offset.y = 0;
+        renderPassBeginInfo.renderArea.extent = *pSurfaceExtent;
+        renderPassBeginInfo.clearValueCount = 1;
+        renderPassBeginInfo.pClearValues = pClearColor;
+
+        vkCmdBeginRenderPass(pCommandBufferHandles[i], &renderPassBeginInfo,
+                             VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(pCommandBufferHandles[i],
+                          VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          pipelineHandle);
+        vkCmdDraw(pCommandBufferHandles[i], 3, 1, 0, 0);
+        vkCmdEndRenderPass(pCommandBufferHandles[i]);
+
+        if (vkEndCommandBuffer(pCommandBufferHandles[i]) != VK_SUCCESS) {
+            fprintf(stderr, "could not end the command buffer recording\n");
+            out = DK_ERROR;
+            goto exit;
+        }
+    }
+
+exit:
+    return out;
+}
+
+
 static void
 dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
                            int *pValid)
@@ -2872,6 +2942,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
+    unsigned int i;
     int valid;
     int headless;
 
@@ -2911,6 +2982,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
     (*ppRenderer)->surfaceExtent.width = (uint32_t) pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t) pCreateInfo->surfaceHeight;
+
+    for (i = 0; i < 4; ++i)
+        (*ppRenderer)->clearColor.color.float32[i] = (float)
+            (*pCreateInfo->pClearColor)[i];
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
                           (unsigned int) pCreateInfo->applicationMajorVersion,
@@ -3076,9 +3151,32 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto graphics_command_pool_undo;
         }
+
+        if (dkpRecordGraphicsCommandBuffers(
+                &(*ppRenderer)->swapChain,
+                (*ppRenderer)->renderPassHandle,
+                (*ppRenderer)->graphicsPipelineHandle,
+                (*ppRenderer)->pFramebufferHandles,
+                (*ppRenderer)->pGraphicsCommandBufferHandles,
+                &(*ppRenderer)->surfaceExtent,
+                &(*ppRenderer)->clearColor)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto graphics_command_buffers_undo;
+        }
     }
 
     goto exit;
+
+graphics_command_buffers_undo:
+    if (!headless)
+        dkpDestroyGraphicsCommandBuffers(
+            &(*ppRenderer)->device,
+            &(*ppRenderer)->swapChain,
+            (*ppRenderer)->graphicsCommandPoolHandle,
+            (*ppRenderer)->pGraphicsCommandBufferHandles,
+            (*ppRenderer)->pAllocator);
 
 graphics_command_pool_undo:
     if (!headless)
