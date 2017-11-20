@@ -3272,6 +3272,8 @@ dkDestroyRenderer(DkRenderer *pRenderer,
 
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
+    vkDeviceWaitIdle(pRenderer->device.logicalHandle);
+
     if (!headless) {
         dkpDestroyGraphicsCommandBuffers(
             &pRenderer->device,
