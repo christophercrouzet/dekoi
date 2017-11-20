@@ -75,6 +75,13 @@ typedef struct DkpQueues {
 } DkpQueues;
 
 
+typedef struct DkpShader {
+    VkShaderModule moduleHandle;
+    VkShaderStageFlagBits stage;
+    const char *pEntryPointName;
+} DkpShader;
+
+
 typedef struct DkpSwapChain {
     VkSwapchainKHR handle;
     VkSurfaceFormatKHR format;
@@ -94,6 +101,8 @@ struct DkRenderer {
     DkpDevice device;
     DkpQueues queues;
     VkSemaphore *pSemaphoreHandles;
+    uint32_t shaderCount;
+    DkpShader *pShaders;
     DkpSwapChain swapChain;
     VkRenderPass renderPassHandle;
     VkPipelineLayout pipelineLayoutHandle;
@@ -1585,6 +1594,225 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 
 
 static DkResult
+dkpCreateShaderCode(const char *pFilePath,
+                    const DkAllocator *pAllocator,
+                    size_t *pShaderCodeSize,
+                    uint32_t **ppShaderCode)
+{
+    DkResult out;
+    DkpFile file;
+
+    DK_ASSERT(pFilePath != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(ppShaderCode != NULL);
+
+    out = DK_SUCCESS;
+
+    if (dkpOpenFile(&file, pFilePath, "rb") != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    if (dkpGetFileSize(&file, pShaderCodeSize) != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto file_closing;
+    }
+
+    DK_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
+
+    *ppShaderCode = DK_ALLOCATE(pAllocator, *pShaderCodeSize);
+    if (*ppShaderCode == NULL) {
+        fprintf(stderr, "failed to allocate the shader code for the file "
+                        "'%s'\n", pFilePath);
+        out = DK_ERROR_ALLOCATION;
+        goto file_closing;
+    }
+
+    if (dkpReadFile(&file, *pShaderCodeSize, (void *) *ppShaderCode)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto code_undo;
+    }
+
+    goto cleanup;
+
+code_undo:
+    DK_FREE(pAllocator, *ppShaderCode);
+
+cleanup: ;
+
+file_closing:
+    if (dkpCloseFile(&file) != DK_SUCCESS)
+        out = DK_ERROR;
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyShaderCode(uint32_t *pShaderCode,
+                     const DkAllocator *pAllocator)
+{
+    DK_ASSERT(pShaderCode != NULL);
+    DK_ASSERT(pAllocator != NULL);
+
+    DK_FREE(pAllocator, pShaderCode);
+}
+
+
+static DkResult
+dkpCreateShaderModule(const DkpDevice *pDevice,
+                      const char *pFilePath,
+                      const VkAllocationCallbacks *pBackEndAllocator,
+                      const DkAllocator *pAllocator,
+                      VkShaderModule *pShaderModuleHandle)
+{
+    DkResult out;
+    size_t codeSize;
+    uint32_t *pCode;
+    VkShaderModuleCreateInfo createInfo;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pFilePath != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(pShaderModuleHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    if (dkpCreateShaderCode(pFilePath, pAllocator, &codeSize, &pCode)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.codeSize = codeSize;
+    createInfo.pCode = pCode;
+
+    if (vkCreateShaderModule(pDevice->logicalHandle, &createInfo,
+                             pBackEndAllocator, pShaderModuleHandle)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "failed to create the shader module from the file "
+                        "'%s'\n", pFilePath);
+        out = DK_ERROR;
+        goto code_cleanup;
+    }
+
+code_cleanup:
+    dkpDestroyShaderCode(pCode, pAllocator);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyShaderModule(const DkpDevice *pDevice,
+                       VkShaderModule shaderModuleHandle,
+                       const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(shaderModuleHandle != VK_NULL_HANDLE);
+
+    vkDestroyShaderModule(pDevice->logicalHandle, shaderModuleHandle,
+                          pBackEndAllocator);
+}
+
+
+static DkResult
+dkpCreateShaders(const DkpDevice *pDevice,
+                 uint32_t shaderCount,
+                 const DkShaderCreateInfo *pShaderInfos,
+                 const VkAllocationCallbacks *pBackEndAllocator,
+                 const DkAllocator *pAllocator,
+                 DkpShader **ppShaders)
+{
+    DkResult out;
+    uint32_t i;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pShaderInfos != NULL);
+    DK_ASSERT(pAllocator != NULL);
+    DK_ASSERT(ppShaders != NULL);
+
+    out = DK_SUCCESS;
+
+    *ppShaders = (DkpShader *)
+        DK_ALLOCATE(pAllocator, sizeof **ppShaders * shaderCount);
+    if (*ppShaders == NULL) {
+        fprintf(stderr, "failed to allocate the shaders\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    for (i = 0; i < shaderCount; ++i)
+        (*ppShaders)[i].moduleHandle = NULL;
+
+    for (i = 0; i < shaderCount; ++i) {
+        if (dkpCreateShaderModule(pDevice, pShaderInfos[i].pFilePath,
+                                  pBackEndAllocator, pAllocator,
+                                  &(*ppShaders)[i].moduleHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto shaders_undo;
+        }
+
+        (*ppShaders)[i].stage = dkpTranslateShaderStage(pShaderInfos[i].stage);
+        (*ppShaders)[i].pEntryPointName = pShaderInfos[i].pEntryPointName;
+    }
+
+    goto exit;
+
+shaders_undo:
+    for (i = 0; i < shaderCount; ++i) {
+        if ((*ppShaders)[i].moduleHandle != NULL) {
+            dkpDestroyShaderModule(pDevice, (*ppShaders)[i].moduleHandle,
+                                   pBackEndAllocator);
+        }
+    }
+
+    DK_FREE(pAllocator, *ppShaders);
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyShaders(const DkpDevice *pDevice,
+                  uint32_t shaderCount,
+                  DkpShader *pShaders,
+                  const VkAllocationCallbacks *pBackEndAllocator,
+                  const DkAllocator *pAllocator)
+{
+    uint32_t i;
+
+    DK_ASSERT(pDevice != NULL);
+    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DK_ASSERT(pShaders != NULL);
+    DK_ASSERT(pAllocator != NULL);
+
+    for (i = 0; i < shaderCount; ++i) {
+        DK_ASSERT(pShaders[i].moduleHandle != NULL);
+        dkpDestroyShaderModule(pDevice, pShaders[i].moduleHandle,
+                               pBackEndAllocator);
+    }
+
+    DK_FREE(pAllocator, pShaders);
+}
+
+
+static DkResult
 dkpCreateSwapChainImages(const DkpDevice *pDevice,
                          VkSwapchainKHR swapChainHandle,
                          const DkAllocator *pAllocator,
@@ -2116,145 +2344,11 @@ dkpDestroyPipelineLayout(const DkpDevice *pDevice,
 
 
 static DkResult
-dkpCreateShaderCode(const char *pFilePath,
-                    const DkAllocator *pAllocator,
-                    size_t *pShaderCodeSize,
-                    uint32_t **ppShaderCode)
-{
-    DkResult out;
-    DkpFile file;
-
-    DK_ASSERT(pFilePath != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(ppShaderCode != NULL);
-
-    out = DK_SUCCESS;
-
-    if (dkpOpenFile(&file, pFilePath, "rb") != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto exit;
-    }
-
-    if (dkpGetFileSize(&file, pShaderCodeSize) != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto file_closing;
-    }
-
-    DK_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
-
-    *ppShaderCode = DK_ALLOCATE(pAllocator, *pShaderCodeSize);
-    if (*ppShaderCode == NULL) {
-        fprintf(stderr, "failed to allocate the shader code for the file "
-                        "'%s'\n", pFilePath);
-        out = DK_ERROR_ALLOCATION;
-        goto file_closing;
-    }
-
-    if (dkpReadFile(&file, *pShaderCodeSize, (void *) *ppShaderCode)
-        != DK_SUCCESS)
-    {
-        out = DK_ERROR;
-        goto code_undo;
-    }
-
-    goto cleanup;
-
-code_undo:
-    DK_FREE(pAllocator, *ppShaderCode);
-
-cleanup: ;
-
-file_closing:
-    if (dkpCloseFile(&file) != DK_SUCCESS)
-        out = DK_ERROR;
-
-exit:
-    return out;
-}
-
-
-static void
-dkpDestroyShaderCode(uint32_t *pShaderCode,
-                     const DkAllocator *pAllocator)
-{
-    DK_ASSERT(pShaderCode != NULL);
-    DK_ASSERT(pAllocator != NULL);
-
-    DK_FREE(pAllocator, pShaderCode);
-}
-
-
-static DkResult
-dkpCreateShaderModule(const DkpDevice *pDevice,
-                      const char *pFilePath,
-                      const VkAllocationCallbacks *pBackEndAllocator,
-                      const DkAllocator *pAllocator,
-                      VkShaderModule *pShaderModuleHandle)
-{
-    DkResult out;
-    size_t codeSize;
-    uint32_t *pCode;
-    VkShaderModuleCreateInfo createInfo;
-
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pFilePath != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pShaderModuleHandle != NULL);
-
-    out = DK_SUCCESS;
-
-    if (dkpCreateShaderCode(pFilePath, pAllocator, &codeSize, &pCode)
-        != DK_SUCCESS)
-    {
-        out = DK_ERROR;
-        goto exit;
-    }
-
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.pNext = NULL;
-    createInfo.flags = 0;
-    createInfo.codeSize = codeSize;
-    createInfo.pCode = pCode;
-
-    if (vkCreateShaderModule(pDevice->logicalHandle, &createInfo,
-                             pBackEndAllocator, pShaderModuleHandle)
-        != VK_SUCCESS)
-    {
-        fprintf(stderr, "failed to create the shader module from the file "
-                        "'%s'\n", pFilePath);
-        out = DK_ERROR;
-        goto code_cleanup;
-    }
-
-code_cleanup:
-    dkpDestroyShaderCode(pCode, pAllocator);
-
-exit:
-    return out;
-}
-
-
-static void
-dkpDestroyShaderModule(const DkpDevice *pDevice,
-                       VkShaderModule shaderModuleHandle,
-                       const VkAllocationCallbacks *pBackEndAllocator)
-{
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(shaderModuleHandle != VK_NULL_HANDLE);
-
-    vkDestroyShaderModule(pDevice->logicalHandle, shaderModuleHandle,
-                          pBackEndAllocator);
-}
-
-
-static DkResult
 dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
                           VkPipelineLayout pipelineLayoutHandle,
                           VkRenderPass renderPassHandle,
                           uint32_t shaderCount,
-                          const DkShaderCreateInfo *pShaderInfos,
+                          const DkpShader *pShaders,
                           const VkExtent2D *pSurfaceExtent,
                           const VkAllocationCallbacks *pBackEndAllocator,
                           const DkAllocator *pAllocator,
@@ -2262,7 +2356,6 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
 {
     DkResult out;
     uint32_t i;
-    VkShaderModule *pShaderModuleHandles;
     VkPipelineShaderStageCreateInfo *pShaderStageInfos;
     uint32_t viewportCount;
     VkViewport *pViewports;
@@ -2283,55 +2376,29 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
     DK_ASSERT(pDevice->logicalHandle != NULL);
     DK_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
     DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pShaderInfos != NULL);
+    DK_ASSERT(pShaders != NULL);
     DK_ASSERT(pSurfaceExtent != NULL);
     DK_ASSERT(pAllocator != NULL);
     DK_ASSERT(pPipelineHandle != NULL);
 
     out = DK_SUCCESS;
 
-    pShaderModuleHandles = (VkShaderModule *)
-        DK_ALLOCATE(pAllocator, sizeof *pShaderModuleHandles * shaderCount);
-    if (pShaderModuleHandles == NULL) {
-        fprintf(stderr, "failed to allocate the shader modules\n");
-        out = DK_ERROR_ALLOCATION;
-        goto exit;
-    }
-
-    for (i = 0; i < shaderCount; ++i)
-        pShaderModuleHandles[i] = VK_NULL_HANDLE;
-
-    for (i = 0; i < shaderCount; ++i) {
-        if (dkpCreateShaderModule(pDevice, pShaderInfos[i].pFilePath,
-                                  pBackEndAllocator, pAllocator,
-                                  &pShaderModuleHandles[i])
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto shader_modules_cleanup;
-        }
-    }
-
     pShaderStageInfos = (VkPipelineShaderStageCreateInfo *)
         DK_ALLOCATE(pAllocator, sizeof *pShaderStageInfos * shaderCount);
     if (pShaderStageInfos == NULL) {
         fprintf(stderr, "failed to allocate the shader stage infos\n");
         out = DK_ERROR_ALLOCATION;
-        goto shader_modules_cleanup;
+        goto exit;
     }
 
     for (i = 0; i < shaderCount; ++i) {
-        VkShaderStageFlagBits shaderStage;
-
-        shaderStage = dkpTranslateShaderStage(pShaderInfos[i].stage);
-
         pShaderStageInfos[i].sType =
             VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         pShaderStageInfos[i].pNext = NULL;
         pShaderStageInfos[i].flags = 0;
-        pShaderStageInfos[i].stage = shaderStage;
-        pShaderStageInfos[i].module = pShaderModuleHandles[i];
-        pShaderStageInfos[i].pName = pShaderInfos[i].pEntryPointName;
+        pShaderStageInfos[i].stage = pShaders[i].stage;
+        pShaderStageInfos[i].module = pShaders[i].moduleHandle;
+        pShaderStageInfos[i].pName = pShaders[i].pEntryPointName;
         pShaderStageInfos[i].pSpecializationInfo = NULL;
     }
 
@@ -2507,15 +2574,6 @@ viewports_cleanup:
 
 shader_stage_infos_cleanup:
     DK_FREE(pAllocator, pShaderStageInfos);
-
-shader_modules_cleanup:
-    for (i = 0; i < shaderCount; ++i) {
-        if (pShaderModuleHandles[i] != VK_NULL_HANDLE)
-            dkpDestroyShaderModule(pDevice, pShaderModuleHandles[i],
-                                   pBackEndAllocator);
-    }
-
-    DK_FREE(pAllocator, pShaderModuleHandles);
 
 exit:
     return out;
@@ -2896,6 +2954,18 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_undo;
     }
 
+    (*ppRenderer)->shaderCount = pCreateInfo->shaderCount;
+    if (dkpCreateShaders(&(*ppRenderer)->device,
+                         (uint32_t) pCreateInfo->shaderCount,
+                         pCreateInfo->pShaderInfos,
+                         (*ppRenderer)->pBackEndAllocator,
+                         (*ppRenderer)->pAllocator,
+                         &(*ppRenderer)->pShaders))
+    {
+        out = DK_ERROR;
+        goto semaphores_undo;
+    }
+
     if (!headless) {
         if (dkpCreateSwapChain(&(*ppRenderer)->device,
                                (*ppRenderer)->surfaceHandle,
@@ -2907,7 +2977,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             != DK_SUCCESS)
         {
             out = DK_ERROR;
-            goto semaphores_undo;
+            goto shaders_undo;
         }
 
         if (dkpCreateRenderPass(&(*ppRenderer)->device,
@@ -2933,8 +3003,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         if (dkpCreateGraphicsPipeline(&(*ppRenderer)->device,
                                       (*ppRenderer)->pipelineLayoutHandle,
                                       (*ppRenderer)->renderPassHandle,
-                                      (uint32_t) pCreateInfo->shaderCount,
-                                      pCreateInfo->pShaderInfos,
+                                      (*ppRenderer)->shaderCount,
+                                      (*ppRenderer)->pShaders,
                                       &(*ppRenderer)->surfaceExtent,
                                       (*ppRenderer)->pBackEndAllocator,
                                       (*ppRenderer)->pAllocator,
@@ -3022,6 +3092,13 @@ swap_chain_undo:
                             (*ppRenderer)->pBackEndAllocator,
                             (*ppRenderer)->pAllocator);
 
+shaders_undo:
+    dkpDestroyShaders(&(*ppRenderer)->device,
+                      (*ppRenderer)->shaderCount,
+                      (*ppRenderer)->pShaders,
+                      (*ppRenderer)->pBackEndAllocator,
+                      (*ppRenderer)->pAllocator);
+
 semaphores_undo:
     dkpDestroySemaphores(&(*ppRenderer)->device,
                          (*ppRenderer)->pSemaphoreHandles,
@@ -3098,6 +3175,11 @@ dkDestroyRenderer(DkRenderer *pRenderer,
                             pRenderer->pBackEndAllocator, pAllocator);
     }
 
+    dkpDestroyShaders(&pRenderer->device,
+                      pRenderer->shaderCount,
+                      pRenderer->pShaders,
+                      pRenderer->pBackEndAllocator,
+                      pRenderer->pAllocator);
     dkpDestroySemaphores(&pRenderer->device, pRenderer->pSemaphoreHandles,
                          pRenderer->pBackEndAllocator, pAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
