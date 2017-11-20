@@ -2180,6 +2180,8 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     VkAttachmentReference *pColorAttachmentReferences;
     uint32_t subpassCount;
     VkSubpassDescription *pSubpasses;
+    uint32_t subpassDependencyCount;
+    VkSubpassDependency *pSubpassDependencies;
     VkRenderPassCreateInfo renderPassInfo;
 
     DK_ASSERT(pDevice != NULL);
@@ -2246,6 +2248,28 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     pSubpasses[0].preserveAttachmentCount = 0;
     pSubpasses[0].pPreserveAttachments = NULL;
 
+    subpassDependencyCount = 1;
+    pSubpassDependencies = (VkSubpassDependency *)
+        DK_ALLOCATE(pAllocator,
+                    sizeof *pSubpassDependencies * subpassDependencyCount);
+    if (pSubpassDependencies == NULL) {
+        fprintf(stderr, "failed to allocate the subpass dependencies\n");
+        out = DK_ERROR_ALLOCATION;
+        goto subpasses_cleanup;
+    }
+
+    pSubpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    pSubpassDependencies[0].dstSubpass = 0;
+    pSubpassDependencies[0].srcStageMask =
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    pSubpassDependencies[0].dstStageMask =
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    pSubpassDependencies[0].srcAccessMask = 0;
+    pSubpassDependencies[0].dstAccessMask =
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT
+        | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    pSubpassDependencies[0].dependencyFlags = 0;
+
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.pNext = NULL;
     renderPassInfo.flags = 0;
@@ -2253,8 +2277,8 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     renderPassInfo.pAttachments = pColorAttachments;
     renderPassInfo.subpassCount = subpassCount;
     renderPassInfo.pSubpasses = pSubpasses;
-    renderPassInfo.dependencyCount = 0;
-    renderPassInfo.pDependencies = NULL;
+    renderPassInfo.dependencyCount = subpassDependencyCount;
+    renderPassInfo.pDependencies = pSubpassDependencies;
 
     if (vkCreateRenderPass(pDevice->logicalHandle, &renderPassInfo,
                            pBackEndAllocator, pRenderPassHandle)
@@ -2262,8 +2286,11 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     {
         fprintf(stderr, "failed to created the render pass\n");
         out = DK_ERROR;
-        goto subpasses_cleanup;
+        goto subpass_dependencies_cleanup;
     }
+
+subpass_dependencies_cleanup:
+    DK_FREE(pAllocator, pSubpassDependencies);
 
 subpasses_cleanup:
     DK_FREE(pAllocator, pSubpasses);
