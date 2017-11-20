@@ -2657,18 +2657,18 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
         (*ppFramebufferHandles)[i] = VK_NULL_HANDLE;
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
-        VkImageView pAttachments[1];
+        VkImageView attachments[1];
         VkFramebufferCreateInfo framebufferInfo;
 
-        pAttachments[0] = pSwapChain->pImageViewHandles[i];
+        attachments[0] = pSwapChain->pImageViewHandles[i];
 
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.pNext = NULL;
         framebufferInfo.flags = 0;
         framebufferInfo.renderPass = renderPassHandle;
         framebufferInfo.attachmentCount = (uint32_t)
-            sizeof pAttachments / sizeof *pAttachments;
-        framebufferInfo.pAttachments = pAttachments;
+            sizeof attachments / sizeof *attachments;
+        framebufferInfo.pAttachments = attachments;
         framebufferInfo.width = pSurfaceExtent->width;
         framebufferInfo.height = pSurfaceExtent->height;
         framebufferInfo.layers = 1;
