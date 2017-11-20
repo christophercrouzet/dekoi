@@ -3183,7 +3183,7 @@ dkDestroyRenderer(DkRenderer *pRenderer,
             pAllocator);
         dkpDestroyGraphicsCommandPool(&pRenderer->device,
                                       pRenderer->graphicsCommandPoolHandle,
-                                      pRenderer->pBackEndAllocator),
+                                      pRenderer->pBackEndAllocator);
         dkpDestroyFramebuffers(&pRenderer->device,
                                &pRenderer->swapChain,
                                pRenderer->pFramebufferHandles,
