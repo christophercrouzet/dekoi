@@ -45,6 +45,11 @@ typedef enum DkpSemaphoreId {
     DKP_SEMAPHORE_ID_ENUM_COUNT = DKP_SEMAPHORE_ID_ENUM_LAST + 1
 } DkpSemaphoreId;
 
+typedef enum DkpSwapChainSystemScope {
+    DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL = 0,
+    DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL = 1
+} DkpSwapChainSystemScope;
+
 
 typedef struct DkpQueueFamilyIndices {
     uint32_t graphics;
@@ -2149,25 +2154,6 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
 
 
 static DkResult
-dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
-{
-    if (dkpCreateSwapChain(&pRenderer->device,
-                           pRenderer->surfaceHandle,
-                           &pRenderer->surfaceExtent,
-                           pRenderer->swapChain.handle,
-                           pRenderer->pBackEndAllocator,
-                           pRenderer->pAllocator,
-                           &pRenderer->swapChain)
-        != DK_SUCCESS)
-    {
-        return DK_ERROR;
-    }
-
-    return DK_SUCCESS;
-}
-
-
-static DkResult
 dkpCreateRenderPass(const DkpDevice *pDevice,
                     const DkpSwapChain *pSwapChain,
                     const VkAllocationCallbacks *pBackEndAllocator,
@@ -2913,6 +2899,231 @@ exit:
 }
 
 
+static DkResult
+dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
+                                 const DkpSwapChainSystemScope scope)
+{
+    DkResult out;
+
+    DK_ASSERT(pRenderer != NULL);
+
+    out = DK_SUCCESS;
+
+    if (dkpCreateSwapChain(&pRenderer->device,
+                           pRenderer->surfaceHandle,
+                           &pRenderer->surfaceExtent,
+                           VK_NULL_HANDLE,
+                           pRenderer->pBackEndAllocator,
+                           pRenderer->pAllocator,
+                           &pRenderer->swapChain)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    if (dkpCreateRenderPass(&pRenderer->device,
+                            &pRenderer->swapChain,
+                            pRenderer->pBackEndAllocator,
+                            pRenderer->pAllocator,
+                            &pRenderer->renderPassHandle)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto swap_chain_undo;
+    }
+
+    if (dkpCreatePipelineLayout(&pRenderer->device,
+                                pRenderer->pBackEndAllocator,
+                                &pRenderer->pipelineLayoutHandle)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto render_pass_undo;
+    }
+
+    if (dkpCreateGraphicsPipeline(&pRenderer->device,
+                                  pRenderer->pipelineLayoutHandle,
+                                  pRenderer->renderPassHandle,
+                                  pRenderer->shaderCount,
+                                  pRenderer->pShaders,
+                                  &pRenderer->surfaceExtent,
+                                  pRenderer->pBackEndAllocator,
+                                  pRenderer->pAllocator,
+                                  &pRenderer->graphicsPipelineHandle)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto pipeline_layout_undo;
+    }
+
+    if (dkpCreateFramebuffers(&pRenderer->device,
+                              &pRenderer->swapChain,
+                              pRenderer->renderPassHandle,
+                              &pRenderer->surfaceExtent,
+                              pRenderer->pBackEndAllocator,
+                              pRenderer->pAllocator,
+                              &pRenderer->pFramebufferHandles)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto graphics_pipeline_undo;
+    }
+
+    if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
+        if (dkpCreateGraphicsCommandPool(&pRenderer->device,
+                                         pRenderer->pBackEndAllocator,
+                                         &pRenderer->graphicsCommandPoolHandle)
+            != DK_SUCCESS)
+        {
+            out = DK_ERROR;
+            goto framebuffers_undo;
+        }
+    }
+
+    if (dkpCreateGraphicsCommandBuffers(
+            &pRenderer->device,
+            &pRenderer->swapChain,
+            pRenderer->graphicsCommandPoolHandle,
+            pRenderer->pAllocator,
+            &pRenderer->pGraphicsCommandBufferHandles)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto graphics_command_pool_undo;
+    }
+
+    if (dkpRecordGraphicsCommandBuffers(
+            &pRenderer->swapChain,
+            pRenderer->renderPassHandle,
+            pRenderer->graphicsPipelineHandle,
+            pRenderer->pFramebufferHandles,
+            pRenderer->pGraphicsCommandBufferHandles,
+            &pRenderer->surfaceExtent,
+            &pRenderer->clearColor)
+        != DK_SUCCESS)
+    {
+        out = DK_ERROR;
+        goto graphics_command_buffers_undo;
+    }
+
+    goto exit;
+
+graphics_command_buffers_undo:
+    dkpDestroyGraphicsCommandBuffers(&pRenderer->device,
+                                     &pRenderer->swapChain,
+                                     pRenderer->graphicsCommandPoolHandle,
+                                     pRenderer->pGraphicsCommandBufferHandles,
+                                     pRenderer->pAllocator);
+    pRenderer->pGraphicsCommandBufferHandles = NULL;
+
+graphics_command_pool_undo:
+    dkpDestroyGraphicsCommandPool(&pRenderer->device,
+                                  pRenderer->graphicsCommandPoolHandle,
+                                  pRenderer->pBackEndAllocator);
+    pRenderer->graphicsCommandPoolHandle = VK_NULL_HANDLE;
+
+framebuffers_undo:
+    dkpDestroyFramebuffers(&pRenderer->device,
+                           &pRenderer->swapChain,
+                           pRenderer->pFramebufferHandles,
+                           pRenderer->pBackEndAllocator,
+                           pRenderer->pAllocator);
+    pRenderer->pFramebufferHandles = NULL;
+
+graphics_pipeline_undo:
+    dkpDestroyGraphicsPipeline(&pRenderer->device,
+                               pRenderer->graphicsPipelineHandle,
+                               pRenderer->pBackEndAllocator);
+    pRenderer->graphicsPipelineHandle = VK_NULL_HANDLE;
+
+pipeline_layout_undo:
+    dkpDestroyPipelineLayout(&pRenderer->device,
+                             pRenderer->pipelineLayoutHandle,
+                             pRenderer->pBackEndAllocator);
+    pRenderer->pipelineLayoutHandle = VK_NULL_HANDLE;
+
+render_pass_undo:
+    dkpDestroyRenderPass(&pRenderer->device,
+                         pRenderer->renderPassHandle,
+                         pRenderer->pBackEndAllocator);
+    pRenderer->renderPassHandle = VK_NULL_HANDLE;
+
+swap_chain_undo:
+    dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
+                        pRenderer->pBackEndAllocator, pRenderer->pAllocator);
+    pRenderer->swapChain.handle = VK_NULL_HANDLE;
+
+exit:
+    return out;
+}
+
+
+static void
+dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
+                                  DkpSwapChainSystemScope scope)
+{
+    DK_ASSERT(pRenderer != NULL);
+
+    vkDeviceWaitIdle(pRenderer->device.logicalHandle);
+
+    if (pRenderer->pGraphicsCommandBufferHandles != NULL)
+        dkpDestroyGraphicsCommandBuffers(
+            &pRenderer->device,
+            &pRenderer->swapChain,
+            pRenderer->graphicsCommandPoolHandle,
+            pRenderer->pGraphicsCommandBufferHandles,
+            pRenderer->pAllocator);
+
+    if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL
+        && pRenderer->graphicsCommandPoolHandle != VK_NULL_HANDLE)
+    {
+        dkpDestroyGraphicsCommandPool(&pRenderer->device,
+                                      pRenderer->graphicsCommandPoolHandle,
+                                      pRenderer->pBackEndAllocator);
+    }
+
+    if (pRenderer->pFramebufferHandles != NULL)
+        dkpDestroyFramebuffers(&pRenderer->device,
+                               &pRenderer->swapChain,
+                               pRenderer->pFramebufferHandles,
+                               pRenderer->pBackEndAllocator,
+                               pRenderer->pAllocator);
+
+    if (pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE)
+        dkpDestroyGraphicsPipeline(&pRenderer->device,
+                                   pRenderer->graphicsPipelineHandle,
+                                   pRenderer->pBackEndAllocator);
+
+    if (pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE)
+        dkpDestroyPipelineLayout(&pRenderer->device,
+                                 pRenderer->pipelineLayoutHandle,
+                                 pRenderer->pBackEndAllocator);
+
+    if (pRenderer->renderPassHandle != VK_NULL_HANDLE)
+        dkpDestroyRenderPass(&pRenderer->device,
+                             pRenderer->renderPassHandle,
+                             pRenderer->pBackEndAllocator);
+
+    if (pRenderer->swapChain.handle != VK_NULL_HANDLE)
+        dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
+                            pRenderer->pBackEndAllocator,
+                            pRenderer->pAllocator);
+}
+
+
+static DkResult
+dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
+{
+    DK_ASSERT(pRenderer != NULL);
+
+    dkpDestroyRendererSwapChainSystem(pRenderer,
+                                      DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
+    return dkpCreateRendererSwapChainSystem(
+        pRenderer, DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
+}
+
+
 static void
 dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
                            int *pValid)
@@ -3069,153 +3280,16 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     if (!headless) {
-        if (dkpCreateSwapChain(&(*ppRenderer)->device,
-                               (*ppRenderer)->surfaceHandle,
-                               &(*ppRenderer)->surfaceExtent,
-                               VK_NULL_HANDLE,
-                               (*ppRenderer)->pBackEndAllocator,
-                               (*ppRenderer)->pAllocator,
-                               &(*ppRenderer)->swapChain)
+        if (dkpCreateRendererSwapChainSystem(*ppRenderer,
+                                             DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL)
             != DK_SUCCESS)
         {
             out = DK_ERROR;
             goto shaders_undo;
         }
-
-        if (dkpCreateRenderPass(&(*ppRenderer)->device,
-                                &(*ppRenderer)->swapChain,
-                                (*ppRenderer)->pBackEndAllocator,
-                                (*ppRenderer)->pAllocator,
-                                &(*ppRenderer)->renderPassHandle)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto swap_chain_undo;
-        }
-
-        if (dkpCreatePipelineLayout(&(*ppRenderer)->device,
-                                    (*ppRenderer)->pBackEndAllocator,
-                                    &(*ppRenderer)->pipelineLayoutHandle)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto render_pass_undo;
-        }
-
-        if (dkpCreateGraphicsPipeline(&(*ppRenderer)->device,
-                                      (*ppRenderer)->pipelineLayoutHandle,
-                                      (*ppRenderer)->renderPassHandle,
-                                      (*ppRenderer)->shaderCount,
-                                      (*ppRenderer)->pShaders,
-                                      &(*ppRenderer)->surfaceExtent,
-                                      (*ppRenderer)->pBackEndAllocator,
-                                      (*ppRenderer)->pAllocator,
-                                      &(*ppRenderer)->graphicsPipelineHandle)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto pipeline_layout_undo;
-        }
-
-        if (dkpCreateFramebuffers(&(*ppRenderer)->device,
-                                  &(*ppRenderer)->swapChain,
-                                  (*ppRenderer)->renderPassHandle,
-                                  &(*ppRenderer)->surfaceExtent,
-                                  (*ppRenderer)->pBackEndAllocator,
-                                  (*ppRenderer)->pAllocator,
-                                  &(*ppRenderer)->pFramebufferHandles)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto graphics_pipeline_undo;
-        }
-
-        if (dkpCreateGraphicsCommandPool(
-                &(*ppRenderer)->device,
-                (*ppRenderer)->pBackEndAllocator,
-                &(*ppRenderer)->graphicsCommandPoolHandle)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto framebuffers_undo;
-        }
-
-        if (dkpCreateGraphicsCommandBuffers(
-                &(*ppRenderer)->device,
-                &(*ppRenderer)->swapChain,
-                (*ppRenderer)->graphicsCommandPoolHandle,
-                (*ppRenderer)->pAllocator,
-                &(*ppRenderer)->pGraphicsCommandBufferHandles)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto graphics_command_pool_undo;
-        }
-
-        if (dkpRecordGraphicsCommandBuffers(
-                &(*ppRenderer)->swapChain,
-                (*ppRenderer)->renderPassHandle,
-                (*ppRenderer)->graphicsPipelineHandle,
-                (*ppRenderer)->pFramebufferHandles,
-                (*ppRenderer)->pGraphicsCommandBufferHandles,
-                &(*ppRenderer)->surfaceExtent,
-                &(*ppRenderer)->clearColor)
-            != DK_SUCCESS)
-        {
-            out = DK_ERROR;
-            goto graphics_command_buffers_undo;
-        }
     }
 
     goto exit;
-
-graphics_command_buffers_undo:
-    if (!headless)
-        dkpDestroyGraphicsCommandBuffers(
-            &(*ppRenderer)->device,
-            &(*ppRenderer)->swapChain,
-            (*ppRenderer)->graphicsCommandPoolHandle,
-            (*ppRenderer)->pGraphicsCommandBufferHandles,
-            (*ppRenderer)->pAllocator);
-
-graphics_command_pool_undo:
-    if (!headless)
-        dkpDestroyGraphicsCommandPool(&(*ppRenderer)->device,
-                                      (*ppRenderer)->graphicsCommandPoolHandle,
-                                      (*ppRenderer)->pBackEndAllocator);
-
-framebuffers_undo:
-    if (!headless)
-        dkpDestroyFramebuffers(&(*ppRenderer)->device,
-                               &(*ppRenderer)->swapChain,
-                               (*ppRenderer)->pFramebufferHandles,
-                               (*ppRenderer)->pBackEndAllocator,
-                               (*ppRenderer)->pAllocator);
-
-graphics_pipeline_undo:
-    if (!headless)
-        dkpDestroyGraphicsPipeline(&(*ppRenderer)->device,
-                                   (*ppRenderer)->graphicsPipelineHandle,
-                                   (*ppRenderer)->pBackEndAllocator);
-
-pipeline_layout_undo:
-    if (!headless)
-        dkpDestroyPipelineLayout(&(*ppRenderer)->device,
-                                 (*ppRenderer)->pipelineLayoutHandle,
-                                 (*ppRenderer)->pBackEndAllocator);
-
-render_pass_undo:
-    if (!headless)
-        dkpDestroyRenderPass(&(*ppRenderer)->device,
-                             (*ppRenderer)->renderPassHandle,
-                             (*ppRenderer)->pBackEndAllocator);
-
-swap_chain_undo:
-    if (!headless)
-        dkpDestroySwapChain(&(*ppRenderer)->device,
-                            &(*ppRenderer)->swapChain,
-                            (*ppRenderer)->pBackEndAllocator,
-                            (*ppRenderer)->pAllocator);
 
 shaders_undo:
     dkpDestroyShaders(&(*ppRenderer)->device,
@@ -3274,33 +3348,9 @@ dkDestroyRenderer(DkRenderer *pRenderer,
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
-    if (!headless) {
-        dkpDestroyGraphicsCommandBuffers(
-            &pRenderer->device,
-            &pRenderer->swapChain,
-            pRenderer->graphicsCommandPoolHandle,
-            pRenderer->pGraphicsCommandBufferHandles,
-            pAllocator);
-        dkpDestroyGraphicsCommandPool(&pRenderer->device,
-                                      pRenderer->graphicsCommandPoolHandle,
-                                      pRenderer->pBackEndAllocator);
-        dkpDestroyFramebuffers(&pRenderer->device,
-                               &pRenderer->swapChain,
-                               pRenderer->pFramebufferHandles,
-                               pRenderer->pBackEndAllocator,
-                               pAllocator);
-        dkpDestroyGraphicsPipeline(&pRenderer->device,
-                                   pRenderer->graphicsPipelineHandle,
-                                   pRenderer->pBackEndAllocator);
-        dkpDestroyPipelineLayout(&pRenderer->device,
-                                 pRenderer->pipelineLayoutHandle,
-                                 pRenderer->pBackEndAllocator);
-        dkpDestroyRenderPass(&pRenderer->device,
-                             pRenderer->renderPassHandle,
-                             pRenderer->pBackEndAllocator);
-        dkpDestroySwapChain(&pRenderer->device, &pRenderer->swapChain,
-                            pRenderer->pBackEndAllocator, pAllocator);
-    }
+    if (!headless)
+        dkpDestroyRendererSwapChainSystem(pRenderer,
+                                          DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL);
 
     dkpDestroyShaders(&pRenderer->device,
                       pRenderer->shaderCount,
