@@ -245,3 +245,13 @@ pollWindowEvents(const Window *pWindow)
     glfwPollEvents();
     return 0;
 }
+
+
+int
+renderWindowImage(const Window *pWindow)
+{
+    if (drawRendererImage(pWindow->pRenderer))
+        return 1;
+
+    return 0;
+}

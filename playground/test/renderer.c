@@ -73,3 +73,15 @@ resizeRendererSurface(Renderer *pRenderer,
 
     return 0;
 }
+
+
+int
+drawRendererImage(Renderer *pRenderer)
+{
+    assert(pRenderer != NULL);
+
+    if (dkDrawRendererImage(pRenderer->pHandle) != DK_SUCCESS)
+        return 1;
+
+    return 0;
+}

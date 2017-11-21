@@ -69,6 +69,9 @@ runApplication(Application *pApplication)
         getWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
         if (pApplication->stopFlag)
             break;
+
+        if (renderWindowImage(pApplication->pWindow))
+            return 1;
     }
 
     return 0;

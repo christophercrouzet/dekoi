@@ -58,5 +58,6 @@ void dkDestroyRenderer(DkRenderer *pRenderer,
 DkResult dkResizeRendererSurface(DkRenderer *pRenderer,
                                  DkUint32 width,
                                  DkUint32 height);
+DkResult dkDrawRendererImage(DkRenderer *pRenderer);
 
 #endif /* DEKOI_RENDERER_H */

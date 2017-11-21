@@ -3387,3 +3387,143 @@ dkResizeRendererSurface(DkRenderer *pRenderer,
     pRenderer->surfaceExtent.height = (uint32_t) height;
     return dkpRecreateRendererSwapChain(pRenderer);
 }
+
+
+DkResult
+dkDrawRendererImage(DkRenderer *pRenderer)
+{
+    DkResult out;
+    uint32_t imageIndex;
+    uint32_t waitSemaphoreCount;
+    VkSemaphore *pWaitSemaphores;
+    uint32_t signalSemaphoreCount;
+    VkSemaphore *pSignalSemaphores;
+    VkPipelineStageFlags waitDstStageMask;
+    VkSubmitInfo submitInfo;
+    VkPresentInfoKHR presentInfo;
+    VkSwapchainKHR swapChainHandles[1];
+    uint32_t imageIndices[1];
+
+    DK_ASSERT(pRenderer != NULL);
+
+    out = DK_SUCCESS;
+
+    vkQueueWaitIdle(pRenderer->queues.presentHandle);
+
+    switch (vkAcquireNextImageKHR(
+        pRenderer->device.logicalHandle,
+        pRenderer->swapChain.handle,
+        UINT64_MAX,
+        pRenderer->pSemaphoreHandles[DKP_SEMAPHORE_ID_IMAGE_ACQUIRED],
+        VK_NULL_HANDLE,
+        &imageIndex))
+    {
+        case VK_SUCCESS:
+            break;
+        case VK_NOT_READY:
+            fprintf(stderr, "no image was available\n");
+            out = DK_ERROR;
+            goto exit;
+        case VK_TIMEOUT:
+            fprintf(stderr, "no image was available within the time allowed\n");
+            out = DK_ERROR;
+            goto exit;
+        case VK_SUBOPTIMAL_KHR:
+            if (dkpRecreateRendererSwapChain(pRenderer) != DK_SUCCESS) {
+                out = DK_ERROR;
+                goto exit;
+            }
+
+            break;
+        case VK_ERROR_OUT_OF_DATE_KHR:
+            if (dkpRecreateRendererSwapChain(pRenderer) != DK_SUCCESS) {
+                out = DK_ERROR;
+                goto exit;
+            }
+
+            break;
+        case VK_ERROR_DEVICE_LOST:
+            fprintf(stderr, "the swap chain's device has been lost\n");
+            out = DK_ERROR;
+            goto exit;
+        case VK_ERROR_SURFACE_LOST_KHR:
+            fprintf(stderr, "the swap chain's surface has been lost\n");
+            out = DK_ERROR;
+            goto exit;
+        default:
+            fprintf(stderr, "could not acquire a new image\n");
+            out = DK_ERROR;
+            goto exit;
+    }
+
+    waitSemaphoreCount = 1;
+    pWaitSemaphores = DK_ALLOCATE(pRenderer->pAllocator,
+                                  sizeof *pWaitSemaphores * waitSemaphoreCount);
+    if (pWaitSemaphores == NULL) {
+        fprintf(stderr, "failed to allocate the wait semaphores\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    pWaitSemaphores[0] =
+        pRenderer->pSemaphoreHandles[DKP_SEMAPHORE_ID_IMAGE_ACQUIRED];
+
+    signalSemaphoreCount = 1;
+    pSignalSemaphores = DK_ALLOCATE(
+        pRenderer->pAllocator,
+        sizeof *pSignalSemaphores * signalSemaphoreCount);
+    if (pSignalSemaphores == NULL) {
+        fprintf(stderr, "failed to allocate the signal semaphores\n");
+        out = DK_ERROR_ALLOCATION;
+        goto wait_semaphores_cleanup;
+    }
+
+    pSignalSemaphores[0] =
+        pRenderer->pSemaphoreHandles[DKP_SEMAPHORE_ID_PRESENT_COMPLETED];
+
+    waitDstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pNext = NULL;
+    submitInfo.waitSemaphoreCount = waitSemaphoreCount;
+    submitInfo.pWaitSemaphores = pWaitSemaphores;
+    submitInfo.pWaitDstStageMask = &waitDstStageMask;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers =
+        &pRenderer->pGraphicsCommandBufferHandles[imageIndex];
+    submitInfo.signalSemaphoreCount = signalSemaphoreCount;
+    submitInfo.pSignalSemaphores = pSignalSemaphores;
+
+    if (vkQueueSubmit(pRenderer->queues.graphicsHandle, 1, &submitInfo,
+                      VK_NULL_HANDLE)
+        != VK_SUCCESS)
+    {
+        fprintf(stderr, "could not submit the graphics queue\n");
+        out = DK_ERROR;
+        goto signal_semaphores_cleanup;
+    }
+
+    swapChainHandles[0] = pRenderer->swapChain.handle;
+    imageIndices[0] = imageIndex;
+
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.pNext = NULL;
+    presentInfo.waitSemaphoreCount = signalSemaphoreCount;
+    presentInfo.pWaitSemaphores = pSignalSemaphores;
+    presentInfo.swapchainCount =
+        sizeof swapChainHandles / sizeof *swapChainHandles;
+    presentInfo.pSwapchains = swapChainHandles;
+    presentInfo.pImageIndices = imageIndices;
+    presentInfo.pResults = NULL;
+
+    vkQueuePresentKHR(pRenderer->queues.presentHandle, &presentInfo);
+
+signal_semaphores_cleanup:
+    DK_FREE(pRenderer->pAllocator, pSignalSemaphores);
+
+wait_semaphores_cleanup:
+    DK_FREE(pRenderer->pAllocator, pWaitSemaphores);
+
+exit:
+    return out;
+}

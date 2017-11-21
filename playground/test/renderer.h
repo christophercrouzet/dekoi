@@ -11,5 +11,6 @@ void destroyRenderer(Window *pWindow,
 int resizeRendererSurface(Renderer *pRenderer,
                           unsigned int width,
                           unsigned int height);
+int drawRendererImage(Renderer *pRenderer);
 
 #endif /* DEKOI_PLAYGROUND_TEST_RENDERER_H */

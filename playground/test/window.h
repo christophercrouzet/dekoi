@@ -24,5 +24,6 @@ int bindWindowRenderer(Window *pWindow,
 void getWindowCloseFlag(const Window *pWindow,
                         int *pCloseFlag);
 int pollWindowEvents(const Window *pWindow);
+int renderWindowImage(const Window *pWindow);
 
 #endif /* DEKOI_PLAYGROUND_TEST_WINDOW_H */
