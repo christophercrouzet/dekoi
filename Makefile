@@ -106,4 +106,4 @@ all: playground
 clean:
 	@-rm -rf $(OBJECTDIR)
 	@-rm -rf $(TARGETDIR)
-	@-rm -f $(SHADEROBJECTS:%=%.txt)
+	@-rm -f $(SHADEROBJECTS) $(SHADEROBJECTS:%=%.txt)
