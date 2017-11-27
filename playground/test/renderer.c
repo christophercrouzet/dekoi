@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <dekoi/dekoi>
 #include <dekoi/renderer>
@@ -18,11 +20,19 @@ createRenderer(Window *pWindow,
                Renderer **ppRenderer)
 {
     int out;
+
     assert(pWindow != NULL);
     assert(pCreateInfo != NULL);
     assert(ppRenderer != NULL);
 
     out = 0;
+
+    *ppRenderer = (Renderer *) malloc(sizeof **ppRenderer);
+    if (*ppRenderer == NULL) {
+        fprintf(stderr, "failed to allocate the renderer\n");
+        return 1;
+    }
+
     if (dkCreateRenderer(pCreateInfo, NULL, &(*ppRenderer)->pHandle)
         != DK_SUCCESS)
     {
@@ -54,6 +64,7 @@ destroyRenderer(Window *pWindow,
 
     bindWindowRenderer(pWindow, NULL);
     dkDestroyRenderer(pRenderer->pHandle, NULL);
+    free(pRenderer);
 }
 
 
