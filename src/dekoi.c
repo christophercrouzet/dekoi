@@ -1,6 +1,5 @@
 #include "dekoi.h"
 
-
 const char *
 dkGetResultString(DkResult result)
 {

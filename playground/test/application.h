@@ -13,8 +13,7 @@ struct ApplicationCreateInfo {
 int createApplication(const ApplicationCreateInfo *pCreateInfo,
                       Application **ppApplication);
 void destroyApplication(Application *pApplication);
-int bindApplicationWindow(Application *pApplication,
-                          Window *pWindow);
+int bindApplicationWindow(Application *pApplication, Window *pWindow);
 int runApplication(Application *pApplication);
 
 #endif /* DEKOI_PLAYGROUND_TEST_APPLICATION_H */

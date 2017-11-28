@@ -6,8 +6,7 @@
 int createRenderer(Window *pWindow,
                    const RendererCreateInfo *pCreateInfo,
                    Renderer **ppRenderer);
-void destroyRenderer(Window *pWindow,
-                     Renderer *pRenderer);
+void destroyRenderer(Window *pWindow, Renderer *pRenderer);
 int resizeRendererSurface(Renderer *pRenderer,
                           unsigned int width,
                           unsigned int height);

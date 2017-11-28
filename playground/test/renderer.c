@@ -8,11 +8,9 @@
 
 #include "window.h"
 
-
 struct Renderer {
     DkRenderer *pHandle;
 };
-
 
 int
 createRenderer(Window *pWindow,
@@ -27,15 +25,14 @@ createRenderer(Window *pWindow,
 
     out = 0;
 
-    *ppRenderer = (Renderer *) malloc(sizeof **ppRenderer);
+    *ppRenderer = (Renderer *)malloc(sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
         fprintf(stderr, "failed to allocate the renderer\n");
         return 1;
     }
 
     if (dkCreateRenderer(pCreateInfo, NULL, &(*ppRenderer)->pHandle)
-        != DK_SUCCESS)
-    {
+        != DK_SUCCESS) {
         out = 1;
         goto exit;
     }
@@ -54,10 +51,8 @@ exit:
     return out;
 }
 
-
 void
-destroyRenderer(Window *pWindow,
-                Renderer *pRenderer)
+destroyRenderer(Window *pWindow, Renderer *pRenderer)
 {
     assert(pWindow != NULL);
     assert(pRenderer != NULL);
@@ -67,7 +62,6 @@ destroyRenderer(Window *pWindow,
     free(pRenderer);
 }
 
-
 int
 resizeRendererSurface(Renderer *pRenderer,
                       unsigned int width,
@@ -75,16 +69,14 @@ resizeRendererSurface(Renderer *pRenderer,
 {
     assert(pRenderer != NULL);
 
-    if (dkResizeRendererSurface(pRenderer->pHandle,
-                                (DkUint32) width, (DkUint32) height)
-        != DK_SUCCESS)
-    {
+    if (dkResizeRendererSurface(
+            pRenderer->pHandle, (DkUint32)width, (DkUint32)height)
+        != DK_SUCCESS) {
         return 1;
     }
 
     return 0;
 }
-
 
 int
 drawRendererImage(Renderer *pRenderer)

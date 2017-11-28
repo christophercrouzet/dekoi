@@ -14,6 +14,7 @@ OBJECTDIR := build
 TARGETDIR := bin
 
 SOURCES := $(shell find $(SOURCEDIR) -name '*.c')
+HEADERS := $(shell find $(SOURCEDIR) -name '*.h')
 SHADERS := $(shell find $(SHADERDIR) -name '*.vert' \
 									 -o -name '*.tesc' \
 									 -o -name '*.tese' \
@@ -59,6 +60,7 @@ PLAYGROUNDTESTTARGET := test
 PLAYGROUNDTESTSOURCEDIR := playground/$(PLAYGROUNDTESTTARGET)
 PLAYGROUNDTESTOBJECTDIR := $(OBJECTDIR)/playground
 PLAYGROUNDTESTSOURCES := $(shell find $(PLAYGROUNDTESTSOURCEDIR) -name '*.c')
+PLAYGROUNDTESTHEADERS := $(shell find $(PLAYGROUNDTESTSOURCEDIR) -name '*.h')
 PLAYGROUNDTESTLDLIBS := -lglfw -lrt -lm -ldl
 
 
@@ -99,9 +101,14 @@ test: testdebug testrelease
 playground: test
 
 
-.PHONY: all clean
+.PHONY: all format clean
 
 all: playground
+
+format:
+	@-clang-format -i -style=file \
+		$(SOURCES) $(HEADERS) \
+		$(PLAYGROUNDTESTSOURCES) $(PLAYGROUNDTESTHEADERS)
 
 clean:
 	@-rm -rf $(OBJECTDIR)

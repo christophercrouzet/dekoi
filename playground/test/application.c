@@ -6,7 +6,6 @@
 #include "application.h"
 #include "window.h"
 
-
 struct Application {
     const char *pName;
     unsigned int majorVersion;
@@ -16,7 +15,6 @@ struct Application {
     int stopFlag;
 };
 
-
 int
 createApplication(const ApplicationCreateInfo *pCreateInfo,
                   Application **ppApplication)
@@ -24,7 +22,7 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
 
-    *ppApplication = (Application *) malloc(sizeof **ppApplication);
+    *ppApplication = (Application *)malloc(sizeof **ppApplication);
     if (*ppApplication == NULL) {
         fprintf(stderr, "failed to allocate the application\n");
         return 1;
@@ -38,7 +36,6 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
     return 0;
 }
 
-
 void
 destroyApplication(Application *pApplication)
 {
@@ -47,17 +44,14 @@ destroyApplication(Application *pApplication)
     free(pApplication);
 }
 
-
 int
-bindApplicationWindow(Application *pApplication,
-                      Window *pWindow)
+bindApplicationWindow(Application *pApplication, Window *pWindow)
 {
     assert(pApplication != NULL);
 
     pApplication->pWindow = pWindow;
     return 0;
 }
-
 
 int
 runApplication(Application *pApplication)

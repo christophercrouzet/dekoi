@@ -8,8 +8,8 @@
 #define DK_FREE(pAllocator, pMemory) \
     (pAllocator->pfnFree(pAllocator->pContext, pMemory))
 
-typedef void * (*DkPfnAllocationCallback) (void *, DkSize);
-typedef void (*DkPfnFreeCallback) (void *, void *);
+typedef void *(*DkPfnAllocationCallback)(void *, DkSize);
+typedef void (*DkPfnFreeCallback)(void *, void *);
 
 struct DkAllocator {
     void *pContext;

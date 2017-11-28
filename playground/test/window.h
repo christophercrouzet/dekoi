@@ -14,15 +14,12 @@ struct WindowCreateInfo {
 int createWindow(Application *pApplication,
                  const WindowCreateInfo *pCreateInfo,
                  Window **ppWindow);
-void destroyWindow(Application *pApplication,
-                   Window *pWindow);
+void destroyWindow(Application *pApplication, Window *pWindow);
 void getWindowRendererCallbacks(
     Window *pWindow,
     const DkWindowCallbacks **ppWindowRendererCallbacks);
-int bindWindowRenderer(Window *pWindow,
-                       Renderer *pRenderer);
-void getWindowCloseFlag(const Window *pWindow,
-                        int *pCloseFlag);
+int bindWindowRenderer(Window *pWindow, Renderer *pRenderer);
+void getWindowCloseFlag(const Window *pWindow, int *pCloseFlag);
 int pollWindowEvents(const Window *pWindow);
 int renderWindowImage(const Window *pWindow);
 

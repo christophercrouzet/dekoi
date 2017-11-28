@@ -8,24 +8,19 @@
 #include "test.h"
 #include "window.h"
 
-
 const char *pApplicationName = "dekoi";
 const unsigned int majorVersion = 1;
 const unsigned int minorVersion = 0;
 const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
-const DkShaderCreateInfo pShaderInfos[] = {
-    { DK_SHADER_STAGE_VERTEX, "shaders/shader.vert.spv", "main" },
-    { DK_SHADER_STAGE_FRAGMENT, "shaders/shader.frag.spv", "main" }
-};
-const DkFloat32 clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
-
+const DkShaderCreateInfo pShaderInfos[]
+    = {{DK_SHADER_STAGE_VERTEX, "shaders/shader.vert.spv", "main"},
+       {DK_SHADER_STAGE_FRAGMENT, "shaders/shader.frag.spv", "main"}};
+const DkFloat32 clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 
 int
-setup(Application **ppApplication,
-      Window **ppWindow,
-      Renderer **ppRenderer)
+setup(Application **ppApplication, Window **ppWindow, Renderer **ppRenderer)
 {
     int out;
     ApplicationCreateInfo applicationInfo;
@@ -89,11 +84,8 @@ exit:
     return out;
 }
 
-
 void
-cleanup(Application *pApplication,
-        Window *pWindow,
-        Renderer *pRenderer)
+cleanup(Application *pApplication, Window *pWindow, Renderer *pRenderer)
 {
     assert(pApplication != NULL);
     assert(pWindow != NULL);
@@ -103,7 +95,6 @@ cleanup(Application *pApplication,
     destroyWindow(pApplication, pWindow);
     destroyApplication(pApplication);
 }
-
 
 int
 main(void)

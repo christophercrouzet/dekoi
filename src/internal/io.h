@@ -12,14 +12,9 @@ typedef struct DkpFile {
     const char *pPath;
 } DkpFile;
 
-DkResult dkpOpenFile(DkpFile *pFile,
-                     const char *pPath,
-                     const char *pMode);
-DkResult dkpGetFileSize(DkpFile *pFile,
-                        size_t *pSize);
-DkResult dkpReadFile(DkpFile *pFile,
-                     size_t size,
-                     void *pBuffer);
+DkResult dkpOpenFile(DkpFile *pFile, const char *pPath, const char *pMode);
+DkResult dkpGetFileSize(DkpFile *pFile, size_t *pSize);
+DkResult dkpReadFile(DkpFile *pFile, size_t size, void *pBuffer);
 DkResult dkpCloseFile(DkpFile *pFile);
 
 #endif /* DEKOI_INTERNAL_IO_H */
