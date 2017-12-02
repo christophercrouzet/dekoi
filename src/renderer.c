@@ -1,16 +1,18 @@
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <vulkan/vulkan.h>
+#include "renderer.h"
 
 #include "internal/assert.h"
 #include "internal/dekoi.h"
 #include "internal/io.h"
 #include "internal/memory.h"
+
 #include "memory.h"
-#include "renderer.h"
+
+#include <vulkan/vulkan.h>
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifdef DK_DEBUG
 #define DK_ENABLE_DEBUG_REPORT 1

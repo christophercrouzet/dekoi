@@ -1,10 +1,9 @@
-#include <errno.h>
-#include <stdio.h>
+#include "io.h"
 
-#include "../dekoi.h"
 #include "assert.h"
 #include "dekoi.h"
-#include "io.h"
+
+#include <errno.h>
 
 DkResult
 dkpOpenFile(DkpFile *pFile, const char *pPath, const char *pMode)

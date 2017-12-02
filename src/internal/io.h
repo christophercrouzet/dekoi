@@ -1,11 +1,10 @@
 #ifndef DEKOI_INTERNAL_IO_H
 #define DEKOI_INTERNAL_IO_H
 
-#include <stddef.h>
-
 #include "../dekoi.h"
 
-struct FILE;
+#include <stddef.h>
+#include <stdio.h>
 
 typedef struct DkpFile {
     FILE *pHandle;

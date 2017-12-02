@@ -1,10 +1,11 @@
-#include <stddef.h>
+#include "memory.h"
 
-#include "../dekoi.h"
-#include "../memory.h"
 #include "assert.h"
 #include "dekoi.h"
-#include "memory.h"
+
+#include "../memory.h"
+
+#include <stddef.h>
 
 #ifndef DK_DEFAULT_ALLOCATION_CALLBACK
 #include <stdlib.h>

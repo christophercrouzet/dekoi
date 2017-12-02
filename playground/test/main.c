@@ -1,12 +1,12 @@
-#include <assert.h>
-#include <stdlib.h>
-
-#include <dekoi/renderer>
-
 #include "application.h"
 #include "renderer.h"
 #include "test.h"
 #include "window.h"
+
+#include <dekoi/renderer>
+
+#include <assert.h>
+#include <stdlib.h>
 
 const char *pApplicationName = "dekoi";
 const unsigned int majorVersion = 1;

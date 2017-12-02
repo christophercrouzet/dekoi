@@ -1,18 +1,19 @@
 #define GLFW_INCLUDE_VULKAN
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "window.h"
+
+#include "application.h"
+#include "renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <dekoi/dekoi>
 #include <dekoi/renderer>
 
-#include "application.h"
-#include "renderer.h"
-#include "window.h"
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct WindowRendererCallbacksContext {
     GLFWwindow *pWindowHandle;

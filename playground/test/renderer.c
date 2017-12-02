@@ -1,12 +1,14 @@
-#include <assert.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "renderer.h"
+
+#include "window.h"
 
 #include <dekoi/dekoi>
 #include <dekoi/renderer>
 
-#include "window.h"
+#include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Renderer {
     DkRenderer *pHandle;

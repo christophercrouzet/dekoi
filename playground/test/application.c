@@ -1,10 +1,11 @@
+#include "application.h"
+
+#include "window.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "application.h"
-#include "window.h"
 
 struct Application {
     const char *pName;
