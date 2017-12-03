@@ -1558,7 +1558,7 @@ dkpCreateShaderCode(const char *pFilePath,
 
     DK_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
 
-    *ppShaderCode = DKP_ALLOCATE(pAllocator, *pShaderCodeSize);
+    *ppShaderCode = (uint32_t *)DKP_ALLOCATE(pAllocator, *pShaderCodeSize);
     if (*ppShaderCode == NULL) {
         fprintf(stderr,
                 "failed to allocate the shader code for the file "
@@ -3346,7 +3346,7 @@ dkDrawRendererImage(DkRenderer *pRenderer)
     }
 
     waitSemaphoreCount = 1;
-    pWaitSemaphores = DKP_ALLOCATE(
+    pWaitSemaphores = (VkSemaphore *)DKP_ALLOCATE(
         pRenderer->pAllocator, sizeof *pWaitSemaphores * waitSemaphoreCount);
     if (pWaitSemaphores == NULL) {
         fprintf(stderr, "failed to allocate the wait semaphores\n");
@@ -3358,9 +3358,9 @@ dkDrawRendererImage(DkRenderer *pRenderer)
         = pRenderer->pSemaphoreHandles[DKP_SEMAPHORE_ID_IMAGE_ACQUIRED];
 
     signalSemaphoreCount = 1;
-    pSignalSemaphores
-        = DKP_ALLOCATE(pRenderer->pAllocator,
-                       sizeof *pSignalSemaphores * signalSemaphoreCount);
+    pSignalSemaphores = (VkSemaphore *)DKP_ALLOCATE(
+        pRenderer->pAllocator,
+        sizeof *pSignalSemaphores * signalSemaphoreCount);
     if (pSignalSemaphores == NULL) {
         fprintf(stderr, "failed to allocate the signal semaphores\n");
         out = DK_ERROR_ALLOCATION;
