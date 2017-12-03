@@ -9,6 +9,7 @@
 #define DKP_FREE(pAllocator, pMemory) \
     ((pAllocator)->pfnFree((pAllocator)->pContext, pMemory))
 
-void dkpGetDefaultAllocator(const DkAllocator **ppAllocator);
+void
+dkpGetDefaultAllocator(const DkAllocator **ppAllocator);
 
 #endif /* DEKOI_PRIVATE_MEMORY_H */

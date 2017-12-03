@@ -53,13 +53,18 @@ struct DkRendererCreateInfo {
     const VkAllocationCallbacks *pBackEndAllocator;
 };
 
-DkResult dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
-                          const DkAllocator *pAllocator,
-                          DkRenderer **ppRenderer);
-void dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator);
-DkResult dkResizeRendererSurface(DkRenderer *pRenderer,
-                                 DkUint32 width,
-                                 DkUint32 height);
-DkResult dkDrawRendererImage(DkRenderer *pRenderer);
+DkResult
+dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
+                 const DkAllocator *pAllocator,
+                 DkRenderer **ppRenderer);
+
+void
+dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator);
+
+DkResult
+dkResizeRendererSurface(DkRenderer *pRenderer, DkUint32 width, DkUint32 height);
+
+DkResult
+dkDrawRendererImage(DkRenderer *pRenderer);
 
 #endif /* DEKOI_RENDERER_H */
