@@ -188,8 +188,9 @@ static void
 dkpDestroyInstanceLayerNames(const char **ppLayerNames,
                              const DkAllocator *pAllocator)
 {
-    if (DK_ENABLE_VALIDATION_LAYERS)
+    if (DK_ENABLE_VALIDATION_LAYERS) {
         DKP_FREE(pAllocator, ppLayerNames);
+    }
 }
 
 static DkResult
@@ -247,8 +248,9 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
             }
         }
 
-        if (!found)
+        if (!found) {
             goto layers_cleanup;
+        }
     }
 
     *pSupported = DKP_TRUE;
@@ -293,16 +295,18 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
             return DK_ERROR_ALLOCATION;
         }
 
-        if (*pppExtensionNames != NULL)
+        if (*pppExtensionNames != NULL) {
             memcpy(ppBuffer,
                    *pppExtensionNames,
                    sizeof *ppBuffer * *pExtensionCount);
+        }
 
         ppBuffer[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
-        if (pWindowCallbacks != NULL)
+        if (pWindowCallbacks != NULL) {
             pWindowCallbacks->pfnDestroyInstanceExtensionNames(
                 pWindowCallbacks->pContext, *pppExtensionNames);
+        }
 
         *pExtensionCount += 1;
         *pppExtensionNames = ppBuffer;
@@ -321,9 +325,10 @@ dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
     if (DK_ENABLE_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
     } else {
-        if (pWindowCallbacks != NULL)
+        if (pWindowCallbacks != NULL) {
             pWindowCallbacks->pfnDestroyInstanceExtensionNames(
                 pWindowCallbacks->pContext, ppExtensionNames);
+        }
     }
 }
 
@@ -388,8 +393,9 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
             }
         }
 
-        if (!found)
+        if (!found) {
             goto extensions_cleanup;
+        }
     }
 
     *pSupported = DKP_TRUE;
@@ -748,8 +754,9 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
             }
         }
 
-        if (!found)
+        if (!found) {
             goto extensions_cleanup;
+        }
     }
 
     *pSupported = DKP_TRUE;
@@ -783,8 +790,9 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
     vkGetPhysicalDeviceQueueFamilyProperties(
         physicalDeviceHandle, &propertyCount, NULL);
-    if (propertyCount == 0)
+    if (propertyCount == 0) {
         goto exit;
+    }
 
     pProperties = (VkQueueFamilyProperties *)DKP_ALLOCATE(
         pAllocator, sizeof *pProperties * propertyCount);
@@ -883,8 +891,9 @@ dkpPickSwapChainImageUsage(VkSurfaceCapabilitiesKHR capabilities,
 {
     DK_ASSERT(pImageUsage != NULL);
 
-    if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT))
+    if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
         return DK_ERROR_NOT_SUPPORTED;
+    }
 
     *pImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
                    | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -928,8 +937,9 @@ dkpPickSwapChainMinImageCount(VkSurfaceCapabilitiesKHR capabilities,
 
     *pMinImageCount = capabilities.minImageCount;
 
-    if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+    if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
         ++(*pMinImageCount);
+    }
 
     if (capabilities.maxImageCount > 0
         && *pMinImageCount > capabilities.maxImageCount) {
@@ -1051,8 +1061,9 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     out = dkpPickSwapChainPresentMode(
         presentModeCount, pPresentModes, &pSwapChainProperties->presentMode);
     if (out != DK_SUCCESS) {
-        if (logging == DKP_LOGGING_ENABLED)
+        if (logging == DKP_LOGGING_ENABLED) {
             fprintf(stderr, "could not find a suitable present mode\n");
+        }
 
         goto present_modes_cleanup;
     }
@@ -1060,9 +1071,10 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     out = dkpPickSwapChainImageUsage(capabilities,
                                      &pSwapChainProperties->imageUsage);
     if (out != DK_SUCCESS) {
-        if (logging == DKP_LOGGING_ENABLED)
+        if (logging == DKP_LOGGING_ENABLED) {
             fprintf(stderr,
                     "one or more image usage flags are not supported\n");
+        }
 
         goto present_modes_cleanup;
     }
@@ -1116,8 +1128,9 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
         return DK_SUCCESS;
     }
 
-    if (result == DK_ERROR_NOT_SUPPORTED)
+    if (result == DK_ERROR_NOT_SUPPORTED) {
         return DK_SUCCESS;
+    }
 
     return DK_ERROR;
 }
@@ -1143,8 +1156,9 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
     *pSuitable = DKP_FALSE;
 
     vkGetPhysicalDeviceProperties(physicalDeviceHandle, &properties);
-    if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    if (properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
         return DK_SUCCESS;
+    }
 
     if (dkpCheckDeviceExtensionsSupport(physicalDeviceHandle,
                                         extensionCount,
@@ -1155,8 +1169,9 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
         return DK_ERROR;
     }
 
-    if (!extensionsSupported)
+    if (!extensionsSupported) {
         return DK_SUCCESS;
+    }
 
     if (dkpPickDeviceQueueFamilies(physicalDeviceHandle,
                                    surfaceHandle,
@@ -1181,8 +1196,9 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
             return DK_ERROR;
         }
 
-        if (!swapChainSupported)
+        if (!swapChainSupported) {
             return DK_SUCCESS;
+        }
     }
 
     *pSuitable = DKP_TRUE;
@@ -1324,8 +1340,9 @@ dkpCreateDevice(VkInstance instanceHandle,
         goto extension_names_cleanup;
     }
 
-    for (i = 0; i < queueCount; ++i)
+    for (i = 0; i < queueCount; ++i) {
         pQueuePriorities[i] = 1.0f;
+    }
 
     queueInfoCount = (presentSupport == DKP_PRESENT_SUPPORT_ENABLED
                       && pDevice->queueFamilyIndices.graphics
@@ -1432,21 +1449,23 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
 
     queueIndex = 0;
 
-    if (pDevice->queueFamilyIndices.graphics != UINT32_MAX)
+    if (pDevice->queueFamilyIndices.graphics != UINT32_MAX) {
         vkGetDeviceQueue(pDevice->logicalHandle,
                          pDevice->queueFamilyIndices.graphics,
                          queueIndex,
                          &pQueues->graphicsHandle);
-    else
+    } else {
         pQueues->graphicsHandle = NULL;
+    }
 
-    if (pDevice->queueFamilyIndices.present != UINT32_MAX)
+    if (pDevice->queueFamilyIndices.present != UINT32_MAX) {
         vkGetDeviceQueue(pDevice->logicalHandle,
                          pDevice->queueFamilyIndices.present,
                          queueIndex,
                          &pQueues->presentHandle);
-    else
+    } else {
         pQueues->presentHandle = NULL;
+    }
 
     return DK_SUCCESS;
 }
@@ -1477,8 +1496,9 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
         goto exit;
     }
 
-    for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i)
+    for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         (*ppSemaphoreHandles)[i] = VK_NULL_HANDLE;
+    }
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         if (vkCreateSemaphore(pDevice->logicalHandle,
@@ -1498,10 +1518,11 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
 
 semaphores_undo:
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
-        if ((*ppSemaphoreHandles)[i] != VK_NULL_HANDLE)
+        if ((*ppSemaphoreHandles)[i] != VK_NULL_HANDLE) {
             vkDestroySemaphore(pDevice->logicalHandle,
                                (*ppSemaphoreHandles)[i],
                                pBackEndAllocator);
+        }
     }
 
     DKP_FREE(pAllocator, *ppSemaphoreHandles);
@@ -1582,8 +1603,9 @@ code_undo:
 cleanup:;
 
 file_closing:
-    if (dkpCloseFile(&file) != DK_SUCCESS)
+    if (dkpCloseFile(&file) != DK_SUCCESS) {
         out = DK_ERROR;
+    }
 
 exit:
     return out;
@@ -1690,8 +1712,9 @@ dkpCreateShaders(const DkpDevice *pDevice,
         goto exit;
     }
 
-    for (i = 0; i < shaderCount; ++i)
+    for (i = 0; i < shaderCount; ++i) {
         (*ppShaders)[i].moduleHandle = NULL;
+    }
 
     for (i = 0; i < shaderCount; ++i) {
         if (dkpCreateShaderModule(pDevice,
@@ -1837,8 +1860,9 @@ dkpCreateSwapChainImageViewHandles(
         goto exit;
     }
 
-    for (i = 0; i < imageCount; ++i)
+    for (i = 0; i < imageCount; ++i) {
         (*ppImageViewHandles)[i] = VK_NULL_HANDLE;
+    }
 
     for (i = 0; i < imageCount; ++i) {
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1872,10 +1896,11 @@ dkpCreateSwapChainImageViewHandles(
 
 image_views_undo:
     for (i = 0; i < imageCount; ++i) {
-        if ((*ppImageViewHandles)[i] != VK_NULL_HANDLE)
+        if ((*ppImageViewHandles)[i] != VK_NULL_HANDLE) {
             vkDestroyImageView(pDevice->logicalHandle,
                                (*ppImageViewHandles)[i],
                                pBackEndAllocator);
+        }
     }
 
     DKP_FREE(pAllocator, *ppImageViewHandles);
@@ -2034,8 +2059,9 @@ images_undo:
 cleanup:;
 
 queue_family_indices_cleanup:
-    if (pQueueFamilyIndices != NULL)
+    if (pQueueFamilyIndices != NULL) {
         DKP_FREE(pAllocator, pQueueFamilyIndices);
+    }
 
 exit:
     if (oldSwapChainHandle != VK_NULL_HANDLE) {
@@ -2058,8 +2084,9 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
     DK_ASSERT(pAllocator != NULL);
 
-    if (pSwapChain->handle == VK_NULL_HANDLE)
+    if (pSwapChain->handle == VK_NULL_HANDLE) {
         return;
+    }
 
     DK_ASSERT(pSwapChain->pImageHandles != NULL);
     DK_ASSERT(pSwapChain->pImageViewHandles != NULL);
@@ -2556,8 +2583,9 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
         goto exit;
     }
 
-    for (i = 0; i < pSwapChain->imageCount; ++i)
+    for (i = 0; i < pSwapChain->imageCount; ++i) {
         (*ppFramebufferHandles)[i] = VK_NULL_HANDLE;
+    }
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
         VkImageView attachments[1];
@@ -2591,10 +2619,11 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
 
 frame_buffers_undo:
     for (i = 0; i < pSwapChain->imageCount; ++i) {
-        if ((*ppFramebufferHandles)[i] != VK_NULL_HANDLE)
+        if ((*ppFramebufferHandles)[i] != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(pDevice->logicalHandle,
                                  (*ppFramebufferHandles)[i],
                                  pBackEndAllocator);
+        }
     }
 
     DKP_FREE(pAllocator, *ppFramebufferHandles);
@@ -2972,13 +3001,14 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
-    if (pRenderer->pGraphicsCommandBufferHandles != NULL)
+    if (pRenderer->pGraphicsCommandBufferHandles != NULL) {
         dkpDestroyGraphicsCommandBuffers(
             &pRenderer->device,
             &pRenderer->swapChain,
             pRenderer->graphicsCommandPoolHandle,
             pRenderer->pGraphicsCommandBufferHandles,
             pRenderer->pAllocator);
+    }
 
     if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL
         && pRenderer->graphicsCommandPoolHandle != VK_NULL_HANDLE) {
@@ -2987,33 +3017,38 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
                                       pRenderer->pBackEndAllocator);
     }
 
-    if (pRenderer->pFramebufferHandles != NULL)
+    if (pRenderer->pFramebufferHandles != NULL) {
         dkpDestroyFramebuffers(&pRenderer->device,
                                &pRenderer->swapChain,
                                pRenderer->pFramebufferHandles,
                                pRenderer->pBackEndAllocator,
                                pRenderer->pAllocator);
+    }
 
-    if (pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE)
+    if (pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE) {
         dkpDestroyGraphicsPipeline(&pRenderer->device,
                                    pRenderer->graphicsPipelineHandle,
                                    pRenderer->pBackEndAllocator);
+    }
 
-    if (pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE)
+    if (pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE) {
         dkpDestroyPipelineLayout(&pRenderer->device,
                                  pRenderer->pipelineLayoutHandle,
                                  pRenderer->pBackEndAllocator);
+    }
 
-    if (pRenderer->renderPassHandle != VK_NULL_HANDLE)
+    if (pRenderer->renderPassHandle != VK_NULL_HANDLE) {
         dkpDestroyRenderPass(&pRenderer->device,
                              pRenderer->renderPassHandle,
                              pRenderer->pBackEndAllocator);
+    }
 
-    if (pRenderer->swapChain.handle != VK_NULL_HANDLE)
+    if (pRenderer->swapChain.handle != VK_NULL_HANDLE) {
         dkpDestroySwapChain(&pRenderer->device,
                             &pRenderer->swapChain,
                             pRenderer->pBackEndAllocator,
                             pRenderer->pAllocator);
+    }
 }
 
 static DkResult
@@ -3080,8 +3115,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto exit;
     }
 
-    if (pAllocator == NULL)
+    if (pAllocator == NULL) {
         dkpGetDefaultAllocator(&pAllocator);
+    }
 
     headless = pCreateInfo->pWindowCallbacks == NULL;
 
@@ -3097,9 +3133,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     (*ppRenderer)->surfaceExtent.width = (uint32_t)pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t)pCreateInfo->surfaceHeight;
 
-    for (i = 0; i < 4; ++i)
+    for (i = 0; i < 4; ++i) {
         (*ppRenderer)->clearColor.color.float32[i]
             = (float)(*pCreateInfo->pClearColor)[i];
+    }
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
                           (unsigned int)pCreateInfo->applicationMajorVersion,
@@ -3123,8 +3160,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto instance_undo;
         }
-    } else
+    } else {
         (*ppRenderer)->debugReportCallbackHandle = VK_NULL_HANDLE;
+    }
 
     if (!headless) {
         if (dkpCreateSurface((*ppRenderer)->instanceHandle,
@@ -3135,8 +3173,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
             out = DK_ERROR;
             goto debug_report_callback_undo;
         }
-    } else
+    } else {
         (*ppRenderer)->surfaceHandle = VK_NULL_HANDLE;
+    }
 
     if (dkpCreateDevice((*ppRenderer)->instanceHandle,
                         (*ppRenderer)->surfaceHandle,
@@ -3202,16 +3241,18 @@ device_undo:
     dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
 
 surface_undo:
-    if (!headless)
+    if (!headless) {
         dkpDestroySurface((*ppRenderer)->instanceHandle,
                           (*ppRenderer)->surfaceHandle,
                           (*ppRenderer)->pBackEndAllocator);
+    }
 
 debug_report_callback_undo:
-    if (DK_ENABLE_DEBUG_REPORT)
+    if (DK_ENABLE_DEBUG_REPORT) {
         dkpDestroyDebugReportCallback((*ppRenderer)->instanceHandle,
                                       (*ppRenderer)->debugReportCallbackHandle,
                                       (*ppRenderer)->pBackEndAllocator);
+    }
 
 instance_undo:
     dkpDestroyInstance((*ppRenderer)->instanceHandle,
@@ -3230,19 +3271,22 @@ dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator)
 {
     int headless;
 
-    if (pRenderer == NULL)
+    if (pRenderer == NULL) {
         return;
+    }
 
-    if (pAllocator == NULL)
+    if (pAllocator == NULL) {
         dkpGetDefaultAllocator(&pAllocator);
+    }
 
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
-    if (!headless)
+    if (!headless) {
         dkpDestroyRendererSwapChainSystem(pRenderer,
                                           DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL);
+    }
 
     dkpDestroyShaders(&pRenderer->device,
                       pRenderer->shaderCount,
@@ -3255,15 +3299,17 @@ dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator)
                          pAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
 
-    if (!headless)
+    if (!headless) {
         dkpDestroySurface(pRenderer->instanceHandle,
                           pRenderer->surfaceHandle,
                           pRenderer->pBackEndAllocator);
+    }
 
-    if (DK_ENABLE_DEBUG_REPORT)
+    if (DK_ENABLE_DEBUG_REPORT) {
         dkpDestroyDebugReportCallback(pRenderer->instanceHandle,
                                       pRenderer->debugReportCallbackHandle,
                                       pRenderer->pBackEndAllocator);
+    }
 
     dkpDestroyInstance(pRenderer->instanceHandle, pRenderer->pBackEndAllocator);
     DKP_FREE(pAllocator, pRenderer);

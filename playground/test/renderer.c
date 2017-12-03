@@ -85,8 +85,9 @@ drawRendererImage(Renderer *pRenderer)
 {
     assert(pRenderer != NULL);
 
-    if (dkDrawRendererImage(pRenderer->pHandle) != DK_SUCCESS)
+    if (dkDrawRendererImage(pRenderer->pHandle) != DK_SUCCESS) {
         return 1;
+    }
 
     return 0;
 }

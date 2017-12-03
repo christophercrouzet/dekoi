@@ -1,0 +1,8 @@
+---
+# Minimum version required for clang-tidy: 5.0
+Checks: '*,-llvm-header-guard'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle: file
+...

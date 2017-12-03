@@ -22,6 +22,12 @@ SHADERS := $(shell find $(SHADERDIR) -name '*.vert' \
 									 -o -name '*.frag' \
 									 -o -name '*.comp')
 
+CLANGVERSION := $(shell clang --version \
+                        | grep version \
+                        | sed 's/^.*version \([0-9]*\.[0-9]*\.[0-9]*\).*$$/\1/')
+CLANGDIR := $(shell dirname $(shell which clang))
+CLANGINCLUDE := $(CLANGDIR)/../lib/clang/$(CLANGVERSION)/include
+
 DEBUGCFLAGS := -O0 -g
 DEBUGCPPFLAGS := -DDEBUG
 DEBUGOBJECTDIR := $(OBJECTDIR)/debug
@@ -101,7 +107,7 @@ test: testdebug testrelease
 playground: test
 
 
-.PHONY: all format clean
+.PHONY: all format tidy clean
 
 all: playground
 
@@ -109,6 +115,12 @@ format:
 	@-clang-format -i -style=file \
 		$(SOURCES) $(HEADERS) \
 		$(PLAYGROUNDTESTSOURCES) $(PLAYGROUNDTESTHEADERS)
+
+tidy:
+	clang-tidy -fix \
+		$(SOURCES) $(HEADERS) \
+		$(PLAYGROUNDTESTSOURCES) $(PLAYGROUNDTESTHEADERS) \
+		-- $(CFLAGS) $(CPPFLAGS) $(RELEASECFLAGS) -I$(CLANGINCLUDE)
 
 clean:
 	@-rm -rf $(OBJECTDIR)

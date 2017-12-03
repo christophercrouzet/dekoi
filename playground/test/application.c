@@ -62,11 +62,13 @@ runApplication(Application *pApplication)
     while (1) {
         pollWindowEvents(pApplication->pWindow);
         getWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
-        if (pApplication->stopFlag)
+        if (pApplication->stopFlag) {
             break;
+        }
 
-        if (renderWindowImage(pApplication->pWindow))
+        if (renderWindowImage(pApplication->pWindow)) {
             return 1;
+        }
     }
 
     return 0;

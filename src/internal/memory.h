@@ -5,9 +5,9 @@
 #include "../memory.h"
 
 #define DKP_ALLOCATE(pAllocator, size) \
-    (pAllocator->pfnAllocate(pAllocator->pContext, size))
+    ((pAllocator)->pfnAllocate((pAllocator)->pContext, size))
 #define DKP_FREE(pAllocator, pMemory) \
-    (pAllocator->pfnFree(pAllocator->pContext, pMemory))
+    ((pAllocator)->pfnFree((pAllocator)->pContext, pMemory))
 
 void dkpGetDefaultAllocator(const DkAllocator **ppAllocator);
 

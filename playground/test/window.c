@@ -235,8 +235,9 @@ pollWindowEvents(const Window *pWindow)
 int
 renderWindowImage(const Window *pWindow)
 {
-    if (drawRendererImage(pWindow->pRenderer))
+    if (drawRendererImage(pWindow->pRenderer)) {
         return 1;
+    }
 
     return 0;
 }
