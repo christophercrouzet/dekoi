@@ -277,7 +277,7 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
         *pppExtensionNames = NULL;
     } else if (pWindowCallbacks->pfnCreateInstanceExtensionNames(
                    pWindowCallbacks->pContext,
-                   (uint32_t *)pExtensionCount,
+                   (DkUint32 *)pExtensionCount,
                    pppExtensionNames)
                != DK_SUCCESS) {
         return DK_ERROR;
