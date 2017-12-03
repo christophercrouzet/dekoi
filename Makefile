@@ -16,11 +16,11 @@ TARGETDIR := bin
 SOURCES := $(shell find $(SOURCEDIR) -name '*.c')
 HEADERS := $(shell find $(SOURCEDIR) -name '*.h')
 SHADERS := $(shell find $(SHADERDIR) -name '*.vert' \
-									 -o -name '*.tesc' \
-									 -o -name '*.tese' \
-									 -o -name '*.geom' \
-									 -o -name '*.frag' \
-									 -o -name '*.comp')
+                                     -o -name '*.tesc' \
+                                     -o -name '*.tese' \
+                                     -o -name '*.geom' \
+                                     -o -name '*.frag' \
+                                     -o -name '*.comp')
 
 CLANGVERSION := $(shell clang --version \
                         | grep version \
