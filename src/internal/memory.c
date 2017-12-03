@@ -39,7 +39,7 @@ static const DkAllocator dkpDefaultAllocator
 void
 dkpGetDefaultAllocator(const DkAllocator **ppAllocator)
 {
-    DK_ASSERT(ppAllocator != NULL);
+    DKP_ASSERT(ppAllocator != NULL);
 
     *ppAllocator = &dkpDefaultAllocator;
 }

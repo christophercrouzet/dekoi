@@ -8,9 +8,9 @@
 DkResult
 dkpOpenFile(DkpFile *pFile, const char *pPath, const char *pMode)
 {
-    DK_ASSERT(pFile != NULL);
-    DK_ASSERT(pPath != NULL);
-    DK_ASSERT(pMode != NULL);
+    DKP_ASSERT(pFile != NULL);
+    DKP_ASSERT(pPath != NULL);
+    DKP_ASSERT(pMode != NULL);
 
     /* Only POSIX requires `errno` to be set when `fopen()` fails. */
     errno = 0;
@@ -31,9 +31,9 @@ dkpGetFileSize(DkpFile *pFile, size_t *pSize)
     fpos_t position;
     long size;
 
-    DK_ASSERT(pFile != NULL);
-    DK_ASSERT(pFile->pHandle != NULL);
-    DK_ASSERT(pSize != NULL);
+    DKP_ASSERT(pFile != NULL);
+    DKP_ASSERT(pFile->pHandle != NULL);
+    DKP_ASSERT(pSize != NULL);
 
     out = DK_SUCCESS;
 
@@ -83,9 +83,9 @@ exit:
 DkResult
 dkpReadFile(DkpFile *pFile, size_t size, void *pBuffer)
 {
-    DK_ASSERT(pFile != NULL);
-    DK_ASSERT(pFile->pHandle != NULL);
-    DK_ASSERT(pBuffer != NULL);
+    DKP_ASSERT(pFile != NULL);
+    DKP_ASSERT(pFile->pHandle != NULL);
+    DKP_ASSERT(pBuffer != NULL);
 
     if (fread(pBuffer, 1, size, pFile->pHandle) != size) {
         fprintf(stderr, "could not read the file '%s'\n", pFile->pPath);
@@ -98,8 +98,8 @@ dkpReadFile(DkpFile *pFile, size_t size, void *pBuffer)
 DkResult
 dkpCloseFile(DkpFile *pFile)
 {
-    DK_ASSERT(pFile != NULL);
-    DK_ASSERT(pFile->pHandle != NULL);
+    DKP_ASSERT(pFile != NULL);
+    DKP_ASSERT(pFile->pHandle != NULL);
 
     if (fclose(pFile->pHandle) == EOF) {
         fprintf(stderr, "could not close the file '%s'\n", pFile->pPath);

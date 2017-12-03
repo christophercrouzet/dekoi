@@ -160,7 +160,7 @@ dkpTranslateShaderStage(DkShaderStage shaderStage)
         case DK_SHADER_STAGE_COMPUTE:
             return VK_SHADER_STAGE_COMPUTE_BIT;
         default:
-            DK_ASSERT(1);
+            DKP_ASSERT(1);
             return (VkShaderStageFlagBits)0;
     }
 }
@@ -170,9 +170,9 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
                             uint32_t *pLayerCount,
                             const char ***pppLayerNames)
 {
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pLayerCount != NULL);
-    DK_ASSERT(pppLayerNames != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLayerCount != NULL);
+    DKP_ASSERT(pppLayerNames != NULL);
 
     if (DK_ENABLE_VALIDATION_LAYERS) {
         *pLayerCount = 1;
@@ -213,9 +213,9 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
     uint32_t layerCount;
     VkLayerProperties *pLayers;
 
-    DK_ASSERT(ppRequiredLayerNames != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSupported != NULL);
+    DKP_ASSERT(ppRequiredLayerNames != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pSupported != NULL);
 
     out = DK_SUCCESS;
 
@@ -278,9 +278,9 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
 {
     const char **ppBuffer;
 
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pExtensionCount != NULL);
-    DK_ASSERT(pppExtensionNames != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pExtensionCount != NULL);
+    DKP_ASSERT(pppExtensionNames != NULL);
 
     if (pWindowCallbacks == NULL) {
         *pExtensionCount = 0;
@@ -328,7 +328,7 @@ dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
                                  const DkWindowCallbacks *pWindowCallbacks,
                                  const DkAllocator *pAllocator)
 {
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     if (DK_ENABLE_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
@@ -352,9 +352,9 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
     uint32_t extensionCount;
     VkExtensionProperties *pExtensions;
 
-    DK_ASSERT(ppRequiredExtensionNames != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSupported != NULL);
+    DKP_ASSERT(ppRequiredExtensionNames != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pSupported != NULL);
 
     out = DK_SUCCESS;
 
@@ -435,9 +435,9 @@ dkpCreateInstance(const char *pApplicationName,
     VkApplicationInfo applicationInfo;
     VkInstanceCreateInfo createInfo;
 
-    DK_ASSERT(pApplicationName != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pInstanceHandle != NULL);
+    DKP_ASSERT(pApplicationName != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pInstanceHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -545,7 +545,7 @@ static void
 dkpDestroyInstance(VkInstance instanceHandle,
                    const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(instanceHandle != NULL);
 
     vkDestroyInstance(instanceHandle, pBackEndAllocator);
 }
@@ -580,8 +580,8 @@ dkpCreateDebugReportCallback(VkInstance instanceHandle,
     VkDebugReportCallbackCreateInfoEXT createInfo;
     PFN_vkCreateDebugReportCallbackEXT function;
 
-    DK_ASSERT(instanceHandle != NULL);
-    DK_ASSERT(pCallbackHandle != NULL);
+    DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pCallbackHandle != NULL);
 
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
     createInfo.pNext = NULL;
@@ -616,8 +616,8 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 {
     PFN_vkDestroyDebugReportCallbackEXT function;
 
-    DK_ASSERT(instanceHandle != NULL);
-    DK_ASSERT(callbackHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(callbackHandle != VK_NULL_HANDLE);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
         instanceHandle, "vkDestroyDebugReportCallbackEXT");
@@ -637,9 +637,9 @@ dkpCreateSurface(VkInstance instanceHandle,
                  const VkAllocationCallbacks *pBackEndAllocator,
                  VkSurfaceKHR *pSurfaceHandle)
 {
-    DK_ASSERT(instanceHandle != NULL);
-    DK_ASSERT(pWindowCallbacks != NULL);
-    DK_ASSERT(pSurfaceHandle != NULL);
+    DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pWindowCallbacks != NULL);
+    DKP_ASSERT(pSurfaceHandle != NULL);
 
     if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pContext,
                                            instanceHandle,
@@ -660,8 +660,8 @@ dkpDestroySurface(VkInstance instanceHandle,
                   VkSurfaceKHR surfaceHandle,
                   const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(instanceHandle != NULL);
-    DK_ASSERT(surfaceHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(surfaceHandle != VK_NULL_HANDLE);
 
     vkDestroySurfaceKHR(instanceHandle, surfaceHandle, pBackEndAllocator);
 }
@@ -672,9 +672,9 @@ dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
                               uint32_t *pExtensionCount,
                               const char ***pppExtensionNames)
 {
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pExtensionCount != NULL);
-    DK_ASSERT(pppExtensionNames != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pExtensionCount != NULL);
+    DKP_ASSERT(pppExtensionNames != NULL);
 
     if (presentSupport == DKP_PRESENT_SUPPORT_DISABLED) {
         *pExtensionCount = 0;
@@ -714,9 +714,9 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
     uint32_t extensionCount;
     VkExtensionProperties *pExtensions;
 
-    DK_ASSERT(physicalDeviceHandle != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSupported != NULL);
+    DKP_ASSERT(physicalDeviceHandle != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pSupported != NULL);
 
     out = DK_SUCCESS;
 
@@ -787,9 +787,9 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
     uint32_t propertyCount;
     VkQueueFamilyProperties *pProperties;
 
-    DK_ASSERT(physicalDeviceHandle != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pQueueFamilyIndices != NULL);
+    DKP_ASSERT(physicalDeviceHandle != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pQueueFamilyIndices != NULL);
 
     out = DK_SUCCESS;
 
@@ -866,8 +866,8 @@ dkpPickSwapChainPresentMode(uint32_t presentModeCount,
 {
     uint32_t i;
 
-    DK_ASSERT(pPresentModes != NULL);
-    DK_ASSERT(pPresentMode != NULL);
+    DKP_ASSERT(pPresentModes != NULL);
+    DKP_ASSERT(pPresentMode != NULL);
 
     for (i = 0; i < presentModeCount; ++i) {
         if (pPresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -897,7 +897,7 @@ static DkResult
 dkpPickSwapChainImageUsage(VkSurfaceCapabilitiesKHR capabilities,
                            VkImageUsageFlags *pImageUsage)
 {
-    DK_ASSERT(pImageUsage != NULL);
+    DKP_ASSERT(pImageUsage != NULL);
 
     if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
         return DK_ERROR_NOT_SUPPORTED;
@@ -915,8 +915,8 @@ dkpPickSwapChainFormat(uint32_t formatCount,
 {
     uint32_t i;
 
-    DK_ASSERT(pFormats != NULL);
-    DK_ASSERT(pFormat != NULL);
+    DKP_ASSERT(pFormats != NULL);
+    DKP_ASSERT(pFormat != NULL);
 
     if (formatCount == 1 && pFormats[0].format == VK_FORMAT_UNDEFINED) {
         pFormat->format = VK_FORMAT_B8G8R8A8_UNORM;
@@ -941,7 +941,7 @@ dkpPickSwapChainMinImageCount(VkSurfaceCapabilitiesKHR capabilities,
                               VkPresentModeKHR presentMode,
                               uint32_t *pMinImageCount)
 {
-    DK_ASSERT(pMinImageCount != NULL);
+    DKP_ASSERT(pMinImageCount != NULL);
 
     *pMinImageCount = capabilities.minImageCount;
 
@@ -960,8 +960,8 @@ dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
                             const VkExtent2D *pDesiredImageExtent,
                             VkExtent2D *pImageExtent)
 {
-    DK_ASSERT(pDesiredImageExtent != NULL);
-    DK_ASSERT(pImageExtent != NULL);
+    DKP_ASSERT(pDesiredImageExtent != NULL);
+    DKP_ASSERT(pImageExtent != NULL);
 
     if (capabilities.currentExtent.width == UINT32_MAX
         || capabilities.currentExtent.height == UINT32_MAX) {
@@ -981,7 +981,7 @@ static void
 dkpPickSwapChainPreTransform(VkSurfaceCapabilitiesKHR capabilities,
                              VkSurfaceTransformFlagBitsKHR *pPreTransform)
 {
-    DK_ASSERT(pPreTransform != NULL);
+    DKP_ASSERT(pPreTransform != NULL);
 
     *pPreTransform = capabilities.currentTransform;
 }
@@ -1001,8 +1001,8 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     uint32_t presentModeCount;
     VkPresentModeKHR *pPresentModes;
 
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSwapChainProperties != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pSwapChainProperties != NULL);
 
     out = DK_SUCCESS;
 
@@ -1156,10 +1156,10 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
     int extensionsSupported;
     int swapChainSupported;
 
-    DK_ASSERT(physicalDeviceHandle != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pQueueFamilyIndices != NULL);
-    DK_ASSERT(pSuitable != NULL);
+    DKP_ASSERT(physicalDeviceHandle != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pQueueFamilyIndices != NULL);
+    DKP_ASSERT(pSuitable != NULL);
 
     *pSuitable = DKP_FALSE;
 
@@ -1227,10 +1227,10 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
     uint32_t physicalDeviceCount;
     VkPhysicalDevice *pPhysicalDeviceHandles;
 
-    DK_ASSERT(instanceHandle != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pQueueFamilyIndices != NULL);
-    DK_ASSERT(pPhysicalDeviceHandle != NULL);
+    DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pQueueFamilyIndices != NULL);
+    DKP_ASSERT(pPhysicalDeviceHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -1310,9 +1310,9 @@ dkpCreateDevice(VkInstance instanceHandle,
     VkDeviceQueueCreateInfo *pQueueInfos;
     VkDeviceCreateInfo createInfo;
 
-    DK_ASSERT(instanceHandle != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pDevice != NULL);
+    DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pDevice != NULL);
 
     out = DK_SUCCESS;
 
@@ -1441,8 +1441,8 @@ static void
 dkpDestroyDevice(DkpDevice *pDevice,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
 
     vkDestroyDevice(pDevice->logicalHandle, pBackEndAllocator);
 }
@@ -1452,8 +1452,8 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
 {
     uint32_t queueIndex;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pQueues != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pQueues != NULL);
 
     queueIndex = 0;
 
@@ -1488,7 +1488,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
     int i;
     VkSemaphoreCreateInfo createInfo;
 
-    DK_ASSERT(ppSemaphoreHandles != NULL);
+    DKP_ASSERT(ppSemaphoreHandles != NULL);
 
     out = DK_SUCCESS;
 
@@ -1547,12 +1547,12 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 {
     int i;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pSemaphoreHandles != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSemaphoreHandles != NULL);
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
-        DK_ASSERT(pSemaphoreHandles[i] != VK_NULL_HANDLE);
+        DKP_ASSERT(pSemaphoreHandles[i] != VK_NULL_HANDLE);
         vkDestroySemaphore(
             pDevice->logicalHandle, pSemaphoreHandles[i], pBackEndAllocator);
     }
@@ -1569,9 +1569,9 @@ dkpCreateShaderCode(const char *pFilePath,
     DkResult out;
     DkpFile file;
 
-    DK_ASSERT(pFilePath != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(ppShaderCode != NULL);
+    DKP_ASSERT(pFilePath != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(ppShaderCode != NULL);
 
     out = DK_SUCCESS;
 
@@ -1585,7 +1585,7 @@ dkpCreateShaderCode(const char *pFilePath,
         goto file_closing;
     }
 
-    DK_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
+    DKP_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
 
     *ppShaderCode = (uint32_t *)DKP_ALLOCATE(pAllocator, *pShaderCodeSize);
     if (*ppShaderCode == NULL) {
@@ -1622,8 +1622,8 @@ exit:
 static void
 dkpDestroyShaderCode(uint32_t *pShaderCode, const DkAllocator *pAllocator)
 {
-    DK_ASSERT(pShaderCode != NULL);
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pShaderCode != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     DKP_FREE(pAllocator, pShaderCode);
 }
@@ -1640,11 +1640,11 @@ dkpCreateShaderModule(const DkpDevice *pDevice,
     uint32_t *pCode;
     VkShaderModuleCreateInfo createInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pFilePath != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pShaderModuleHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pFilePath != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pShaderModuleHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -1685,9 +1685,9 @@ dkpDestroyShaderModule(const DkpDevice *pDevice,
                        VkShaderModule shaderModuleHandle,
                        const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(shaderModuleHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(shaderModuleHandle != VK_NULL_HANDLE);
 
     vkDestroyShaderModule(
         pDevice->logicalHandle, shaderModuleHandle, pBackEndAllocator);
@@ -1704,11 +1704,11 @@ dkpCreateShaders(const DkpDevice *pDevice,
     DkResult out;
     uint32_t i;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pShaderInfos != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(ppShaders != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pShaderInfos != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(ppShaders != NULL);
 
     out = DK_SUCCESS;
 
@@ -1764,13 +1764,13 @@ dkpDestroyShaders(const DkpDevice *pDevice,
 {
     uint32_t i;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pShaders != NULL);
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pShaders != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < shaderCount; ++i) {
-        DK_ASSERT(pShaders[i].moduleHandle != NULL);
+        DKP_ASSERT(pShaders[i].moduleHandle != NULL);
         dkpDestroyShaderModule(
             pDevice, pShaders[i].moduleHandle, pBackEndAllocator);
     }
@@ -1787,11 +1787,11 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
 {
     DkResult out;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(swapChainHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pImageCount != NULL);
-    DK_ASSERT(ppImageHandles != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(swapChainHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pImageCount != NULL);
+    DKP_ASSERT(ppImageHandles != NULL);
 
     out = DK_SUCCESS;
 
@@ -1833,8 +1833,8 @@ exit:
 static void
 dkpDestroySwapChainImages(VkImage *pImageHandles, const DkAllocator *pAllocator)
 {
-    DK_ASSERT(pImageHandles != NULL);
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pImageHandles != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     DKP_FREE(pAllocator, pImageHandles);
 }
@@ -1853,10 +1853,10 @@ dkpCreateSwapChainImageViewHandles(
     uint32_t i;
     VkImageViewCreateInfo createInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pImageHandles != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(ppImageViewHandles != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pImageHandles != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(ppImageViewHandles != NULL);
 
     out = DK_SUCCESS;
 
@@ -1927,12 +1927,12 @@ dkpDestroySwapChainImageViewHandles(
 {
     uint32_t i;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pImageViewHandles != NULL);
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pImageViewHandles != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < imageCount; ++i) {
-        DK_ASSERT(pImageViewHandles[i] != VK_NULL_HANDLE);
+        DKP_ASSERT(pImageViewHandles[i] != VK_NULL_HANDLE);
         vkDestroyImageView(
             pDevice->logicalHandle, pImageViewHandles[i], pBackEndAllocator);
     }
@@ -1956,9 +1956,9 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     uint32_t *pQueueFamilyIndices;
     VkSwapchainCreateInfoKHR createInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
 
     out = DK_SUCCESS;
 
@@ -2086,18 +2086,18 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocator *pAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pSwapChain != NULL);
-    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(pAllocator != NULL);
 
     if (pSwapChain->handle == VK_NULL_HANDLE) {
         return;
     }
 
-    DK_ASSERT(pSwapChain->pImageHandles != NULL);
-    DK_ASSERT(pSwapChain->pImageViewHandles != NULL);
+    DKP_ASSERT(pSwapChain->pImageHandles != NULL);
+    DKP_ASSERT(pSwapChain->pImageViewHandles != NULL);
 
     dkpDestroySwapChainImageViewHandles(pDevice,
                                         pSwapChain->imageCount,
@@ -2127,12 +2127,12 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     VkSubpassDependency *pSubpassDependencies;
     VkRenderPassCreateInfo renderPassInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pSwapChain != NULL);
-    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pRenderPassHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pRenderPassHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -2251,9 +2251,9 @@ dkpDestroyRenderPass(const DkpDevice *pDevice,
                      VkRenderPass renderPassHandle,
                      const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
 
     vkDestroyRenderPass(
         pDevice->logicalHandle, renderPassHandle, pBackEndAllocator);
@@ -2267,9 +2267,9 @@ dkpCreatePipelineLayout(const DkpDevice *pDevice,
     DkResult out;
     VkPipelineLayoutCreateInfo layoutInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pPipelineLayoutHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pPipelineLayoutHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -2300,9 +2300,9 @@ dkpDestroyPipelineLayout(const DkpDevice *pDevice,
                          VkPipelineLayout pipelineLayoutHandle,
                          const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
 
     vkDestroyPipelineLayout(
         pDevice->logicalHandle, pipelineLayoutHandle, pBackEndAllocator);
@@ -2337,14 +2337,14 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
     uint32_t createInfoCount;
     VkGraphicsPipelineCreateInfo *pCreateInfos;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
-    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pShaders != NULL);
-    DK_ASSERT(pSurfaceExtent != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(pPipelineHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pShaders != NULL);
+    DKP_ASSERT(pSurfaceExtent != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pPipelineHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -2552,9 +2552,9 @@ dkpDestroyGraphicsPipeline(const DkpDevice *pDevice,
                            VkPipeline pipelineHandle,
                            const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pipelineHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pipelineHandle != VK_NULL_HANDLE);
 
     vkDestroyPipeline(
         pDevice->logicalHandle, pipelineHandle, pBackEndAllocator);
@@ -2572,14 +2572,14 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
     DkResult out;
     uint32_t i;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pSwapChain != NULL);
-    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
-    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pSurfaceExtent != NULL);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(ppFramebufferHandles != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pSurfaceExtent != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(ppFramebufferHandles != NULL);
 
     out = DK_SUCCESS;
 
@@ -2649,11 +2649,11 @@ dkpDestroyFramebuffers(const DkpDevice *pDevice,
 {
     uint32_t i;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
-        DK_ASSERT(pFramebufferHandles[i] != VK_NULL_HANDLE);
+        DKP_ASSERT(pFramebufferHandles[i] != VK_NULL_HANDLE);
         vkDestroyFramebuffer(
             pDevice->logicalHandle, pFramebufferHandles[i], pBackEndAllocator);
     }
@@ -2669,9 +2669,9 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
     DkResult out;
     VkCommandPoolCreateInfo createInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pCommandPoolHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pCommandPoolHandle != NULL);
 
     out = DK_SUCCESS;
 
@@ -2699,9 +2699,9 @@ dkpDestroyGraphicsCommandPool(const DkpDevice *pDevice,
                               VkCommandPool commandPoolHandle,
                               const VkAllocationCallbacks *pBackEndAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
 
     vkDestroyCommandPool(
         pDevice->logicalHandle, commandPoolHandle, pBackEndAllocator);
@@ -2717,13 +2717,13 @@ dkpCreateGraphicsCommandBuffers(const DkpDevice *pDevice,
     DkResult out;
     VkCommandBufferAllocateInfo allocateInfo;
 
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pSwapChain != NULL);
-    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
-    DK_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pAllocator != NULL);
-    DK_ASSERT(ppCommandBufferHandles != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(ppCommandBufferHandles != NULL);
 
     out = DK_SUCCESS;
 
@@ -2765,13 +2765,13 @@ dkpDestroyGraphicsCommandBuffers(const DkpDevice *pDevice,
                                  VkCommandBuffer *pCommandBufferHandles,
                                  const DkAllocator *pAllocator)
 {
-    DK_ASSERT(pDevice != NULL);
-    DK_ASSERT(pDevice->logicalHandle != NULL);
-    DK_ASSERT(pSwapChain != NULL);
-    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
-    DK_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pCommandBufferHandles != NULL);
-    DK_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pCommandBufferHandles != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     vkFreeCommandBuffers(pDevice->logicalHandle,
                          commandPoolHandle,
@@ -2792,13 +2792,13 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
     DkResult out;
     uint32_t i;
 
-    DK_ASSERT(pSwapChain != NULL);
-    DK_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
-    DK_ASSERT(renderPassHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pipelineHandle != VK_NULL_HANDLE);
-    DK_ASSERT(pFramebufferHandles != NULL);
-    DK_ASSERT(pCommandBufferHandles != NULL);
-    DK_ASSERT(pSurfaceExtent != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pipelineHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pFramebufferHandles != NULL);
+    DKP_ASSERT(pCommandBufferHandles != NULL);
+    DKP_ASSERT(pSurfaceExtent != NULL);
 
     out = DK_SUCCESS;
 
@@ -2854,7 +2854,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
 {
     DkResult out;
 
-    DK_ASSERT(pRenderer != NULL);
+    DKP_ASSERT(pRenderer != NULL);
 
     out = DK_SUCCESS;
 
@@ -3005,7 +3005,7 @@ static void
 dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
                                   DkpSwapChainSystemScope scope)
 {
-    DK_ASSERT(pRenderer != NULL);
+    DKP_ASSERT(pRenderer != NULL);
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
@@ -3062,7 +3062,7 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
 static DkResult
 dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
 {
-    DK_ASSERT(pRenderer != NULL);
+    DKP_ASSERT(pRenderer != NULL);
 
     dkpDestroyRendererSwapChainSystem(pRenderer,
                                       DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
@@ -3075,8 +3075,8 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo, int *pValid)
 {
     uint32_t i;
 
-    DK_ASSERT(pCreateInfo != NULL);
-    DK_ASSERT(pValid != NULL);
+    DKP_ASSERT(pCreateInfo != NULL);
+    DKP_ASSERT(pValid != NULL);
 
     *pValid = DKP_FALSE;
 
@@ -3326,7 +3326,7 @@ dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator)
 DkResult
 dkResizeRendererSurface(DkRenderer *pRenderer, DkUint32 width, DkUint32 height)
 {
-    DK_ASSERT(pRenderer != NULL);
+    DKP_ASSERT(pRenderer != NULL);
 
     pRenderer->surfaceExtent.width = (uint32_t)width;
     pRenderer->surfaceExtent.height = (uint32_t)height;
@@ -3348,7 +3348,7 @@ dkDrawRendererImage(DkRenderer *pRenderer)
     VkSwapchainKHR swapChainHandles[1];
     uint32_t imageIndices[1];
 
-    DK_ASSERT(pRenderer != NULL);
+    DKP_ASSERT(pRenderer != NULL);
 
     out = DK_SUCCESS;
 
