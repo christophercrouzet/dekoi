@@ -137,7 +137,8 @@ typedef enum DkResult {
     DK_SUCCESS = 0,
     DK_ERROR = -1,
     DK_ERROR_INVALID_VALUE = -2,
-    DK_ERROR_ALLOCATION = -3
+    DK_ERROR_ALLOCATION = -3,
+    DK_ERROR_NOT_SUPPORTED = -4
 } DkResult;
 
 const char *dkGetResultString(DkResult result);

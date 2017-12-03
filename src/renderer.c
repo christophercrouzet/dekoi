@@ -843,6 +843,54 @@ exit:
     return out;
 }
 
+static DkResult
+dkpPickSwapChainPresentMode(uint32_t presentModeCount,
+                            const VkPresentModeKHR *pPresentModes,
+                            VkPresentModeKHR *pPresentMode)
+{
+    uint32_t i;
+
+    DK_ASSERT(pPresentModes != NULL);
+    DK_ASSERT(pPresentMode != NULL);
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return DK_SUCCESS;
+        }
+    }
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return DK_SUCCESS;
+        }
+    }
+
+    for (i = 0; i < presentModeCount; ++i) {
+        if (pPresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            *pPresentMode = pPresentModes[i];
+            return DK_SUCCESS;
+        }
+    }
+
+    return DK_ERROR_NOT_SUPPORTED;
+}
+
+static DkResult
+dkpPickSwapChainImageUsage(VkSurfaceCapabilitiesKHR capabilities,
+                           VkImageUsageFlags *pImageUsage)
+{
+    DK_ASSERT(pImageUsage != NULL);
+
+    if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT))
+        return DK_ERROR_NOT_SUPPORTED;
+
+    *pImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                   | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    return DK_SUCCESS;
+}
+
 static void
 dkpPickSwapChainFormat(uint32_t formatCount,
                        const VkSurfaceFormatKHR *pFormats,
@@ -869,40 +917,6 @@ dkpPickSwapChainFormat(uint32_t formatCount,
 
     pFormat->format = pFormats[0].format;
     pFormat->colorSpace = pFormats[0].colorSpace;
-}
-
-static void
-dkpPickSwapChainPresentMode(uint32_t presentModeCount,
-                            const VkPresentModeKHR *pPresentModes,
-                            VkPresentModeKHR *pPresentMode)
-{
-    uint32_t i;
-
-    DK_ASSERT(pPresentModes != NULL);
-    DK_ASSERT(pPresentMode != NULL);
-
-    for (i = 0; i < presentModeCount; ++i) {
-        if (pPresentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-            *pPresentMode = pPresentModes[i];
-            return;
-        }
-    }
-
-    for (i = 0; i < presentModeCount; ++i) {
-        if (pPresentModes[i] == VK_PRESENT_MODE_FIFO_KHR) {
-            *pPresentMode = pPresentModes[i];
-            return;
-        }
-    }
-
-    for (i = 0; i < presentModeCount; ++i) {
-        if (pPresentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-            *pPresentMode = pPresentModes[i];
-            return;
-        }
-    }
-
-    *pPresentMode = (VkPresentModeKHR)-1;
 }
 
 static void
@@ -946,21 +960,6 @@ dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
 }
 
 static void
-dkpPickSwapChainImageUsage(VkSurfaceCapabilitiesKHR capabilities,
-                           VkImageUsageFlags *pImageUsage)
-{
-    DK_ASSERT(pImageUsage != NULL);
-
-    if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
-        *pImageUsage = (VkImageUsageFlags)-1;
-        return;
-    }
-
-    *pImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                   | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-}
-
-static void
 dkpPickSwapChainPreTransform(VkSurfaceCapabilitiesKHR capabilities,
                              VkSurfaceTransformFlagBitsKHR *pPreTransform)
 {
@@ -973,6 +972,7 @@ static DkResult
 dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
                            const VkExtent2D *pDesiredImageExtent,
+                           DkpLogging logging,
                            const DkAllocator *pAllocator,
                            DkpSwapChainProperties *pSwapChainProperties)
 {
@@ -1048,16 +1048,32 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
         goto present_modes_cleanup;
     }
 
+    out = dkpPickSwapChainPresentMode(
+        presentModeCount, pPresentModes, &pSwapChainProperties->presentMode);
+    if (out != DK_SUCCESS) {
+        if (logging == DKP_LOGGING_ENABLED)
+            fprintf(stderr, "could not find a suitable present mode\n");
+
+        goto present_modes_cleanup;
+    }
+
+    out = dkpPickSwapChainImageUsage(capabilities,
+                                     &pSwapChainProperties->imageUsage);
+    if (out != DK_SUCCESS) {
+        if (logging == DKP_LOGGING_ENABLED)
+            fprintf(stderr,
+                    "one or more image usage flags are not supported\n");
+
+        goto present_modes_cleanup;
+    }
+
     dkpPickSwapChainFormat(
         formatCount, pFormats, &pSwapChainProperties->format);
-    dkpPickSwapChainPresentMode(
-        presentModeCount, pPresentModes, &pSwapChainProperties->presentMode);
     dkpPickSwapChainMinImageCount(capabilities,
                                   pSwapChainProperties->presentMode,
                                   &pSwapChainProperties->minImageCount);
     dkpPickSwapChainImageExtent(
         capabilities, pDesiredImageExtent, &pSwapChainProperties->imageExtent);
-    dkpPickSwapChainImageUsage(capabilities, &pSwapChainProperties->imageUsage);
     dkpPickSwapChainPreTransform(capabilities,
                                  &pSwapChainProperties->preTransform);
 
@@ -1071,39 +1087,13 @@ exit:
     return out;
 }
 
-static void
-dkpCheckSwapChainProperties(const DkpSwapChainProperties *pSwapChainProperties,
-                            DkpLogging logging,
-                            int *pValid)
-{
-    DK_ASSERT(pSwapChainProperties != NULL);
-
-    *pValid = DKP_FALSE;
-
-    if (pSwapChainProperties->imageUsage == (VkImageUsageFlags)-1) {
-        if (logging == DKP_LOGGING_ENABLED)
-            fprintf(stderr,
-                    "one or more image usage flags are not "
-                    "supported\n");
-        return;
-    }
-
-    if (pSwapChainProperties->presentMode == (VkPresentModeKHR)-1) {
-        if (logging == DKP_LOGGING_ENABLED)
-            fprintf(stderr, "could not find a suitable present mode\n");
-
-        return;
-    }
-
-    *pValid = DKP_TRUE;
-}
-
 static DkResult
 dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
                          VkSurfaceKHR surfaceHandle,
                          const DkAllocator *pAllocator,
                          int *pSupported)
 {
+    DkResult result;
     VkExtent2D imageExtent;
     DkpSwapChainProperties swapChainProperties;
 
@@ -1115,18 +1105,21 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
     */
     imageExtent.width = 0;
     imageExtent.height = 0;
-    if (dkpPickSwapChainProperties(physicalDeviceHandle,
-                                   surfaceHandle,
-                                   &imageExtent,
-                                   pAllocator,
-                                   &swapChainProperties)
-        != DK_SUCCESS) {
-        return DK_ERROR;
+    result = dkpPickSwapChainProperties(physicalDeviceHandle,
+                                        surfaceHandle,
+                                        &imageExtent,
+                                        DKP_LOGGING_DISABLED,
+                                        pAllocator,
+                                        &swapChainProperties);
+    if (result == DK_SUCCESS) {
+        *pSupported = DKP_TRUE;
+        return DK_SUCCESS;
     }
 
-    dkpCheckSwapChainProperties(
-        &swapChainProperties, DKP_LOGGING_DISABLED, pSupported);
-    return DK_SUCCESS;
+    if (result == DK_ERROR_NOT_SUPPORTED)
+        return DK_SUCCESS;
+
+    return DK_ERROR;
 }
 
 static DkResult
@@ -1925,7 +1918,6 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
 {
     DkResult out;
     DkpSwapChainProperties swapChainProperties;
-    int valid;
     VkSharingMode imageSharingMode;
     uint32_t queueFamilyIndexCount;
     uint32_t *pQueueFamilyIndices;
@@ -1940,16 +1932,10 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     if (dkpPickSwapChainProperties(pDevice->physicalHandle,
                                    surfaceHandle,
                                    pDesiredImageExtent,
+                                   DKP_LOGGING_ENABLED,
                                    pAllocator,
                                    &swapChainProperties)
         != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto exit;
-    }
-
-    dkpCheckSwapChainProperties(
-        &swapChainProperties, DKP_LOGGING_ENABLED, &valid);
-    if (!valid) {
         out = DK_ERROR;
         goto exit;
     }
