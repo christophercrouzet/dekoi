@@ -12,13 +12,21 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef DK_ENABLE_DEBUG_REPORT
 #ifdef DK_DEBUG
 #define DK_ENABLE_DEBUG_REPORT 1
-#define DK_ENABLE_VALIDATION_LAYERS 1
 #else
 #define DK_ENABLE_DEBUG_REPORT 0
+#endif
+#endif /* DK_ENABLE_DEBUG_REPORT */
+
+#ifndef DK_ENABLE_VALIDATION_LAYERS
+#ifdef DK_DEBUG
+#define DK_ENABLE_VALIDATION_LAYERS 1
+#else
 #define DK_ENABLE_VALIDATION_LAYERS 0
-#endif /* DK_DEBUG */
+#endif
+#endif /* DK_ENABLE_VALIDATION_LAYERS */
 
 #define DKP_CLAMP(x, low, high) \
     (((x) > (high)) ? (high) : (x) < (low) ? (low) : (x))
