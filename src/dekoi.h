@@ -16,8 +16,8 @@
 #define DKP_C_EXTENSION
 #endif
 
-#define DK_STATIC_ASSERT(x, msg) \
-    typedef char dk_static_assertion_failed_##msg[(x) ? 1 : -1]
+#define DKP_STATIC_ASSERT(x, msg) \
+    typedef char DKP_STATIC_ASSERTion_failed_##msg[(x) ? 1 : -1]
 
 /*
    Focus on the common ILP32, LP64 and LLP64 data models.
@@ -111,18 +111,18 @@ typedef DK_SIZE_T DkSize;
 typedef DK_FLOAT32 DkFloat32;
 typedef DK_FLOAT64 DkFloat64;
 
-DK_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
-DK_STATIC_ASSERT(sizeof(DkInt8) == 1, invalid_int8_type);
-DK_STATIC_ASSERT(sizeof(DkUint8) == 1, invalid_uint8_type);
-DK_STATIC_ASSERT(sizeof(DkInt16) == 2, invalid_int16_type);
-DK_STATIC_ASSERT(sizeof(DkUint16) == 2, invalid_uint16_type);
-DK_STATIC_ASSERT(sizeof(DkInt32) == 4, invalid_int32_type);
-DK_STATIC_ASSERT(sizeof(DkUint32) == 4, invalid_uint32_type);
-DK_STATIC_ASSERT(sizeof(DkInt64) == 8, invalid_int64_type);
-DK_STATIC_ASSERT(sizeof(DkUint64) == 8, invalid_uint64_type);
-DK_STATIC_ASSERT(sizeof(DkSize) == sizeof(void *), invalid_size_type);
-DK_STATIC_ASSERT(sizeof(DkFloat32) == 4, invalid_float32_type);
-DK_STATIC_ASSERT(sizeof(DkFloat64) == 8, invalid_float64_type);
+DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
+DKP_STATIC_ASSERT(sizeof(DkInt8) == 1, invalid_int8_type);
+DKP_STATIC_ASSERT(sizeof(DkUint8) == 1, invalid_uint8_type);
+DKP_STATIC_ASSERT(sizeof(DkInt16) == 2, invalid_int16_type);
+DKP_STATIC_ASSERT(sizeof(DkUint16) == 2, invalid_uint16_type);
+DKP_STATIC_ASSERT(sizeof(DkInt32) == 4, invalid_int32_type);
+DKP_STATIC_ASSERT(sizeof(DkUint32) == 4, invalid_uint32_type);
+DKP_STATIC_ASSERT(sizeof(DkInt64) == 8, invalid_int64_type);
+DKP_STATIC_ASSERT(sizeof(DkUint64) == 8, invalid_uint64_type);
+DKP_STATIC_ASSERT(sizeof(DkSize) == sizeof(void *), invalid_size_type);
+DKP_STATIC_ASSERT(sizeof(DkFloat32) == 4, invalid_float32_type);
+DKP_STATIC_ASSERT(sizeof(DkFloat64) == 8, invalid_float64_type);
 
 #define DK_FALSE ((DkBool32)0)
 #define DK_TRUE ((DkBool32)1)
