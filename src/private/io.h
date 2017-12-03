@@ -1,5 +1,5 @@
-#ifndef DEKOI_INTERNAL_IO_H
-#define DEKOI_INTERNAL_IO_H
+#ifndef DEKOI_PRIVATE_IO_H
+#define DEKOI_PRIVATE_IO_H
 
 #include "../dekoi.h"
 
@@ -16,4 +16,4 @@ DkResult dkpGetFileSize(DkpFile *pFile, size_t *pSize);
 DkResult dkpReadFile(DkpFile *pFile, size_t size, void *pBuffer);
 DkResult dkpCloseFile(DkpFile *pFile);
 
-#endif /* DEKOI_INTERNAL_IO_H */
+#endif /* DEKOI_PRIVATE_IO_H */

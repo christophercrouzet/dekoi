@@ -1,9 +1,9 @@
 #include "renderer.h"
 
-#include "internal/assert.h"
-#include "internal/dekoi.h"
-#include "internal/io.h"
-#include "internal/memory.h"
+#include "private/assert.h"
+#include "private/dekoi.h"
+#include "private/io.h"
+#include "private/memory.h"
 
 #include <vulkan/vulkan.h>
 

@@ -1,5 +1,5 @@
-#ifndef DEKOI_INTERNAL_MEMORY_H
-#define DEKOI_INTERNAL_MEMORY_H
+#ifndef DEKOI_PRIVATE_MEMORY_H
+#define DEKOI_PRIVATE_MEMORY_H
 
 #include "../dekoi.h"
 #include "../memory.h"
@@ -11,4 +11,4 @@
 
 void dkpGetDefaultAllocator(const DkAllocator **ppAllocator);
 
-#endif /* DEKOI_INTERNAL_MEMORY_H */
+#endif /* DEKOI_PRIVATE_MEMORY_H */
