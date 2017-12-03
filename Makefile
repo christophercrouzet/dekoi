@@ -2,8 +2,8 @@ PROJECT := dekoi
 CFLAGS := -std=c89 \
           -Wpedantic -Wall -Wextra -Waggregate-return -Wcast-align -Wcast-qual \
           -Wconversion -Wfloat-equal -Wpointer-arith -Wshadow \
-          -Wstrict-overflow=5 -Wstrict-prototypes -Wswitch -Wswitch-default \
-          -Wundef -Wunreachable-code -Wwrite-strings
+          -Wstrict-overflow=5 -Wswitch -Wswitch-default -Wundef \
+          -Wunreachable-code -Wwrite-strings
 CPPFLAGS := -Iinclude
 LDFLAGS :=
 LDLIBS := -lvulkan
