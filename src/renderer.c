@@ -153,7 +153,7 @@ dkpTranslateShaderStage(DkShaderStage shaderStage)
             return VK_SHADER_STAGE_COMPUTE_BIT;
         default:
             DK_ASSERT(1);
-            return (VkShaderStageFlagBits)-1;
+            return (VkShaderStageFlagBits)0;
     }
 }
 
