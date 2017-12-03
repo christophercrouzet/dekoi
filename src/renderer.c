@@ -160,7 +160,7 @@ dkpTranslateShaderStage(DkShaderStage shaderStage)
         case DK_SHADER_STAGE_COMPUTE:
             return VK_SHADER_STAGE_COMPUTE_BIT;
         default:
-            DKP_ASSERT(1);
+            DKP_ASSERT(0);
             return (VkShaderStageFlagBits)0;
     }
 }
