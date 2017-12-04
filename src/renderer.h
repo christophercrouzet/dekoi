@@ -35,7 +35,8 @@ struct DkWindowCallbacks {
 
 struct DkShaderCreateInfo {
     DkShaderStage stage;
-    const char *pFilePath;
+    DkSize codeSize;
+    DkUint32 *pCode;
     const char *pEntryPointName;
 };
 

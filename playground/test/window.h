@@ -20,8 +20,9 @@ void
 destroyWindow(Application *pApplication, Window *pWindow);
 
 void
-getWindowRendererCallbacks(Window *pWindow,
-                           const DkWindowCallbacks **ppWindowRendererCallbacks);
+getWindowRendererCallbacks(
+    Window *pWindow,
+    const struct DkWindowCallbacks **ppWindowRendererCallbacks);
 
 int
 bindWindowRenderer(Window *pWindow, Renderer *pRenderer);

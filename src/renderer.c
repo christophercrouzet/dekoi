@@ -2,7 +2,6 @@
 
 #include "private/assert.h"
 #include "private/dekoi.h"
-#include "private/io.h"
 #include "private/memory.h"
 
 #include <vulkan/vulkan.h>
@@ -1561,123 +1560,35 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
 }
 
 static DkResult
-dkpCreateShaderCode(const char *pFilePath,
-                    const DkAllocator *pAllocator,
-                    size_t *pShaderCodeSize,
-                    uint32_t **ppShaderCode)
-{
-    DkResult out;
-    DkpFile file;
-
-    DKP_ASSERT(pFilePath != NULL);
-    DKP_ASSERT(pAllocator != NULL);
-    DKP_ASSERT(ppShaderCode != NULL);
-
-    out = DK_SUCCESS;
-
-    if (dkpOpenFile(&file, pFilePath, "rb") != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto exit;
-    }
-
-    if (dkpGetFileSize(&file, pShaderCodeSize) != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto file_closing;
-    }
-
-    DKP_ASSERT(*pShaderCodeSize % sizeof **ppShaderCode == 0);
-
-    *ppShaderCode = (uint32_t *)DKP_ALLOCATE(pAllocator, *pShaderCodeSize);
-    if (*ppShaderCode == NULL) {
-        fprintf(stderr,
-                "failed to allocate the shader code for the file "
-                "'%s'\n",
-                pFilePath);
-        out = DK_ERROR_ALLOCATION;
-        goto file_closing;
-    }
-
-    if (dkpReadFile(&file, *pShaderCodeSize, (void *)*ppShaderCode)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto code_undo;
-    }
-
-    goto cleanup;
-
-code_undo:
-    DKP_FREE(pAllocator, *ppShaderCode);
-
-cleanup:;
-
-file_closing:
-    if (dkpCloseFile(&file) != DK_SUCCESS) {
-        out = DK_ERROR;
-    }
-
-exit:
-    return out;
-}
-
-static void
-dkpDestroyShaderCode(uint32_t *pShaderCode, const DkAllocator *pAllocator)
-{
-    DKP_ASSERT(pShaderCode != NULL);
-    DKP_ASSERT(pAllocator != NULL);
-
-    DKP_FREE(pAllocator, pShaderCode);
-}
-
-static DkResult
 dkpCreateShaderModule(const DkpDevice *pDevice,
-                      const char *pFilePath,
+                      size_t shaderCodeSize,
+                      const uint32_t *pShaderCode,
                       const VkAllocationCallbacks *pBackEndAllocator,
-                      const DkAllocator *pAllocator,
                       VkShaderModule *pShaderModuleHandle)
 {
-    DkResult out;
-    size_t codeSize;
-    uint32_t *pCode;
     VkShaderModuleCreateInfo createInfo;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
-    DKP_ASSERT(pFilePath != NULL);
-    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pShaderCode != NULL);
     DKP_ASSERT(pShaderModuleHandle != NULL);
-
-    out = DK_SUCCESS;
-
-    if (dkpCreateShaderCode(pFilePath, pAllocator, &codeSize, &pCode)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
-        goto exit;
-    }
 
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
-    createInfo.codeSize = codeSize;
-    createInfo.pCode = pCode;
+    createInfo.codeSize = shaderCodeSize;
+    createInfo.pCode = pShaderCode;
 
     if (vkCreateShaderModule(pDevice->logicalHandle,
                              &createInfo,
                              pBackEndAllocator,
                              pShaderModuleHandle)
         != VK_SUCCESS) {
-        fprintf(stderr,
-                "failed to create the shader module from the file "
-                "'%s'\n",
-                pFilePath);
-        out = DK_ERROR;
-        goto code_cleanup;
+        fprintf(stderr, "failed to create a shader module\n");
+        return DK_ERROR;
     }
 
-code_cleanup:
-    dkpDestroyShaderCode(pCode, pAllocator);
-
-exit:
-    return out;
+    return DK_SUCCESS;
 }
 
 static void
@@ -1726,9 +1637,9 @@ dkpCreateShaders(const DkpDevice *pDevice,
 
     for (i = 0; i < shaderCount; ++i) {
         if (dkpCreateShaderModule(pDevice,
-                                  pShaderInfos[i].pFilePath,
+                                  (size_t)pShaderInfos[i].codeSize,
+                                  (uint32_t *)pShaderInfos[i].pCode,
                                   pBackEndAllocator,
-                                  pAllocator,
                                   &(*ppShaders)[i].moduleHandle)
             != DK_SUCCESS) {
             out = DK_ERROR;

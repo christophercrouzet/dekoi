@@ -3,8 +3,6 @@
 #include "test.h"
 #include "window.h"
 
-#include <dekoi/renderer>
-
 #include <assert.h>
 #include <stdlib.h>
 
@@ -14,10 +12,10 @@ const unsigned int minorVersion = 0;
 const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
-const DkShaderCreateInfo pShaderInfos[]
-    = {{DK_SHADER_STAGE_VERTEX, "shaders/shader.vert.spv", "main"},
-       {DK_SHADER_STAGE_FRAGMENT, "shaders/shader.frag.spv", "main"}};
-const DkFloat32 clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+const ShaderCreateInfo pShaderInfos[]
+    = {{SHADER_STAGE_VERTEX, "shaders/shader.vert.spv", "main"},
+       {SHADER_STAGE_FRAGMENT, "shaders/shader.frag.spv", "main"}};
+const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 
 int
 setup(Application **ppApplication, Window **ppWindow, Renderer **ppRenderer)
@@ -25,7 +23,6 @@ setup(Application **ppApplication, Window **ppWindow, Renderer **ppRenderer)
     int out;
     ApplicationCreateInfo applicationInfo;
     WindowCreateInfo windowInfo;
-    const DkWindowCallbacks *pWindowRendererCallbacks;
     RendererCreateInfo rendererInfo;
 
     assert(ppApplication != NULL);
@@ -53,22 +50,18 @@ setup(Application **ppApplication, Window **ppWindow, Renderer **ppRenderer)
         goto application_undo;
     }
 
-    getWindowRendererCallbacks(*ppWindow, &pWindowRendererCallbacks);
-
     rendererInfo.pApplicationName = pApplicationName;
     rendererInfo.applicationMajorVersion = majorVersion;
     rendererInfo.applicationMinorVersion = minorVersion;
     rendererInfo.applicationPatchVersion = patchVersion;
     rendererInfo.surfaceWidth = width;
     rendererInfo.surfaceHeight = height;
-    rendererInfo.pWindowCallbacks = pWindowRendererCallbacks;
     rendererInfo.shaderCount = sizeof pShaderInfos / sizeof *pShaderInfos;
     rendererInfo.pShaderInfos = pShaderInfos;
     rendererInfo.clearColor[0] = clearColor[0];
     rendererInfo.clearColor[1] = clearColor[1];
     rendererInfo.clearColor[2] = clearColor[2];
     rendererInfo.clearColor[3] = clearColor[3];
-    rendererInfo.pBackEndAllocator = NULL;
 
     if (createRenderer(*ppWindow, &rendererInfo, ppRenderer)) {
         out = 1;
