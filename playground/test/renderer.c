@@ -30,7 +30,8 @@ createRenderer(Window *pWindow,
     *ppRenderer = (Renderer *)malloc(sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
         fprintf(stderr, "failed to allocate the renderer\n");
-        return 1;
+        out = 1;
+        goto exit;
     }
 
     if (dkCreateRenderer(pCreateInfo, NULL, &(*ppRenderer)->pHandle)
