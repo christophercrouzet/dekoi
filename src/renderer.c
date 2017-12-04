@@ -3143,7 +3143,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     for (i = 0; i < 4; ++i) {
         (*ppRenderer)->clearColor.color.float32[i]
-            = (float)(*pCreateInfo->pClearColor)[i];
+            = (float)pCreateInfo->clearColor[i];
     }
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,

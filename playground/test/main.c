@@ -64,7 +64,10 @@ setup(Application **ppApplication, Window **ppWindow, Renderer **ppRenderer)
     rendererInfo.pWindowCallbacks = pWindowRendererCallbacks;
     rendererInfo.shaderCount = sizeof pShaderInfos / sizeof *pShaderInfos;
     rendererInfo.pShaderInfos = pShaderInfos;
-    rendererInfo.pClearColor = &clearColor;
+    rendererInfo.clearColor[0] = clearColor[0];
+    rendererInfo.clearColor[1] = clearColor[1];
+    rendererInfo.clearColor[2] = clearColor[2];
+    rendererInfo.clearColor[3] = clearColor[3];
     rendererInfo.pBackEndAllocator = NULL;
 
     if (createRenderer(*ppWindow, &rendererInfo, ppRenderer)) {
