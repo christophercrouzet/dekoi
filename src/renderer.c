@@ -220,8 +220,8 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
 
     if (vkEnumerateInstanceLayerProperties(&layerCount, NULL) != VK_SUCCESS) {
         fprintf(stderr,
-                "could not retrieve the number of instance layer "
-                "properties available\n");
+                "could not retrieve the number of instance layer properties "
+                "available\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -241,14 +241,15 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
 
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS) {
-        fprintf(stderr,
-                "could not enumerate the instance layer properties "
-                "available\n");
+        fprintf(
+            stderr,
+            "could not enumerate the instance layer properties available\n");
         out = DK_ERROR;
         goto layers_cleanup;
     }
 
     *pSupported = DKP_FALSE;
+
     for (i = 0; i < requiredLayerCount; ++i) {
         int found;
 
@@ -302,8 +303,7 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
             pAllocator, sizeof *ppBuffer * (*pExtensionCount + 1));
         if (ppBuffer == NULL) {
             fprintf(stderr,
-                    "failed to allocate the instance extension "
-                    "names\n");
+                    "failed to allocate the instance extension names\n");
             return DK_ERROR_ALLOCATION;
         }
 
@@ -380,8 +380,7 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
         pAllocator, sizeof *pExtensions * extensionCount);
     if (pExtensions == NULL) {
         fprintf(stderr,
-                "failed to allocate the instance extension "
-                "properties\n");
+                "failed to allocate the instance extension properties\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -397,6 +396,7 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
     }
 
     *pSupported = DKP_FALSE;
+
     for (i = 0; i < requiredExtensionCount; ++i) {
         int found;
 
@@ -515,14 +515,12 @@ dkpCreateInstance(const char *pApplicationName,
             break;
         case VK_ERROR_LAYER_NOT_PRESENT:
             fprintf(stderr,
-                    "some requested instance layers are not "
-                    "supported\n");
+                    "some requested instance layers are not supported\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
             fprintf(stderr,
-                    "some requested instance extensions are not "
-                    "supported\n");
+                    "some requested instance extensions are not supported\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_INCOMPATIBLE_DRIVER:
@@ -603,8 +601,8 @@ dkpCreateDebugReportCallback(VkInstance instanceHandle,
         instanceHandle, "vkCreateDebugReportCallbackEXT");
     if (function == NULL) {
         fprintf(stderr,
-                "could not retrieve the "
-                "'vkCreateDebugReportCallbackEXT' function\n");
+                "could not retrieve the 'vkCreateDebugReportCallbackEXT' "
+                "function\n");
         return DK_ERROR;
     }
 
@@ -632,8 +630,8 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
         instanceHandle, "vkDestroyDebugReportCallbackEXT");
     if (function == NULL) {
         fprintf(stderr,
-                "could not retrieve the "
-                "'vkDestroyDebugReportCallbackEXT' function\n");
+                "could not retrieve the 'vkDestroyDebugReportCallbackEXT' "
+                "function\n");
         return;
     }
 
@@ -656,8 +654,8 @@ dkpCreateSurface(VkInstance instanceHandle,
                                            pSurfaceHandle)
         != DK_SUCCESS) {
         fprintf(stderr,
-                "the window manager interface's 'createSurface' "
-                "callback returned an error\n");
+                "the window manager interface's 'createSurface' callback "
+                "returned an error\n");
         return DK_ERROR;
     }
 
@@ -733,8 +731,8 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
             physicalDeviceHandle, NULL, &extensionCount, NULL)
         != VK_SUCCESS) {
         fprintf(stderr,
-                "could not retrieve the number of device extension "
-                "properties available\n");
+                "could not retrieve the number of device extension properties "
+                "available\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -755,14 +753,15 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
     if (vkEnumerateDeviceExtensionProperties(
             physicalDeviceHandle, NULL, &extensionCount, pExtensions)
         != VK_SUCCESS) {
-        fprintf(stderr,
-                "could not enumerate the device extension properties "
-                "available\n");
+        fprintf(
+            stderr,
+            "could not enumerate the device extension properties available\n");
         out = DK_ERROR;
         goto extensions_cleanup;
     }
 
     *pSupported = DKP_FALSE;
+
     for (i = 0; i < requiredExtensionCount; ++i) {
         int found;
 
@@ -844,8 +843,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
                     physicalDeviceHandle, i, surfaceHandle, &presentSupported)
                 != VK_SUCCESS) {
                 fprintf(stderr,
-                        "could not determine support for "
-                        "presentation\n");
+                        "could not determine support for presentation\n");
                 out = DK_ERROR;
                 goto properties_cleanup;
             }
@@ -1062,8 +1060,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
             physicalDeviceHandle, surfaceHandle, &presentModeCount, NULL)
         != VK_SUCCESS) {
         fprintf(stderr,
-                "could not count the number of the surface present "
-                "modes\n");
+                "could not count the number of the surface present modes\n");
         out = DK_ERROR;
         goto formats_cleanup;
     }
@@ -1432,14 +1429,12 @@ dkpCreateDevice(VkInstance instanceHandle,
             break;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
             fprintf(stderr,
-                    "some requested device extensions are not "
-                    "supported\n");
+                    "some requested device extensions are not supported\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         case VK_ERROR_FEATURE_NOT_PRESENT:
             fprintf(stderr,
-                    "some requested device features are not "
-                    "supported\n");
+                    "some requested device features are not supported\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         case VK_ERROR_TOO_MANY_OBJECTS:
@@ -2354,8 +2349,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
              * colorBlendAttachmentStateCount));
     if (pColorBlendAttachmentStates == NULL) {
         fprintf(stderr,
-                "failed to allocate the color blend attachment "
-                "states\n");
+                "failed to allocate the color blend attachment states\n");
         out = DK_ERROR_ALLOCATION;
         goto scissors_cleanup;
     }
@@ -2440,8 +2434,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
         pAllocator, sizeof *pCreateInfos * createInfoCount);
     if (pCreateInfos == NULL) {
         fprintf(stderr,
-                "failed to allocate the graphics pipeline create "
-                "infos\n");
+                "failed to allocate the graphics pipeline create infos\n");
         out = DK_ERROR_ALLOCATION;
         goto color_blend_attachment_states_cleanup;
     }
@@ -3040,8 +3033,8 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo, int *pValid)
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
         if (!dkpCheckShaderStage(pCreateInfo->pShaderInfos[i].stage)) {
             fprintf(stderr,
-                    "invalid enum value for 'pCreateInfo->"
-                    "pShaderInfos[%d].stage'\n",
+                    "invalid enum value for "
+                    "'pCreateInfo->pShaderInfos[%d].stage'\n",
                     i);
             return;
         }

@@ -51,8 +51,7 @@ createVulkanInstanceExtensionNames(void *pContext,
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
     if (*pppExtensionNames == NULL) {
         fprintf(stderr,
-                "could not retrieve the Vulkan instance extension "
-                "names\n");
+                "could not retrieve the Vulkan instance extension names\n");
         return DK_ERROR;
     }
 
@@ -136,8 +135,7 @@ createWindow(Application *pApplication,
         sizeof *pWindowRendererCallbacksContext);
     if (pWindowRendererCallbacksContext == NULL) {
         fprintf(stderr,
-                "failed to allocate the window renderer callbacks "
-                "context\n");
+                "failed to allocate the window renderer callbacks context\n");
         out = 1;
         goto glfw_window_undo;
     }

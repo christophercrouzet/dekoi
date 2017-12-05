@@ -38,8 +38,8 @@ getFileSize(File *pFile, size_t *pSize)
     errno = 0;
     if (fgetpos(pFile->pHandle, &position) != 0) {
         fprintf(stderr,
-                "could not retrieve the current cursor position for "
-                "the file '%s'\n",
+                "could not retrieve the current cursor position for the file "
+                "'%s'\n",
                 pFile->pPath);
         out = 1;
         goto exit;
@@ -68,8 +68,7 @@ position_restoration:
     errno = 0;
     if (fsetpos(pFile->pHandle, &position) != 0) {
         fprintf(stderr,
-                "could not restore the cursor position for the file "
-                "'%s'\n",
+                "could not restore the cursor position for the file '%s'\n",
                 pFile->pPath);
         out = 1;
     }
