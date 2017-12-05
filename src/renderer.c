@@ -2879,6 +2879,8 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
     goto exit;
 
 graphics_command_buffers_undo:
+    vkDeviceWaitIdle(pRenderer->device.logicalHandle);
+
     dkpDestroyGraphicsCommandBuffers(&pRenderer->device,
                                      &pRenderer->swapChain,
                                      pRenderer->graphicsCommandPoolHandle,
