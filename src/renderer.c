@@ -86,6 +86,7 @@ typedef struct DkpShader {
 typedef struct DkpSwapChain {
     VkSwapchainKHR handle;
     VkSurfaceFormatKHR format;
+    VkExtent2D imageExtent;
     uint32_t imageCount;
     VkImage *pImageHandles;
     VkImageView *pImageViewHandles;
@@ -1987,6 +1988,8 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
             goto queue_family_indices_cleanup;
     }
 
+    pSwapChain->imageExtent = swapChainProperties.imageExtent;
+
     if (dkpCreateSwapChainImages(pDevice,
                                  pSwapChain->handle,
                                  pAllocator,
@@ -2254,7 +2257,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
                           VkRenderPass renderPassHandle,
                           uint32_t shaderCount,
                           const DkpShader *pShaders,
-                          const VkExtent2D *pSurfaceExtent,
+                          const VkExtent2D *pImageExtent,
                           const VkAllocationCallbacks *pBackEndAllocator,
                           const DkAllocator *pAllocator,
                           VkPipeline *pPipelineHandle)
@@ -2283,7 +2286,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
     DKP_ASSERT(shaderCount > 0);
     DKP_ASSERT(pShaders != NULL);
-    DKP_ASSERT(pSurfaceExtent != NULL);
+    DKP_ASSERT(pImageExtent != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pPipelineHandle != NULL);
 
@@ -2319,8 +2322,8 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
 
     pViewports[0].x = 0.0f;
     pViewports[0].y = 0.0f;
-    pViewports[0].width = (float)pSurfaceExtent->width;
-    pViewports[0].height = (float)pSurfaceExtent->height;
+    pViewports[0].width = (float)pImageExtent->width;
+    pViewports[0].height = (float)pImageExtent->height;
     pViewports[0].minDepth = 0.0f;
     pViewports[0].maxDepth = 1.0f;
 
@@ -2335,7 +2338,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
 
     pScissors[0].offset.x = 0;
     pScissors[0].offset.y = 0;
-    pScissors[0].extent = *pSurfaceExtent;
+    pScissors[0].extent = *pImageExtent;
 
     colorBlendAttachmentStateCount = 1;
     pColorBlendAttachmentStates
@@ -2503,7 +2506,7 @@ static DkResult
 dkpCreateFramebuffers(const DkpDevice *pDevice,
                       const DkpSwapChain *pSwapChain,
                       VkRenderPass renderPassHandle,
-                      const VkExtent2D *pSurfaceExtent,
+                      const VkExtent2D *pImageExtent,
                       const VkAllocationCallbacks *pBackEndAllocator,
                       const DkAllocator *pAllocator,
                       VkFramebuffer **ppFramebufferHandles)
@@ -2517,7 +2520,7 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain->imageCount > 0);
     DKP_ASSERT(pSwapChain->pImageViewHandles != NULL);
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
-    DKP_ASSERT(pSurfaceExtent != NULL);
+    DKP_ASSERT(pImageExtent != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(ppFramebufferHandles != NULL);
 
@@ -2548,8 +2551,8 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
         framebufferInfo.attachmentCount
             = (uint32_t)sizeof attachments / sizeof *attachments;
         framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = pSurfaceExtent->width;
-        framebufferInfo.height = pSurfaceExtent->height;
+        framebufferInfo.width = pImageExtent->width;
+        framebufferInfo.height = pImageExtent->height;
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(pDevice->logicalHandle,
@@ -2721,7 +2724,7 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
                                 VkPipeline pipelineHandle,
                                 VkFramebuffer *pFramebufferHandles,
                                 VkCommandBuffer *pCommandBufferHandles,
-                                const VkExtent2D *pSurfaceExtent,
+                                const VkExtent2D *pImageExtent,
                                 const VkClearValue *pClearColor)
 {
     uint32_t i;
@@ -2731,7 +2734,7 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
     DKP_ASSERT(pipelineHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pFramebufferHandles != NULL);
     DKP_ASSERT(pCommandBufferHandles != NULL);
-    DKP_ASSERT(pSurfaceExtent != NULL);
+    DKP_ASSERT(pImageExtent != NULL);
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
         VkCommandBufferBeginInfo beginInfo;
@@ -2754,7 +2757,7 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
         renderPassBeginInfo.framebuffer = pFramebufferHandles[i];
         renderPassBeginInfo.renderArea.offset.x = 0;
         renderPassBeginInfo.renderArea.offset.y = 0;
-        renderPassBeginInfo.renderArea.extent = *pSurfaceExtent;
+        renderPassBeginInfo.renderArea.extent = *pImageExtent;
         renderPassBeginInfo.clearValueCount = 1;
         renderPassBeginInfo.pClearValues = pClearColor;
 
@@ -2821,7 +2824,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
                                   pRenderer->renderPassHandle,
                                   pRenderer->shaderCount,
                                   pRenderer->pShaders,
-                                  &pRenderer->surfaceExtent,
+                                  &pRenderer->swapChain.imageExtent,
                                   pRenderer->pBackEndAllocator,
                                   pRenderer->pAllocator,
                                   &pRenderer->graphicsPipelineHandle)
@@ -2833,7 +2836,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
     if (dkpCreateFramebuffers(&pRenderer->device,
                               &pRenderer->swapChain,
                               pRenderer->renderPassHandle,
-                              &pRenderer->surfaceExtent,
+                              &pRenderer->swapChain.imageExtent,
                               pRenderer->pBackEndAllocator,
                               pRenderer->pAllocator,
                               &pRenderer->pFramebufferHandles)
@@ -2869,7 +2872,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
             pRenderer->graphicsPipelineHandle,
             pRenderer->pFramebufferHandles,
             pRenderer->pGraphicsCommandBufferHandles,
-            &pRenderer->surfaceExtent,
+            &pRenderer->swapChain.imageExtent,
             &pRenderer->clearColor)
         != DK_SUCCESS) {
         out = DK_ERROR;
