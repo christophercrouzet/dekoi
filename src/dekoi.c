@@ -12,8 +12,8 @@ dkGetResultString(DkResult result)
             return "invalid value";
         case DK_ERROR_ALLOCATION:
             return "allocation error";
-        case DK_ERROR_NOT_SUPPORTED:
-            return "not supported";
+        case DK_ERROR_NOT_AVAILABLE:
+            return "not available";
         default:
             return "invalid";
     }

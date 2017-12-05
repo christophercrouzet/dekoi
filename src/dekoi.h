@@ -138,7 +138,7 @@ typedef enum DkResult {
     DK_ERROR = -1,
     DK_ERROR_INVALID_VALUE = -2,
     DK_ERROR_ALLOCATION = -3,
-    DK_ERROR_NOT_SUPPORTED = -4
+    DK_ERROR_NOT_AVAILABLE = -4
 } DkResult;
 
 const char *

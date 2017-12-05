@@ -889,7 +889,7 @@ dkpPickSwapChainPresentMode(uint32_t presentModeCount,
         }
     }
 
-    return DK_ERROR_NOT_SUPPORTED;
+    return DK_ERROR_NOT_AVAILABLE;
 }
 
 static DkResult
@@ -899,7 +899,7 @@ dkpPickSwapChainImageUsage(VkSurfaceCapabilitiesKHR capabilities,
     DKP_ASSERT(pImageUsage != NULL);
 
     if (!(capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)) {
-        return DK_ERROR_NOT_SUPPORTED;
+        return DK_ERROR_NOT_AVAILABLE;
     }
 
     *pImageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
@@ -1135,7 +1135,7 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
         return DK_SUCCESS;
     }
 
-    if (result == DK_ERROR_NOT_SUPPORTED) {
+    if (result == DK_ERROR_NOT_AVAILABLE) {
         return DK_SUCCESS;
     }
 
