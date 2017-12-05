@@ -226,6 +226,11 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
         goto exit;
     }
 
+    if (layerCount == 0) {
+        *pSupported = requiredLayerCount == 0 ? DKP_TRUE : DKP_FALSE;
+        goto exit;
+    }
+
     pLayers = (VkLayerProperties *)DKP_ALLOCATE(pAllocator,
                                                 sizeof *pLayers * layerCount);
     if (pLayers == NULL) {
@@ -363,6 +368,11 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
                 "could not retrieve the number of instance extension "
                 "properties available\n");
         out = DK_ERROR;
+        goto exit;
+    }
+
+    if (extensionCount == 0) {
+        *pSupported = requiredExtensionCount == 0 ? DKP_TRUE : DKP_FALSE;
         goto exit;
     }
 
@@ -729,6 +739,11 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
         goto exit;
     }
 
+    if (extensionCount == 0) {
+        *pSupported = requiredExtensionCount == 0 ? DKP_TRUE : DKP_FALSE;
+        goto exit;
+    }
+
     pExtensions = (VkExtensionProperties *)DKP_ALLOCATE(
         pAllocator, sizeof *pExtensions * extensionCount);
     if (pExtensions == NULL) {
@@ -1021,6 +1036,12 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
         goto exit;
     }
 
+    if (formatCount == 0) {
+        fprintf(stderr, "no surface format available\n");
+        out = DK_ERROR_NOT_AVAILABLE;
+        goto exit;
+    }
+
     pFormats = (VkSurfaceFormatKHR *)DKP_ALLOCATE(
         pAllocator, sizeof *pFormats * formatCount);
     if (pFormats == NULL) {
@@ -1044,6 +1065,12 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
                 "could not count the number of the surface present "
                 "modes\n");
         out = DK_ERROR;
+        goto formats_cleanup;
+    }
+
+    if (presentModeCount == 0) {
+        fprintf(stderr, "no surface present mode available\n");
+        out = DK_ERROR_NOT_AVAILABLE;
         goto formats_cleanup;
     }
 
@@ -1237,6 +1264,12 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
         != VK_SUCCESS) {
         fprintf(stderr, "could not count the number of the physical devices\n");
         out = DK_ERROR;
+        goto exit;
+    }
+
+    if (physicalDeviceCount == 0) {
+        fprintf(stderr, "no physical device available\n");
+        out = DK_ERROR_NOT_AVAILABLE;
         goto exit;
     }
 
@@ -1495,6 +1528,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
     createInfo.pNext = NULL;
     createInfo.flags = 0;
 
+    DKP_ASSERT(DKP_SEMAPHORE_ID_ENUM_COUNT > 0);
     *ppSemaphoreHandles = (VkSemaphore *)DKP_ALLOCATE(
         pAllocator, sizeof **ppSemaphoreHandles * DKP_SEMAPHORE_ID_ENUM_COUNT);
     if (*ppSemaphoreHandles == NULL) {
@@ -1617,6 +1651,7 @@ dkpCreateShaders(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(shaderCount > 0);
     DKP_ASSERT(pShaderInfos != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(ppShaders != NULL);
@@ -1714,6 +1749,12 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
         goto exit;
     }
 
+    if (*pImageCount == 0) {
+        fprintf(stderr, "no swap chain image available\n");
+        out = DK_ERROR_NOT_AVAILABLE;
+        goto exit;
+    }
+
     *ppImageHandles = (VkImage *)DKP_ALLOCATE(
         pAllocator, sizeof **ppImageHandles * *pImageCount);
     if (*ppImageHandles == NULL) {
@@ -1765,6 +1806,7 @@ dkpCreateSwapChainImageViewHandles(
     VkImageViewCreateInfo createInfo;
 
     DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(imageCount > 0);
     DKP_ASSERT(pImageHandles != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(ppImageViewHandles != NULL);
@@ -2252,6 +2294,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(shaderCount > 0);
     DKP_ASSERT(pShaders != NULL);
     DKP_ASSERT(pSurfaceExtent != NULL);
     DKP_ASSERT(pAllocator != NULL);
@@ -2487,6 +2530,7 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pSwapChain != NULL);
     DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(pSwapChain->imageCount > 0);
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pSurfaceExtent != NULL);
     DKP_ASSERT(pAllocator != NULL);
@@ -2632,6 +2676,7 @@ dkpCreateGraphicsCommandBuffers(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pSwapChain != NULL);
     DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(pSwapChain->imageCount > 0);
     DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(ppCommandBufferHandles != NULL);
@@ -2990,6 +3035,11 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo, int *pValid)
     DKP_ASSERT(pValid != NULL);
 
     *pValid = DKP_FALSE;
+
+    if (pCreateInfo->shaderCount == 0) {
+        fprintf(stderr, "'pCreateInfo->shaderCount' must be greater than 0\n");
+        return;
+    }
 
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
         if (!dkpCheckShaderStage(pCreateInfo->pShaderInfos[i].stage)) {
