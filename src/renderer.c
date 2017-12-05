@@ -1017,8 +1017,6 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pSwapChainProperties != NULL);
 
-    out = DK_SUCCESS;
-
     if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             physicalDeviceHandle, surfaceHandle, &capabilities)
         != VK_SUCCESS) {
