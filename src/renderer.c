@@ -2045,10 +2045,6 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
     DKP_ASSERT(pAllocator != NULL);
 
-    if (pSwapChain->handle == VK_NULL_HANDLE) {
-        return;
-    }
-
     DKP_ASSERT(pSwapChain->pImageHandles != NULL);
     DKP_ASSERT(pSwapChain->pImageViewHandles != NULL);
 
