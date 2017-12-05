@@ -1788,14 +1788,13 @@ dkpDestroySwapChainImages(VkImage *pImageHandles, const DkAllocator *pAllocator)
 }
 
 static DkResult
-dkpCreateSwapChainImageViewHandles(
-    const DkpDevice *pDevice,
-    uint32_t imageCount,
-    const VkImage *pImageHandles,
-    VkFormat format,
-    const VkAllocationCallbacks *pBackEndAllocator,
-    const DkAllocator *pAllocator,
-    VkImageView **ppImageViewHandles)
+dkpCreateSwapChainImageViews(const DkpDevice *pDevice,
+                             uint32_t imageCount,
+                             const VkImage *pImageHandles,
+                             VkFormat format,
+                             const VkAllocationCallbacks *pBackEndAllocator,
+                             const DkAllocator *pAllocator,
+                             VkImageView **ppImageViewHandles)
 {
     DkResult out;
     uint32_t i;
@@ -1868,12 +1867,11 @@ exit:
 }
 
 static void
-dkpDestroySwapChainImageViewHandles(
-    const DkpDevice *pDevice,
-    uint32_t imageCount,
-    VkImageView *pImageViewHandles,
-    const VkAllocationCallbacks *pBackEndAllocator,
-    const DkAllocator *pAllocator)
+dkpDestroySwapChainImageViews(const DkpDevice *pDevice,
+                              uint32_t imageCount,
+                              VkImageView *pImageViewHandles,
+                              const VkAllocationCallbacks *pBackEndAllocator,
+                              const DkAllocator *pAllocator)
 {
     uint32_t i;
 
@@ -1999,13 +1997,13 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         goto queue_family_indices_cleanup;
     }
 
-    if (dkpCreateSwapChainImageViewHandles(pDevice,
-                                           pSwapChain->imageCount,
-                                           pSwapChain->pImageHandles,
-                                           swapChainProperties.format.format,
-                                           pBackEndAllocator,
-                                           pAllocator,
-                                           &pSwapChain->pImageViewHandles)
+    if (dkpCreateSwapChainImageViews(pDevice,
+                                     pSwapChain->imageCount,
+                                     pSwapChain->pImageHandles,
+                                     swapChainProperties.format.format,
+                                     pBackEndAllocator,
+                                     pAllocator,
+                                     &pSwapChain->pImageViewHandles)
         != DK_SUCCESS) {
         out = DK_ERROR;
         goto images_undo;
@@ -2047,11 +2045,11 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain->pImageViewHandles != NULL);
     DKP_ASSERT(pAllocator != NULL);
 
-    dkpDestroySwapChainImageViewHandles(pDevice,
-                                        pSwapChain->imageCount,
-                                        pSwapChain->pImageViewHandles,
-                                        pBackEndAllocator,
-                                        pAllocator);
+    dkpDestroySwapChainImageViews(pDevice,
+                                  pSwapChain->imageCount,
+                                  pSwapChain->pImageViewHandles,
+                                  pBackEndAllocator,
+                                  pAllocator);
     dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
     vkDestroySwapchainKHR(
         pDevice->logicalHandle, pSwapChain->handle, pBackEndAllocator);
