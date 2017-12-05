@@ -216,6 +216,7 @@ destroyRenderer(Window *pWindow, Renderer *pRenderer)
 {
     assert(pWindow != NULL);
     assert(pRenderer != NULL);
+    assert(pRenderer->pHandle != NULL);
 
     bindWindowRenderer(pWindow, NULL);
     dkDestroyRenderer(pRenderer->pHandle, NULL);

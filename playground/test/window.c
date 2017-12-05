@@ -184,6 +184,7 @@ destroyWindow(Application *pApplication, Window *pWindow)
 {
     assert(pApplication != NULL);
     assert(pWindow != NULL);
+    assert(pWindow->pHandle != NULL);
 
     bindApplicationWindow(pApplication, NULL);
     free(pWindow->windowRendererCallbacks.pContext);
@@ -215,6 +216,7 @@ void
 getWindowCloseFlag(const Window *pWindow, int *pCloseFlag)
 {
     assert(pWindow != NULL);
+    assert(pWindow->pHandle != NULL);
     assert(pCloseFlag != NULL);
 
     *pCloseFlag = glfwWindowShouldClose(pWindow->pHandle);
@@ -233,6 +235,8 @@ pollWindowEvents(const Window *pWindow)
 int
 renderWindowImage(const Window *pWindow)
 {
+    assert(pWindow != NULL);
+
     if (drawRendererImage(pWindow->pRenderer)) {
         return 1;
     }

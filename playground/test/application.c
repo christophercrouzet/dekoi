@@ -58,6 +58,7 @@ int
 runApplication(Application *pApplication)
 {
     assert(pApplication != NULL);
+    assert(pApplication->pWindow != NULL);
 
     while (1) {
         pollWindowEvents(pApplication->pWindow);
