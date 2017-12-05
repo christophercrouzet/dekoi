@@ -2211,14 +2211,11 @@ dkpCreatePipelineLayout(const DkpDevice *pDevice,
                         const VkAllocationCallbacks *pBackEndAllocator,
                         VkPipelineLayout *pPipelineLayoutHandle)
 {
-    DkResult out;
     VkPipelineLayoutCreateInfo layoutInfo;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pPipelineLayoutHandle != NULL);
-
-    out = DK_SUCCESS;
 
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutInfo.pNext = NULL;
@@ -2234,12 +2231,10 @@ dkpCreatePipelineLayout(const DkpDevice *pDevice,
                                pPipelineLayoutHandle)
         != VK_SUCCESS) {
         fprintf(stderr, "failed to create the pipeline layout\n");
-        out = DK_ERROR;
-        goto exit;
+        return DK_ERROR;
     }
 
-exit:
-    return out;
+    return DK_SUCCESS;
 }
 
 static void
@@ -2613,14 +2608,11 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
                              const VkAllocationCallbacks *pBackEndAllocator,
                              VkCommandPool *pCommandPoolHandle)
 {
-    DkResult out;
     VkCommandPoolCreateInfo createInfo;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pCommandPoolHandle != NULL);
-
-    out = DK_SUCCESS;
 
     createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     createInfo.pNext = NULL;
@@ -2633,12 +2625,10 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
                             pCommandPoolHandle)
         != VK_SUCCESS) {
         fprintf(stderr, "failed to create the graphics command pool\n");
-        out = DK_ERROR;
-        goto exit;
+        return DK_ERROR;
     }
 
-exit:
-    return out;
+    return DK_SUCCESS;
 }
 
 static void
@@ -2736,7 +2726,6 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
                                 const VkExtent2D *pSurfaceExtent,
                                 const VkClearValue *pClearColor)
 {
-    DkResult out;
     uint32_t i;
 
     DKP_ASSERT(pSwapChain != NULL);
@@ -2745,8 +2734,6 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
     DKP_ASSERT(pFramebufferHandles != NULL);
     DKP_ASSERT(pCommandBufferHandles != NULL);
     DKP_ASSERT(pSurfaceExtent != NULL);
-
-    out = DK_SUCCESS;
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
         VkCommandBufferBeginInfo beginInfo;
@@ -2760,8 +2747,7 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
         if (vkBeginCommandBuffer(pCommandBufferHandles[i], &beginInfo)
             != VK_SUCCESS) {
             fprintf(stderr, "could not begin the command buffer recording\n");
-            out = DK_ERROR;
-            goto exit;
+            return DK_ERROR;
         }
 
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -2785,13 +2771,11 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
 
         if (vkEndCommandBuffer(pCommandBufferHandles[i]) != VK_SUCCESS) {
             fprintf(stderr, "could not end the command buffer recording\n");
-            out = DK_ERROR;
-            goto exit;
+            return DK_ERROR;
         }
     }
 
-exit:
-    return out;
+    return DK_SUCCESS;
 }
 
 static DkResult
