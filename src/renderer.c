@@ -3276,11 +3276,11 @@ dkDrawRendererImage(DkRenderer *pRenderer)
             break;
         case VK_NOT_READY:
             fprintf(stderr, "no image was available\n");
-            out = DK_ERROR;
+            out = DK_ERROR_NOT_AVAILABLE;
             goto exit;
         case VK_TIMEOUT:
             fprintf(stderr, "no image was available within the time allowed\n");
-            out = DK_ERROR;
+            out = DK_ERROR_NOT_AVAILABLE;
             goto exit;
         case VK_SUBOPTIMAL_KHR:
             if (dkpRecreateRendererSwapChain(pRenderer) != DK_SUCCESS) {
