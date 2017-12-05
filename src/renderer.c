@@ -3211,16 +3211,12 @@ exit:
 }
 
 void
-dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator)
+dkDestroyRenderer(DkRenderer *pRenderer)
 {
     int headless;
 
     if (pRenderer == NULL) {
         return;
-    }
-
-    if (pAllocator == NULL) {
-        dkpGetDefaultAllocator(&pAllocator);
     }
 
     headless = pRenderer->surfaceHandle == VK_NULL_HANDLE;
@@ -3240,7 +3236,7 @@ dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator)
     dkpDestroySemaphores(&pRenderer->device,
                          pRenderer->pSemaphoreHandles,
                          pRenderer->pBackEndAllocator,
-                         pAllocator);
+                         pRenderer->pAllocator);
     dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
 
     if (!headless) {
@@ -3256,7 +3252,7 @@ dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator)
     }
 
     dkpDestroyInstance(pRenderer->instanceHandle, pRenderer->pBackEndAllocator);
-    DKP_FREE(pAllocator, pRenderer);
+    DKP_FREE(pRenderer->pAllocator, pRenderer);
 }
 
 DkResult

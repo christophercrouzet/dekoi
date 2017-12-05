@@ -60,7 +60,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer);
 
 void
-dkDestroyRenderer(DkRenderer *pRenderer, const DkAllocator *pAllocator);
+dkDestroyRenderer(DkRenderer *pRenderer);
 
 DkResult
 dkResizeRendererSurface(DkRenderer *pRenderer, DkUint32 width, DkUint32 height);

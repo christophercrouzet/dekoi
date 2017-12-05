@@ -194,7 +194,7 @@ createRenderer(Window *pWindow,
     goto cleanup;
 
 renderer_undo:
-    dkDestroyRenderer((*ppRenderer)->pHandle, NULL);
+    dkDestroyRenderer((*ppRenderer)->pHandle);
     free(*ppRenderer);
 
 cleanup:;
@@ -220,7 +220,7 @@ destroyRenderer(Window *pWindow, Renderer *pRenderer)
     assert(pRenderer->pHandle != NULL);
 
     bindWindowRenderer(pWindow, NULL);
-    dkDestroyRenderer(pRenderer->pHandle, NULL);
+    dkDestroyRenderer(pRenderer->pHandle);
     free(pRenderer);
 }
 
