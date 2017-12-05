@@ -118,13 +118,6 @@ createRenderer(Window *pWindow,
 
     out = 0;
 
-    *ppRenderer = (Renderer *)malloc(sizeof **ppRenderer);
-    if (*ppRenderer == NULL) {
-        fprintf(stderr, "failed to allocate the renderer\n");
-        out = 1;
-        goto exit;
-    }
-
     getWindowRendererCallbacks(pWindow, &pWindowRendererCallbacks);
 
     if (pCreateInfo->shaderCount > 0) {
@@ -180,10 +173,17 @@ createRenderer(Window *pWindow,
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
     backEndInfo.pBackEndAllocator = NULL;
 
+    *ppRenderer = (Renderer *)malloc(sizeof **ppRenderer);
+    if (*ppRenderer == NULL) {
+        fprintf(stderr, "failed to allocate the renderer\n");
+        out = 1;
+        goto shader_infos_cleanup;
+    }
+
     if (dkCreateRenderer(&backEndInfo, NULL, &(*ppRenderer)->pHandle)
         != DK_SUCCESS) {
         out = 1;
-        goto shader_infos_cleanup;
+        goto renderer_undo;
     }
 
     if (bindWindowRenderer(pWindow, *ppRenderer)) {
@@ -195,6 +195,7 @@ createRenderer(Window *pWindow,
 
 renderer_undo:
     dkDestroyRenderer((*ppRenderer)->pHandle, NULL);
+    free(*ppRenderer);
 
 cleanup:;
 
