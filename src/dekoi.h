@@ -17,7 +17,7 @@
 #endif
 
 #define DKP_STATIC_ASSERT(x, msg) \
-    typedef char DKP_STATIC_ASSERTion_failed_##msg[(x) ? 1 : -1]
+    typedef char DKP_STATIC_ASSERTION_failed_##msg[(x) ? 1 : -1]
 
 /*
    Focus on the common ILP32, LP64 and LLP64 data models.
