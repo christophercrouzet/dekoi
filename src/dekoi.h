@@ -25,93 +25,60 @@
 */
 #ifdef DK_USE_STD_FIXED_TYPES
 #include <stdint.h>
-#define DK_INT8 int8_t
-#define DK_UINT8 uint8_t
-#define DK_INT16 int16_t
-#define DK_UINT16 uint16_t
-#define DK_INT32 int32_t
-#define DK_UINT32 uint32_t
-#define DK_INT64 int64_t
-#define DK_UINT64 uint64_t
+typedef int8_t DkInt8;
+typedef uint8_t DkUint8;
+typedef int16_t DkInt16;
+typedef uint16_t DkUint16;
+typedef int32_t DkInt32;
+typedef uint32_t DkUint32;
+typedef int64_t DkInt64;
+typedef uint64_t DkUint64;
 #else
-#ifndef DK_INT8
-#define DK_INT8 char
-#endif
-#ifndef DK_UINT8
-#define DK_UINT8 unsigned DK_INT8
-#endif
-#ifndef DK_INT16
-#define DK_INT16 short
-#endif
-#ifndef DK_UINT16
-#define DK_UINT16 unsigned DK_INT16
-#endif
-#ifndef DK_INT32
+typedef char DkInt8;
+typedef unsigned char DkUint8;
+typedef short DkInt16;
+typedef unsigned short DkUint16;
 #if defined(_MSC_VER)
-#define DK_INT32 __int32
+typedef __int32 DkInt32;
+typedef unsigned __int32 DkUint32;
 #else
-#define DK_INT32 int
+typedef int DkInt32;
+typedef unsigned int DkUint32;
 #endif
-#endif
-#ifndef DK_UINT32
-#define DK_UINT32 unsigned DK_INT32
-#endif
-#ifndef DK_INT64
 #if defined(_MSC_VER)
-#define DK_INT64 __int64
+typedef __int64 DkInt64;
+typedef unsigned __int64 DkUint64;
 #else
-#define DK_INT64 long long
-#endif
-#endif
-#ifndef DK_UINT64
-#define DK_UINT64 unsigned DK_INT64
+DKP_C_EXTENSION typedef long long DkInt64;
+DKP_C_EXTENSION typedef unsigned long long DkUint64;
 #endif
 #endif
 
 #ifdef DK_USE_STD_BASIC_TYPES
 #include <stddef.h>
-#define DK_SIZE_T size_t
+typedef size_t DkSize;
 #else
-#ifndef DK_SIZE_T
 #if defined(__GNUC__) || defined(__clang__)
 #if !defined(__x86_64__) && !defined(__ppc64__)
-#define DK_SIZE_T unsigned int
+typedef unsigned int DkSize;
 #else
-#define DK_SIZE_T unsigned long
+typedef unsigned long DkSize;
 #endif
 #elif defined(_MSC_VER)
 #if !defined(_WIN64)
-#define DK_SIZE_T unsigned __int32
+typedef __int32 DkSize;
 #else
-#define DK_SIZE_T unsigned __int64
+typedef __int64 DkSize;
 #endif
 #else
-#define DK_SIZE_T unsigned long
-#endif
+typedef unsigned long DkSize;
 #endif
 #endif
 
-#ifndef DK_FLOAT32
-#define DK_FLOAT32 float
-#endif
-#ifndef DK_FLOAT64
-#define DK_FLOAT64 double
-#endif
+typedef float DkFloat32;
+typedef double DkFloat64;
+typedef DkInt32 DkBool32;
 
-typedef DK_INT32 DkBool32;
-typedef DK_INT8 DkInt8;
-typedef DK_UINT8 DkUint8;
-typedef DK_INT16 DkInt16;
-typedef DK_UINT16 DkUint16;
-typedef DK_INT32 DkInt32;
-typedef DK_UINT32 DkUint32;
-DKP_C_EXTENSION typedef DK_INT64 DkInt64;
-DKP_C_EXTENSION typedef DK_UINT64 DkUint64;
-typedef DK_SIZE_T DkSize;
-typedef DK_FLOAT32 DkFloat32;
-typedef DK_FLOAT64 DkFloat64;
-
-DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 DKP_STATIC_ASSERT(sizeof(DkInt8) == 1, invalid_int8_type);
 DKP_STATIC_ASSERT(sizeof(DkUint8) == 1, invalid_uint8_type);
 DKP_STATIC_ASSERT(sizeof(DkInt16) == 2, invalid_int16_type);
@@ -123,6 +90,7 @@ DKP_STATIC_ASSERT(sizeof(DkUint64) == 8, invalid_uint64_type);
 DKP_STATIC_ASSERT(sizeof(DkSize) == sizeof(void *), invalid_size_type);
 DKP_STATIC_ASSERT(sizeof(DkFloat32) == 4, invalid_float32_type);
 DKP_STATIC_ASSERT(sizeof(DkFloat64) == 8, invalid_float64_type);
+DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 
 #define DK_FALSE ((DkBool32)0)
 #define DK_TRUE ((DkBool32)1)
