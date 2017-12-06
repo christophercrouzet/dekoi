@@ -1,5 +1,5 @@
-#ifndef DEKOI_RENDERER_H
-#define DEKOI_RENDERER_H
+#ifndef DEKOI_RENDERING_H
+#define DEKOI_RENDERING_H
 
 #include "dekoi.h"
 
@@ -68,4 +68,4 @@ dkResizeRendererSurface(DkRenderer *pRenderer, DkUint32 width, DkUint32 height);
 DkResult
 dkDrawRendererImage(DkRenderer *pRenderer);
 
-#endif /* DEKOI_RENDERER_H */
+#endif /* DEKOI_RENDERING_H */

@@ -1,5 +1,5 @@
-#ifndef DEKOI_PLAYGROUND_TEST_RENDERER_H
-#define DEKOI_PLAYGROUND_TEST_RENDERER_H
+#ifndef DEKOI_PLAYGROUND_TEST_RENDERING_H
+#define DEKOI_PLAYGROUND_TEST_RENDERING_H
 
 #include "test.h"
 
@@ -46,4 +46,4 @@ resizeRendererSurface(Renderer *pRenderer,
 int
 drawRendererImage(Renderer *pRenderer);
 
-#endif /* DEKOI_PLAYGROUND_TEST_RENDERER_H */
+#endif /* DEKOI_PLAYGROUND_TEST_RENDERING_H */

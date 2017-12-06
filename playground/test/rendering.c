@@ -1,10 +1,10 @@
-#include "renderer.h"
+#include "rendering.h"
 
 #include "io.h"
 #include "window.h"
 
 #include <dekoi/dekoi>
-#include <dekoi/renderer>
+#include <dekoi/rendering>
 
 #include <assert.h>
 #include <stddef.h>

@@ -3,11 +3,11 @@
 #include "window.h"
 
 #include "application.h"
-#include "renderer.h"
+#include "rendering.h"
 
 #include <GLFW/glfw3.h>
 #include <dekoi/dekoi>
-#include <dekoi/renderer>
+#include <dekoi/rendering>
 
 #include <assert.h>
 #include <stddef.h>
