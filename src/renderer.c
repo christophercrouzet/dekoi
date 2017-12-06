@@ -123,6 +123,7 @@ dkpGetSemaphoreIdString(DkpSemaphoreId semaphoreId)
         case DKP_SEMAPHORE_ID_PRESENT_COMPLETED:
             return "present completed";
         default:
+            DKP_ASSERT(0);
             return "invalid";
     }
 }
