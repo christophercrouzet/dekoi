@@ -13,17 +13,17 @@
 
 #ifndef DK_ENABLE_DEBUG_REPORT
 #ifdef DK_DEBUG
-#define DK_ENABLE_DEBUG_REPORT 1
+#define DK_DEBUG_REPORT 1
 #else
-#define DK_ENABLE_DEBUG_REPORT 0
+#define DK_DEBUG_REPORT 0
 #endif
 #endif /* DK_ENABLE_DEBUG_REPORT */
 
 #ifndef DK_ENABLE_VALIDATION_LAYERS
 #ifdef DK_DEBUG
-#define DK_ENABLE_VALIDATION_LAYERS 1
+#define DK_VALIDATION_LAYERS 1
 #else
-#define DK_ENABLE_VALIDATION_LAYERS 0
+#define DK_VALIDATION_LAYERS 0
 #endif
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
@@ -175,7 +175,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
     DKP_ASSERT(pLayerCount != NULL);
     DKP_ASSERT(pppLayerNames != NULL);
 
-    if (DK_ENABLE_VALIDATION_LAYERS) {
+    if (DK_VALIDATION_LAYERS) {
         *pLayerCount = 1;
         *pppLayerNames = (const char **)DKP_ALLOCATE(
             pAllocator, sizeof **pppLayerNames * *pLayerCount);
@@ -197,7 +197,7 @@ static void
 dkpDestroyInstanceLayerNames(const char **ppLayerNames,
                              const DkAllocator *pAllocator)
 {
-    if (DK_ENABLE_VALIDATION_LAYERS) {
+    if (DK_VALIDATION_LAYERS) {
         DKP_FREE(pAllocator, ppLayerNames);
     }
 }
@@ -300,7 +300,7 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
         return DK_ERROR;
     }
 
-    if (DK_ENABLE_DEBUG_REPORT) {
+    if (DK_DEBUG_REPORT) {
         ppBuffer = (const char **)DKP_ALLOCATE(
             pAllocator, sizeof *ppBuffer * (*pExtensionCount + 1));
         if (ppBuffer == NULL) {
@@ -336,7 +336,7 @@ dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
 {
     DKP_ASSERT(pAllocator != NULL);
 
-    if (DK_ENABLE_DEBUG_REPORT) {
+    if (DK_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
     } else {
         if (pWindowCallbacks != NULL) {
@@ -3096,7 +3096,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto renderer_undo;
     }
 
-    if (DK_ENABLE_DEBUG_REPORT) {
+    if (DK_DEBUG_REPORT) {
         if (dkpCreateDebugReportCallback(
                 (*ppRenderer)->instanceHandle,
                 (*ppRenderer)->pBackEndAllocator,
@@ -3193,7 +3193,7 @@ surface_undo:
     }
 
 debug_report_callback_undo:
-    if (DK_ENABLE_DEBUG_REPORT) {
+    if (DK_DEBUG_REPORT) {
         dkpDestroyDebugReportCallback((*ppRenderer)->instanceHandle,
                                       (*ppRenderer)->debugReportCallbackHandle,
                                       (*ppRenderer)->pBackEndAllocator);
@@ -3246,7 +3246,7 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                           pRenderer->pBackEndAllocator);
     }
 
-    if (DK_ENABLE_DEBUG_REPORT) {
+    if (DK_DEBUG_REPORT) {
         dkpDestroyDebugReportCallback(pRenderer->instanceHandle,
                                       pRenderer->debugReportCallbackHandle,
                                       pRenderer->pBackEndAllocator);
