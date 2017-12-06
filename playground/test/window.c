@@ -15,9 +15,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct WindowRendererCallbacksContext {
+typedef struct WindowRendererCallbacksData {
     GLFWwindow *pWindowHandle;
-} WindowRendererCallbacksContext;
+} WindowRendererCallbacksData;
 
 struct Window {
     GLFWwindow *pHandle;
@@ -38,14 +38,14 @@ onFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 }
 
 DkResult
-createVulkanInstanceExtensionNames(void *pContext,
+createVulkanInstanceExtensionNames(void *pData,
                                    DkUint32 *pExtensionCount,
                                    const char ***pppExtensionNames)
 {
     assert(pExtensionCount != NULL);
     assert(pppExtensionNames != NULL);
 
-    UNUSED(pContext);
+    UNUSED(pData);
 
     *pppExtensionNames
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
@@ -59,28 +59,27 @@ createVulkanInstanceExtensionNames(void *pContext,
 }
 
 void
-destroyVulkanInstanceExtensionNames(void *pContext,
-                                    const char **ppExtensionNames)
+destroyVulkanInstanceExtensionNames(void *pData, const char **ppExtensionNames)
 {
     assert(ppExtensionNames != NULL);
 
-    UNUSED(pContext);
+    UNUSED(pData);
     UNUSED(ppExtensionNames);
 }
 
 DkResult
-createVulkanSurface(void *pContext,
+createVulkanSurface(void *pData,
                     VkInstance instanceHandle,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     VkSurfaceKHR *pSurfaceHandle)
 {
-    assert(pContext != NULL);
+    assert(pData != NULL);
     assert(instanceHandle != NULL);
     assert(pSurfaceHandle != NULL);
 
     if (glfwCreateWindowSurface(
             instanceHandle,
-            ((WindowRendererCallbacksContext *)pContext)->pWindowHandle,
+            ((WindowRendererCallbacksData *)pData)->pWindowHandle,
             pBackEndAllocator,
             pSurfaceHandle)
         != VK_SUCCESS) {
@@ -97,7 +96,7 @@ createWindow(Application *pApplication,
              Window **ppWindow)
 {
     int out;
-    WindowRendererCallbacksContext *pWindowRendererCallbacksContext;
+    WindowRendererCallbacksData *pWindowRendererCallbacksData;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
@@ -131,19 +130,19 @@ createWindow(Application *pApplication,
         goto glfw_undo;
     }
 
-    pWindowRendererCallbacksContext = (WindowRendererCallbacksContext *)malloc(
-        sizeof *pWindowRendererCallbacksContext);
-    if (pWindowRendererCallbacksContext == NULL) {
+    pWindowRendererCallbacksData = (WindowRendererCallbacksData *)malloc(
+        sizeof *pWindowRendererCallbacksData);
+    if (pWindowRendererCallbacksData == NULL) {
         fprintf(stderr,
-                "failed to allocate the window renderer callbacks context\n");
+                "failed to allocate the window renderer callbacks data\n");
         out = 1;
         goto glfw_window_undo;
     }
 
-    pWindowRendererCallbacksContext->pWindowHandle = (*ppWindow)->pHandle;
+    pWindowRendererCallbacksData->pWindowHandle = (*ppWindow)->pHandle;
 
-    (*ppWindow)->windowRendererCallbacks.pContext
-        = (void *)pWindowRendererCallbacksContext;
+    (*ppWindow)->windowRendererCallbacks.pData
+        = (void *)pWindowRendererCallbacksData;
     (*ppWindow)->windowRendererCallbacks.pfnCreateInstanceExtensionNames
         = createVulkanInstanceExtensionNames;
     (*ppWindow)->windowRendererCallbacks.pfnDestroyInstanceExtensionNames
@@ -157,14 +156,14 @@ createWindow(Application *pApplication,
 
     if (bindApplicationWindow(pApplication, *ppWindow)) {
         out = 1;
-        goto window_renderer_callbacks_context_undo;
+        goto window_renderer_callbacks_data_undo;
     }
 
     (*ppWindow)->pRenderer = NULL;
     goto exit;
 
-window_renderer_callbacks_context_undo:
-    free((*ppWindow)->windowRendererCallbacks.pContext);
+window_renderer_callbacks_data_undo:
+    free((*ppWindow)->windowRendererCallbacks.pData);
 
 glfw_window_undo:
     glfwDestroyWindow((*ppWindow)->pHandle);
@@ -187,7 +186,7 @@ destroyWindow(Application *pApplication, Window *pWindow)
     assert(pWindow->pHandle != NULL);
 
     bindApplicationWindow(pApplication, NULL);
-    free(pWindow->windowRendererCallbacks.pContext);
+    free(pWindow->windowRendererCallbacks.pData);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
     free(pWindow);

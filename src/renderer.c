@@ -293,7 +293,7 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
         *pExtensionCount = 0;
         *pppExtensionNames = NULL;
     } else if (pWindowCallbacks->pfnCreateInstanceExtensionNames(
-                   pWindowCallbacks->pContext,
+                   pWindowCallbacks->pData,
                    (DkUint32 *)pExtensionCount,
                    pppExtensionNames)
                != DK_SUCCESS) {
@@ -319,7 +319,7 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
 
         if (pWindowCallbacks != NULL) {
             pWindowCallbacks->pfnDestroyInstanceExtensionNames(
-                pWindowCallbacks->pContext, *pppExtensionNames);
+                pWindowCallbacks->pData, *pppExtensionNames);
         }
 
         *pExtensionCount += 1;
@@ -341,7 +341,7 @@ dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
     } else {
         if (pWindowCallbacks != NULL) {
             pWindowCallbacks->pfnDestroyInstanceExtensionNames(
-                pWindowCallbacks->pContext, ppExtensionNames);
+                pWindowCallbacks->pData, ppExtensionNames);
         }
     }
 }
@@ -650,7 +650,7 @@ dkpCreateSurface(VkInstance instanceHandle,
     DKP_ASSERT(pWindowCallbacks != NULL);
     DKP_ASSERT(pSurfaceHandle != NULL);
 
-    if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pContext,
+    if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pData,
                                            instanceHandle,
                                            pBackEndAllocator,
                                            pSurfaceHandle)

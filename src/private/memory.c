@@ -9,16 +9,16 @@
 #include <stdlib.h>
 
 static void *
-dkpAllocate(void *pContext, DkSize size)
+dkpAllocate(void *pData, DkSize size)
 {
-    DKP_UNUSED(pContext);
+    DKP_UNUSED(pData);
     return malloc((size_t)size);
 }
 
 static void
-dkpFree(void *pContext, void *pMemory)
+dkpFree(void *pData, void *pMemory)
 {
-    DKP_UNUSED(pContext);
+    DKP_UNUSED(pData);
     free(pMemory);
 }
 

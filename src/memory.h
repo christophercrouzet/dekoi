@@ -7,7 +7,7 @@ typedef void *(*DkPfnAllocationCallback)(void *, DkSize);
 typedef void (*DkPfnFreeCallback)(void *, void *);
 
 struct DkAllocator {
-    void *pContext;
+    void *pData;
     DkPfnAllocationCallback pfnAllocate;
     DkPfnFreeCallback pfnFree;
 };

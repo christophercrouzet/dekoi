@@ -27,7 +27,7 @@ typedef DkResult (*DkPfnCreateSurfaceCallback)(void *,
                                                VkSurfaceKHR *);
 
 struct DkWindowCallbacks {
-    void *pContext;
+    void *pData;
     DkPfnCreateInstanceExtensionNamesCallback pfnCreateInstanceExtensionNames;
     DkPfnDestroyInstanceExtensionNamesCallback pfnDestroyInstanceExtensionNames;
     DkPfnCreateSurfaceCallback pfnCreateSurface;
