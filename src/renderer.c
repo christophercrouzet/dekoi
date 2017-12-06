@@ -93,7 +93,7 @@ typedef struct DkpSwapChain {
 } DkpSwapChain;
 
 struct DkRenderer {
-    const DkAllocator *pAllocator;
+    const DkAllocationCallbacks *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
     VkClearValue clearColor;
     VkInstance instanceHandle;
@@ -167,7 +167,7 @@ dkpTranslateShaderStage(DkShaderStage shaderStage)
 }
 
 static DkResult
-dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
+dkpCreateInstanceLayerNames(const DkAllocationCallbacks *pAllocator,
                             uint32_t *pLayerCount,
                             const char ***pppLayerNames)
 {
@@ -195,7 +195,7 @@ dkpCreateInstanceLayerNames(const DkAllocator *pAllocator,
 
 static void
 dkpDestroyInstanceLayerNames(const char **ppLayerNames,
-                             const DkAllocator *pAllocator)
+                             const DkAllocationCallbacks *pAllocator)
 {
     if (DK_VALIDATION_LAYERS) {
         DKP_FREE(pAllocator, ppLayerNames);
@@ -205,7 +205,7 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 static DkResult
 dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
                               const char *const *ppRequiredLayerNames,
-                              const DkAllocator *pAllocator,
+                              const DkAllocationCallbacks *pAllocator,
                               int *pSupported)
 {
     DkResult out;
@@ -278,10 +278,11 @@ exit:
 }
 
 static DkResult
-dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
-                                const DkAllocator *pAllocator,
-                                uint32_t *pExtensionCount,
-                                const char ***pppExtensionNames)
+dkpCreateInstanceExtensionNames(
+    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator,
+    const DkAllocationCallbacks *pAllocator,
+    uint32_t *pExtensionCount,
+    const char ***pppExtensionNames)
 {
     const char **ppBuffer;
 
@@ -289,11 +290,11 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
     DKP_ASSERT(pExtensionCount != NULL);
     DKP_ASSERT(pppExtensionNames != NULL);
 
-    if (pWindowCallbacks == NULL) {
+    if (pWindowSystemIntegrator == NULL) {
         *pExtensionCount = 0;
         *pppExtensionNames = NULL;
-    } else if (pWindowCallbacks->pfnCreateInstanceExtensionNames(
-                   pWindowCallbacks->pData,
+    } else if (pWindowSystemIntegrator->pfnCreateInstanceExtensionNames(
+                   pWindowSystemIntegrator->pData,
                    (DkUint32 *)pExtensionCount,
                    pppExtensionNames)
                != DK_SUCCESS) {
@@ -317,9 +318,9 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
 
         ppBuffer[*pExtensionCount] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 
-        if (pWindowCallbacks != NULL) {
-            pWindowCallbacks->pfnDestroyInstanceExtensionNames(
-                pWindowCallbacks->pData, *pppExtensionNames);
+        if (pWindowSystemIntegrator != NULL) {
+            pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
+                pWindowSystemIntegrator->pData, *pppExtensionNames);
         }
 
         *pExtensionCount += 1;
@@ -330,18 +331,19 @@ dkpCreateInstanceExtensionNames(const DkWindowCallbacks *pWindowCallbacks,
 }
 
 static void
-dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
-                                 const DkWindowCallbacks *pWindowCallbacks,
-                                 const DkAllocator *pAllocator)
+dkpDestroyInstanceExtensionNames(
+    const char **ppExtensionNames,
+    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator,
+    const DkAllocationCallbacks *pAllocator)
 {
     DKP_ASSERT(pAllocator != NULL);
 
     if (DK_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
     } else {
-        if (pWindowCallbacks != NULL) {
-            pWindowCallbacks->pfnDestroyInstanceExtensionNames(
-                pWindowCallbacks->pData, ppExtensionNames);
+        if (pWindowSystemIntegrator != NULL) {
+            pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
+                pWindowSystemIntegrator->pData, ppExtensionNames);
         }
     }
 }
@@ -349,7 +351,7 @@ dkpDestroyInstanceExtensionNames(const char **ppExtensionNames,
 static DkResult
 dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
                                   const char *const *ppRequiredExtensionNames,
-                                  const DkAllocator *pAllocator,
+                                  const DkAllocationCallbacks *pAllocator,
                                   int *pSupported)
 {
     DkResult out;
@@ -427,14 +429,15 @@ exit:
 }
 
 static DkResult
-dkpCreateInstance(const char *pApplicationName,
-                  unsigned int applicationMajorVersion,
-                  unsigned int applicationMinorVersion,
-                  unsigned int applicationPatchVersion,
-                  const DkWindowCallbacks *pWindowCallbacks,
-                  const VkAllocationCallbacks *pBackEndAllocator,
-                  const DkAllocator *pAllocator,
-                  VkInstance *pInstanceHandle)
+dkpCreateInstance(
+    const char *pApplicationName,
+    unsigned int applicationMajorVersion,
+    unsigned int applicationMinorVersion,
+    unsigned int applicationPatchVersion,
+    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator,
+    const VkAllocationCallbacks *pBackEndAllocator,
+    const DkAllocationCallbacks *pAllocator,
+    VkInstance *pInstanceHandle)
 {
     DkResult out;
     uint32_t layerCount;
@@ -471,8 +474,10 @@ dkpCreateInstance(const char *pApplicationName,
         goto layer_names_cleanup;
     }
 
-    if (dkpCreateInstanceExtensionNames(
-            pWindowCallbacks, pAllocator, &extensionCount, &ppExtensionNames)
+    if (dkpCreateInstanceExtensionNames(pWindowSystemIntegrator,
+                                        pAllocator,
+                                        &extensionCount,
+                                        &ppExtensionNames)
         != DK_SUCCESS) {
         out = DK_ERROR;
         goto layer_names_cleanup;
@@ -541,7 +546,7 @@ dkpCreateInstance(const char *pApplicationName,
 
 extension_names_cleanup:
     dkpDestroyInstanceExtensionNames(
-        ppExtensionNames, pWindowCallbacks, pAllocator);
+        ppExtensionNames, pWindowSystemIntegrator, pAllocator);
 
 layer_names_cleanup:
     dkpDestroyInstanceLayerNames(ppLayerNames, pAllocator);
@@ -641,19 +646,21 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 }
 
 static DkResult
-dkpCreateSurface(VkInstance instanceHandle,
-                 const DkWindowCallbacks *pWindowCallbacks,
-                 const VkAllocationCallbacks *pBackEndAllocator,
-                 VkSurfaceKHR *pSurfaceHandle)
+dkpCreateSurface(
+    VkInstance instanceHandle,
+    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator,
+    const VkAllocationCallbacks *pBackEndAllocator,
+    VkSurfaceKHR *pSurfaceHandle)
 {
     DKP_ASSERT(instanceHandle != NULL);
-    DKP_ASSERT(pWindowCallbacks != NULL);
+    DKP_ASSERT(pWindowSystemIntegrator != NULL);
     DKP_ASSERT(pSurfaceHandle != NULL);
 
-    if (pWindowCallbacks->pfnCreateSurface(pWindowCallbacks->pData,
-                                           instanceHandle,
-                                           pBackEndAllocator,
-                                           pSurfaceHandle)
+    if (pWindowSystemIntegrator->pfnCreateSurface(
+            pWindowSystemIntegrator->pData,
+            instanceHandle,
+            pBackEndAllocator,
+            pSurfaceHandle)
         != DK_SUCCESS) {
         fprintf(stderr,
                 "the window manager interface's 'createSurface' callback "
@@ -677,7 +684,7 @@ dkpDestroySurface(VkInstance instanceHandle,
 
 static DkResult
 dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
-                              const DkAllocator *pAllocator,
+                              const DkAllocationCallbacks *pAllocator,
                               uint32_t *pExtensionCount,
                               const char ***pppExtensionNames)
 {
@@ -705,7 +712,7 @@ dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
 
 static void
 dkpDestroyDeviceExtensionNames(const char **ppExtensionNames,
-                               const DkAllocator *pAllocator)
+                               const DkAllocationCallbacks *pAllocator)
 {
     DKP_FREE(pAllocator, ppExtensionNames);
 }
@@ -714,7 +721,7 @@ static DkResult
 dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
                                 uint32_t requiredExtensionCount,
                                 const char *const *ppRequiredExtensionNames,
-                                const DkAllocator *pAllocator,
+                                const DkAllocationCallbacks *pAllocator,
                                 int *pSupported)
 {
     DkResult out;
@@ -794,7 +801,7 @@ exit:
 static DkResult
 dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
-                           const DkAllocator *pAllocator,
+                           const DkAllocationCallbacks *pAllocator,
                            DkpQueueFamilyIndices *pQueueFamilyIndices)
 {
     DkResult out;
@@ -1005,7 +1012,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
                            const VkExtent2D *pDesiredImageExtent,
                            DkpLogging logging,
-                           const DkAllocator *pAllocator,
+                           const DkAllocationCallbacks *pAllocator,
                            DkpSwapChainProperties *pSwapChainProperties)
 {
     DkResult out;
@@ -1133,7 +1140,7 @@ exit:
 static DkResult
 dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
                          VkSurfaceKHR surfaceHandle,
-                         const DkAllocator *pAllocator,
+                         const DkAllocationCallbacks *pAllocator,
                          int *pSupported)
 {
     DkResult result;
@@ -1171,7 +1178,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
                          VkSurfaceKHR surfaceHandle,
                          uint32_t extensionCount,
                          const char *const *ppExtensionNames,
-                         const DkAllocator *pAllocator,
+                         const DkAllocationCallbacks *pAllocator,
                          DkpQueueFamilyIndices *pQueueFamilyIndices,
                          int *pSuitable)
 {
@@ -1241,7 +1248,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
                       VkSurfaceKHR surfaceHandle,
                       uint32_t extensionCount,
                       const char *const *ppExtensionNames,
-                      const DkAllocator *pAllocator,
+                      const DkAllocationCallbacks *pAllocator,
                       DkpQueueFamilyIndices *pQueueFamilyIndices,
                       VkPhysicalDevice *pPhysicalDeviceHandle)
 {
@@ -1325,7 +1332,7 @@ static DkResult
 dkpCreateDevice(VkInstance instanceHandle,
                 VkSurfaceKHR surfaceHandle,
                 const VkAllocationCallbacks *pBackEndAllocator,
-                const DkAllocator *pAllocator,
+                const DkAllocationCallbacks *pAllocator,
                 DkpDevice *pDevice)
 {
     DkResult out;
@@ -1509,7 +1516,7 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
 static DkResult
 dkpCreateSemaphores(const DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
-                    const DkAllocator *pAllocator,
+                    const DkAllocationCallbacks *pAllocator,
                     VkSemaphore **ppSemaphoreHandles)
 {
     DkResult out;
@@ -1572,7 +1579,7 @@ static void
 dkpDestroySemaphores(const DkpDevice *pDevice,
                      VkSemaphore *pSemaphoreHandles,
                      const VkAllocationCallbacks *pBackEndAllocator,
-                     const DkAllocator *pAllocator)
+                     const DkAllocationCallbacks *pAllocator)
 {
     int i;
 
@@ -1639,7 +1646,7 @@ dkpCreateShaders(const DkpDevice *pDevice,
                  uint32_t shaderCount,
                  const DkShaderCreateInfo *pShaderInfos,
                  const VkAllocationCallbacks *pBackEndAllocator,
-                 const DkAllocator *pAllocator,
+                 const DkAllocationCallbacks *pAllocator,
                  DkpShader **ppShaders)
 {
     DkResult out;
@@ -1702,7 +1709,7 @@ dkpDestroyShaders(const DkpDevice *pDevice,
                   uint32_t shaderCount,
                   DkpShader *pShaders,
                   const VkAllocationCallbacks *pBackEndAllocator,
-                  const DkAllocator *pAllocator)
+                  const DkAllocationCallbacks *pAllocator)
 {
     uint32_t i;
 
@@ -1722,7 +1729,7 @@ dkpDestroyShaders(const DkpDevice *pDevice,
 static DkResult
 dkpCreateSwapChainImages(const DkpDevice *pDevice,
                          VkSwapchainKHR swapChainHandle,
-                         const DkAllocator *pAllocator,
+                         const DkAllocationCallbacks *pAllocator,
                          uint32_t *pImageCount,
                          VkImage **ppImageHandles)
 {
@@ -1779,7 +1786,8 @@ exit:
 }
 
 static void
-dkpDestroySwapChainImages(VkImage *pImageHandles, const DkAllocator *pAllocator)
+dkpDestroySwapChainImages(VkImage *pImageHandles,
+                          const DkAllocationCallbacks *pAllocator)
 {
     DKP_ASSERT(pImageHandles != NULL);
     DKP_ASSERT(pAllocator != NULL);
@@ -1793,7 +1801,7 @@ dkpCreateSwapChainImageViews(const DkpDevice *pDevice,
                              const VkImage *pImageHandles,
                              VkFormat format,
                              const VkAllocationCallbacks *pBackEndAllocator,
-                             const DkAllocator *pAllocator,
+                             const DkAllocationCallbacks *pAllocator,
                              VkImageView **ppImageViewHandles)
 {
     DkResult out;
@@ -1871,7 +1879,7 @@ dkpDestroySwapChainImageViews(const DkpDevice *pDevice,
                               uint32_t imageCount,
                               VkImageView *pImageViewHandles,
                               const VkAllocationCallbacks *pBackEndAllocator,
-                              const DkAllocator *pAllocator)
+                              const DkAllocationCallbacks *pAllocator)
 {
     uint32_t i;
 
@@ -1895,7 +1903,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
                    const VkExtent2D *pDesiredImageExtent,
                    VkSwapchainKHR oldSwapChainHandle,
                    const VkAllocationCallbacks *pBackEndAllocator,
-                   const DkAllocator *pAllocator,
+                   const DkAllocationCallbacks *pAllocator,
                    DkpSwapChain *pSwapChain)
 {
     DkResult out;
@@ -2037,7 +2045,7 @@ static void
 dkpDestroySwapChain(const DkpDevice *pDevice,
                     DkpSwapChain *pSwapChain,
                     const VkAllocationCallbacks *pBackEndAllocator,
-                    const DkAllocator *pAllocator)
+                    const DkAllocationCallbacks *pAllocator)
 {
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
@@ -2061,7 +2069,7 @@ static DkResult
 dkpCreateRenderPass(const DkpDevice *pDevice,
                     const DkpSwapChain *pSwapChain,
                     const VkAllocationCallbacks *pBackEndAllocator,
-                    const DkAllocator *pAllocator,
+                    const DkAllocationCallbacks *pAllocator,
                     VkRenderPass *pRenderPassHandle)
 {
     DkResult out;
@@ -2258,7 +2266,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
                           const DkpShader *pShaders,
                           const VkExtent2D *pImageExtent,
                           const VkAllocationCallbacks *pBackEndAllocator,
-                          const DkAllocator *pAllocator,
+                          const DkAllocationCallbacks *pAllocator,
                           VkPipeline *pPipelineHandle)
 {
     DkResult out;
@@ -2507,7 +2515,7 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
                       VkRenderPass renderPassHandle,
                       const VkExtent2D *pImageExtent,
                       const VkAllocationCallbacks *pBackEndAllocator,
-                      const DkAllocator *pAllocator,
+                      const DkAllocationCallbacks *pAllocator,
                       VkFramebuffer **ppFramebufferHandles)
 {
     DkResult out;
@@ -2587,7 +2595,7 @@ dkpDestroyFramebuffers(const DkpDevice *pDevice,
                        const DkpSwapChain *pSwapChain,
                        VkFramebuffer *pFramebufferHandles,
                        const VkAllocationCallbacks *pBackEndAllocator,
-                       const DkAllocator *pAllocator)
+                       const DkAllocationCallbacks *pAllocator)
 {
     uint32_t i;
 
@@ -2648,7 +2656,7 @@ static DkResult
 dkpCreateGraphicsCommandBuffers(const DkpDevice *pDevice,
                                 const DkpSwapChain *pSwapChain,
                                 VkCommandPool commandPoolHandle,
-                                const DkAllocator *pAllocator,
+                                const DkAllocationCallbacks *pAllocator,
                                 VkCommandBuffer **ppCommandBufferHandles)
 {
     DkResult out;
@@ -2700,7 +2708,7 @@ dkpDestroyGraphicsCommandBuffers(const DkpDevice *pDevice,
                                  const DkpSwapChain *pSwapChain,
                                  VkCommandPool commandPoolHandle,
                                  VkCommandBuffer *pCommandBufferHandles,
-                                 const DkAllocator *pAllocator)
+                                 const DkAllocationCallbacks *pAllocator)
 {
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
@@ -3032,7 +3040,7 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo, int *pValid)
 
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
-                 const DkAllocator *pAllocator,
+                 const DkAllocationCallbacks *pAllocator,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
@@ -3064,7 +3072,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         dkpGetDefaultAllocator(&pAllocator);
     }
 
-    headless = pCreateInfo->pWindowCallbacks == NULL;
+    headless = pCreateInfo->pWindowSystemIntegrator == NULL;
 
     *ppRenderer = (DkRenderer *)DKP_ALLOCATE(pAllocator, sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
@@ -3087,7 +3095,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           (unsigned int)pCreateInfo->applicationMajorVersion,
                           (unsigned int)pCreateInfo->applicationMinorVersion,
                           (unsigned int)pCreateInfo->applicationPatchVersion,
-                          pCreateInfo->pWindowCallbacks,
+                          pCreateInfo->pWindowSystemIntegrator,
                           (*ppRenderer)->pBackEndAllocator,
                           (*ppRenderer)->pAllocator,
                           &(*ppRenderer)->instanceHandle)
@@ -3111,7 +3119,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     if (!headless) {
         if (dkpCreateSurface((*ppRenderer)->instanceHandle,
-                             pCreateInfo->pWindowCallbacks,
+                             pCreateInfo->pWindowSystemIntegrator,
                              (*ppRenderer)->pBackEndAllocator,
                              &(*ppRenderer)->surfaceHandle)
             != DK_SUCCESS) {

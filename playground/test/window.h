@@ -3,7 +3,7 @@
 
 #include "test.h"
 
-struct DkWindowCallbacks;
+struct DkWindowSystemIntegrationCallbacks;
 
 struct WindowCreateInfo {
     unsigned int width;
@@ -20,9 +20,9 @@ void
 destroyWindow(Application *pApplication, Window *pWindow);
 
 void
-getWindowRendererCallbacks(
+getWindowSystemIntegrator(
     Window *pWindow,
-    const struct DkWindowCallbacks **ppWindowRendererCallbacks);
+    const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator);
 
 int
 bindWindowRenderer(Window *pWindow, Renderer *pRenderer);

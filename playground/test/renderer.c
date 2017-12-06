@@ -108,7 +108,7 @@ createRenderer(Window *pWindow,
 {
     int out;
     unsigned int i;
-    const DkWindowCallbacks *pWindowRendererCallbacks;
+    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
     DkShaderCreateInfo *pShaderInfos;
     DkRendererCreateInfo backEndInfo;
 
@@ -118,7 +118,7 @@ createRenderer(Window *pWindow,
 
     out = 0;
 
-    getWindowRendererCallbacks(pWindow, &pWindowRendererCallbacks);
+    getWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
 
     if (pCreateInfo->shaderCount > 0) {
         pShaderInfos = (DkShaderCreateInfo *)malloc(sizeof *pShaderInfos
@@ -164,7 +164,7 @@ createRenderer(Window *pWindow,
         = (DkUint32)pCreateInfo->applicationPatchVersion;
     backEndInfo.surfaceWidth = (DkUint32)pCreateInfo->surfaceWidth;
     backEndInfo.surfaceHeight = (DkUint32)pCreateInfo->surfaceHeight;
-    backEndInfo.pWindowCallbacks = pWindowRendererCallbacks;
+    backEndInfo.pWindowSystemIntegrator = pWindowSystemIntegrator;
     backEndInfo.shaderCount = (DkUint32)pCreateInfo->shaderCount;
     backEndInfo.pShaderInfos = pShaderInfos;
     backEndInfo.clearColor[0] = (DkFloat32)pCreateInfo->clearColor[0];

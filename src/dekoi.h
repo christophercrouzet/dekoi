@@ -95,11 +95,12 @@ DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 #define DK_FALSE ((DkBool32)0)
 #define DK_TRUE ((DkBool32)1)
 
-typedef struct DkAllocator DkAllocator;
+typedef struct DkAllocationCallbacks DkAllocationCallbacks;
 typedef struct DkRenderer DkRenderer;
 typedef struct DkRendererCreateInfo DkRendererCreateInfo;
 typedef struct DkShaderCreateInfo DkShaderCreateInfo;
-typedef struct DkWindowCallbacks DkWindowCallbacks;
+typedef struct DkWindowSystemIntegrationCallbacks
+    DkWindowSystemIntegrationCallbacks;
 
 typedef enum DkResult {
     DK_SUCCESS = 0,

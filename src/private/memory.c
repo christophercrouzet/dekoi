@@ -22,10 +22,11 @@ dkpFree(void *pData, void *pMemory)
     free(pMemory);
 }
 
-static const DkAllocator dkpDefaultAllocator = {NULL, dkpAllocate, dkpFree};
+static const DkAllocationCallbacks dkpDefaultAllocator
+    = {NULL, dkpAllocate, dkpFree};
 
 void
-dkpGetDefaultAllocator(const DkAllocator **ppAllocator)
+dkpGetDefaultAllocator(const DkAllocationCallbacks **ppAllocator)
 {
     DKP_ASSERT(ppAllocator != NULL);
 

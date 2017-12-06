@@ -26,7 +26,7 @@ typedef DkResult (*DkPfnCreateSurfaceCallback)(void *,
                                                const VkAllocationCallbacks *,
                                                VkSurfaceKHR *);
 
-struct DkWindowCallbacks {
+struct DkWindowSystemIntegrationCallbacks {
     void *pData;
     DkPfnCreateInstanceExtensionNamesCallback pfnCreateInstanceExtensionNames;
     DkPfnDestroyInstanceExtensionNamesCallback pfnDestroyInstanceExtensionNames;
@@ -47,7 +47,7 @@ struct DkRendererCreateInfo {
     DkUint32 applicationPatchVersion;
     DkUint32 surfaceWidth;
     DkUint32 surfaceHeight;
-    const DkWindowCallbacks *pWindowCallbacks;
+    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
     DkUint32 shaderCount;
     const DkShaderCreateInfo *pShaderInfos;
     DkFloat32 clearColor[4];
@@ -56,7 +56,7 @@ struct DkRendererCreateInfo {
 
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
-                 const DkAllocator *pAllocator,
+                 const DkAllocationCallbacks *pAllocator,
                  DkRenderer **ppRenderer);
 
 void
