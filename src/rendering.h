@@ -16,15 +16,18 @@ typedef struct VkAllocationCallbacks VkAllocationCallbacks;
 typedef struct VkInstance_T *VkInstance;
 typedef struct VkSurfaceKHR_T *VkSurfaceKHR;
 
-typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(void *,
-                                                              DkUint32 *,
-                                                              const char ***);
-typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(void *,
-                                                           const char **);
-typedef DkResult (*DkPfnCreateSurfaceCallback)(void *,
-                                               VkInstance,
-                                               const VkAllocationCallbacks *,
-                                               VkSurfaceKHR *);
+typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
+    void *pData,
+    DkUint32 *pExtensionCount,
+    const char ***pppExtensionNames);
+typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(
+    void *pData,
+    const char **ppExtensionNames);
+typedef DkResult (*DkPfnCreateSurfaceCallback)(
+    void *pData,
+    VkInstance instanceHandle,
+    const VkAllocationCallbacks *pBackEndAllocator,
+    VkSurfaceKHR *pSurfaceHandle);
 
 struct DkWindowSystemIntegrationCallbacks {
     void *pData;

@@ -3,8 +3,8 @@
 
 #include "dekoi.h"
 
-typedef void *(*DkPfnAllocateCallback)(void *, DkSize);
-typedef void (*DkPfnFreeCallback)(void *, void *);
+typedef void *(*DkPfnAllocateCallback)(void *pData, DkSize size);
+typedef void (*DkPfnFreeCallback)(void *pData, void *pMemory);
 
 struct DkAllocationCallbacks {
     void *pData;
