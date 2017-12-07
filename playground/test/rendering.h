@@ -3,22 +3,22 @@
 
 #include "test.h"
 
-typedef enum ShaderStage {
-    SHADER_STAGE_VERTEX = 0,
-    SHADER_STAGE_TESSELLATION_CONTROL = 1,
-    SHADER_STAGE_TESSELLATION_EVALUATION = 2,
-    SHADER_STAGE_GEOMETRY = 3,
-    SHADER_STAGE_FRAGMENT = 4,
-    SHADER_STAGE_COMPUTE = 5
-} ShaderStage;
+typedef enum PlShaderStage {
+    PL_SHADER_STAGE_VERTEX = 0,
+    PL_SHADER_STAGE_TESSELLATION_CONTROL = 1,
+    PL_SHADER_STAGE_TESSELLATION_EVALUATION = 2,
+    PL_SHADER_STAGE_GEOMETRY = 3,
+    PL_SHADER_STAGE_FRAGMENT = 4,
+    PL_SHADER_STAGE_COMPUTE = 5
+} PlShaderStage;
 
-struct ShaderCreateInfo {
-    ShaderStage stage;
+struct PlShaderCreateInfo {
+    PlShaderStage stage;
     const char *pFilePath;
     const char *pEntryPointName;
 };
 
-struct RendererCreateInfo {
+struct PlRendererCreateInfo {
     const char *pApplicationName;
     unsigned int applicationMajorVersion;
     unsigned int applicationMinorVersion;
@@ -26,24 +26,24 @@ struct RendererCreateInfo {
     unsigned int surfaceWidth;
     unsigned int surfaceHeight;
     unsigned int shaderCount;
-    const ShaderCreateInfo *pShaderInfos;
+    const PlShaderCreateInfo *pShaderInfos;
     float clearColor[4];
 };
 
 int
-createRenderer(Window *pWindow,
-               const RendererCreateInfo *pCreateInfo,
-               Renderer **ppRenderer);
+plCreateRenderer(PlWindow *pWindow,
+                 const PlRendererCreateInfo *pCreateInfo,
+                 PlRenderer **ppRenderer);
 
 void
-destroyRenderer(Window *pWindow, Renderer *pRenderer);
+plDestroyRenderer(PlWindow *pWindow, PlRenderer *pRenderer);
 
 int
-resizeRendererSurface(Renderer *pRenderer,
-                      unsigned int width,
-                      unsigned int height);
+plResizeRendererSurface(PlRenderer *pRenderer,
+                        unsigned int width,
+                        unsigned int height);
 
 int
-drawRendererImage(Renderer *pRenderer);
+plDrawRendererImage(PlRenderer *pRenderer);
 
 #endif /* DEKOI_PLAYGROUND_TEST_RENDERING_H */

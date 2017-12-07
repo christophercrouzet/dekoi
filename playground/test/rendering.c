@@ -11,17 +11,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Renderer {
+struct PlRenderer {
     DkRenderer *pHandle;
 };
 
 static int
-createShaderCode(const char *pFilePath,
-                 DkSize *pShaderCodeSize,
-                 DkUint32 **ppShaderCode)
+plCreateShaderCode(const char *pFilePath,
+                   DkSize *pShaderCodeSize,
+                   DkUint32 **ppShaderCode)
 {
     int out;
-    File file;
+    PlFile file;
 
     assert(pFilePath != NULL);
     assert(pShaderCodeSize != NULL);
@@ -29,12 +29,12 @@ createShaderCode(const char *pFilePath,
 
     out = 0;
 
-    if (openFile(&file, pFilePath, "rb")) {
+    if (plOpenFile(&file, pFilePath, "rb")) {
         out = 1;
         goto exit;
     }
 
-    if (getFileSize(&file, pShaderCodeSize)) {
+    if (plGetFileSize(&file, pShaderCodeSize)) {
         out = 1;
         goto file_closing;
     }
@@ -50,7 +50,7 @@ createShaderCode(const char *pFilePath,
         goto file_closing;
     }
 
-    if (readFile(&file, *pShaderCodeSize, (void *)*ppShaderCode)) {
+    if (plReadFile(&file, *pShaderCodeSize, (void *)*ppShaderCode)) {
         out = 1;
         goto code_undo;
     }
@@ -63,7 +63,7 @@ code_undo:
 cleanup:;
 
 file_closing:
-    if (closeFile(&file)) {
+    if (plCloseFile(&file)) {
         out = 1;
     }
 
@@ -72,7 +72,7 @@ exit:
 }
 
 static void
-destroyShaderCode(DkUint32 *pShaderCode)
+plDestroyShaderCode(DkUint32 *pShaderCode)
 {
     assert(pShaderCode != NULL);
 
@@ -80,20 +80,20 @@ destroyShaderCode(DkUint32 *pShaderCode)
 }
 
 static DkShaderStage
-dkpTranslateShaderStage(ShaderStage shaderStage)
+plTranslateShaderStage(PlShaderStage shaderStage)
 {
     switch (shaderStage) {
-        case SHADER_STAGE_VERTEX:
+        case PL_SHADER_STAGE_VERTEX:
             return DK_SHADER_STAGE_VERTEX;
-        case SHADER_STAGE_TESSELLATION_CONTROL:
+        case PL_SHADER_STAGE_TESSELLATION_CONTROL:
             return DK_SHADER_STAGE_TESSELLATION_CONTROL;
-        case SHADER_STAGE_TESSELLATION_EVALUATION:
+        case PL_SHADER_STAGE_TESSELLATION_EVALUATION:
             return DK_SHADER_STAGE_TESSELLATION_EVALUATION;
-        case SHADER_STAGE_GEOMETRY:
+        case PL_SHADER_STAGE_GEOMETRY:
             return DK_SHADER_STAGE_GEOMETRY;
-        case SHADER_STAGE_FRAGMENT:
+        case PL_SHADER_STAGE_FRAGMENT:
             return DK_SHADER_STAGE_FRAGMENT;
-        case SHADER_STAGE_COMPUTE:
+        case PL_SHADER_STAGE_COMPUTE:
             return DK_SHADER_STAGE_COMPUTE;
         default:
             assert(0);
@@ -102,9 +102,9 @@ dkpTranslateShaderStage(ShaderStage shaderStage)
 }
 
 int
-createRenderer(Window *pWindow,
-               const RendererCreateInfo *pCreateInfo,
-               Renderer **ppRenderer)
+plCreateRenderer(PlWindow *pWindow,
+                 const PlRendererCreateInfo *pCreateInfo,
+                 PlRenderer **ppRenderer)
 {
     int out;
     unsigned int i;
@@ -118,7 +118,7 @@ createRenderer(Window *pWindow,
 
     out = 0;
 
-    getWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
+    plGetWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
 
     if (pCreateInfo->shaderCount > 0) {
         pShaderInfos = (DkShaderCreateInfo *)malloc(sizeof *pShaderInfos
@@ -137,15 +137,15 @@ createRenderer(Window *pWindow,
             DkSize codeSize;
             DkUint32 *pCode;
 
-            if (createShaderCode(pCreateInfo->pShaderInfos[i].pFilePath,
-                                 &codeSize,
-                                 &pCode)) {
+            if (plCreateShaderCode(pCreateInfo->pShaderInfos[i].pFilePath,
+                                   &codeSize,
+                                   &pCode)) {
                 out = 1;
                 goto shader_infos_cleanup;
             }
 
             pShaderInfos[i].stage
-                = dkpTranslateShaderStage(pCreateInfo->pShaderInfos[i].stage);
+                = plTranslateShaderStage(pCreateInfo->pShaderInfos[i].stage);
             pShaderInfos[i].codeSize = codeSize;
             pShaderInfos[i].pCode = pCode;
             pShaderInfos[i].pEntryPointName
@@ -173,7 +173,7 @@ createRenderer(Window *pWindow,
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
     backEndInfo.pBackEndAllocator = NULL;
 
-    *ppRenderer = (Renderer *)malloc(sizeof **ppRenderer);
+    *ppRenderer = (PlRenderer *)malloc(sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
         fprintf(stderr, "failed to allocate the renderer\n");
         out = 1;
@@ -186,7 +186,7 @@ createRenderer(Window *pWindow,
         goto renderer_undo;
     }
 
-    if (bindWindowRenderer(pWindow, *ppRenderer)) {
+    if (plBindWindowRenderer(pWindow, *ppRenderer)) {
         out = 1;
         goto renderer_undo;
     }
@@ -202,7 +202,7 @@ cleanup:;
 shader_infos_cleanup:
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
         if (pShaderInfos[i].pCode != NULL) {
-            destroyShaderCode(pShaderInfos[i].pCode);
+            plDestroyShaderCode(pShaderInfos[i].pCode);
         }
     }
 
@@ -213,21 +213,21 @@ exit:
 }
 
 void
-destroyRenderer(Window *pWindow, Renderer *pRenderer)
+plDestroyRenderer(PlWindow *pWindow, PlRenderer *pRenderer)
 {
     assert(pWindow != NULL);
     assert(pRenderer != NULL);
     assert(pRenderer->pHandle != NULL);
 
-    bindWindowRenderer(pWindow, NULL);
+    plBindWindowRenderer(pWindow, NULL);
     dkDestroyRenderer(pRenderer->pHandle);
     free(pRenderer);
 }
 
 int
-resizeRendererSurface(Renderer *pRenderer,
-                      unsigned int width,
-                      unsigned int height)
+plResizeRendererSurface(PlRenderer *pRenderer,
+                        unsigned int width,
+                        unsigned int height)
 {
     assert(pRenderer != NULL);
 
@@ -241,7 +241,7 @@ resizeRendererSurface(Renderer *pRenderer,
 }
 
 int
-drawRendererImage(Renderer *pRenderer)
+plDrawRendererImage(PlRenderer *pRenderer)
 {
     assert(pRenderer != NULL);
 

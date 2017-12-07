@@ -6,21 +6,21 @@
 #include <stddef.h>
 #include <stdio.h>
 
-typedef struct File {
+typedef struct PlFile {
     FILE *pHandle;
     const char *pPath;
-} File;
+} PlFile;
 
 int
-openFile(File *pFile, const char *pPath, const char *pMode);
+plOpenFile(PlFile *pFile, const char *pPath, const char *pMode);
 
 int
-getFileSize(File *pFile, size_t *pSize);
+plGetFileSize(PlFile *pFile, size_t *pSize);
 
 int
-readFile(File *pFile, size_t size, void *pBuffer);
+plReadFile(PlFile *pFile, size_t size, void *pBuffer);
 
 int
-closeFile(File *pFile);
+plCloseFile(PlFile *pFile);
 
 #endif /* DEKOI_PLAYGROUND_TEST_IO_H */

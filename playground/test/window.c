@@ -15,37 +15,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct WindowSystemIntegrationCallbacksData {
+typedef struct PlWindowSystemIntegrationCallbacksData {
     GLFWwindow *pWindowHandle;
-} WindowSystemIntegrationCallbacksData;
+} PlWindowSystemIntegrationCallbacksData;
 
-struct Window {
+struct PlWindow {
     GLFWwindow *pHandle;
     DkWindowSystemIntegrationCallbacks windowSystemIntegrator;
-    Renderer *pRenderer;
+    PlRenderer *pRenderer;
 };
 
 void
-onFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
+plOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 {
-    Window *pWindow;
+    PlWindow *pWindow;
 
     assert(pWindowHandle != NULL);
 
-    pWindow = (Window *)glfwGetWindowUserPointer(pWindowHandle);
-    resizeRendererSurface(
+    pWindow = (PlWindow *)glfwGetWindowUserPointer(pWindowHandle);
+    plResizeRendererSurface(
         pWindow->pRenderer, (unsigned int)width, (unsigned int)height);
 }
 
 DkResult
-createVulkanInstanceExtensionNames(void *pData,
-                                   DkUint32 *pExtensionCount,
-                                   const char ***pppExtensionNames)
+plCreateVulkanInstanceExtensionNames(void *pData,
+                                     DkUint32 *pExtensionCount,
+                                     const char ***pppExtensionNames)
 {
     assert(pExtensionCount != NULL);
     assert(pppExtensionNames != NULL);
 
-    UNUSED(pData);
+    PL_UNUSED(pData);
 
     *pppExtensionNames
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
@@ -59,19 +59,20 @@ createVulkanInstanceExtensionNames(void *pData,
 }
 
 void
-destroyVulkanInstanceExtensionNames(void *pData, const char **ppExtensionNames)
+plDestroyVulkanInstanceExtensionNames(void *pData,
+                                      const char **ppExtensionNames)
 {
     assert(ppExtensionNames != NULL);
 
-    UNUSED(pData);
-    UNUSED(ppExtensionNames);
+    PL_UNUSED(pData);
+    PL_UNUSED(ppExtensionNames);
 }
 
 DkResult
-createVulkanSurface(void *pData,
-                    VkInstance instanceHandle,
-                    const VkAllocationCallbacks *pBackEndAllocator,
-                    VkSurfaceKHR *pSurfaceHandle)
+plCreateVulkanSurface(void *pData,
+                      VkInstance instanceHandle,
+                      const VkAllocationCallbacks *pBackEndAllocator,
+                      VkSurfaceKHR *pSurfaceHandle)
 {
     assert(pData != NULL);
     assert(instanceHandle != NULL);
@@ -79,7 +80,7 @@ createVulkanSurface(void *pData,
 
     if (glfwCreateWindowSurface(
             instanceHandle,
-            ((WindowSystemIntegrationCallbacksData *)pData)->pWindowHandle,
+            ((PlWindowSystemIntegrationCallbacksData *)pData)->pWindowHandle,
             pBackEndAllocator,
             pSurfaceHandle)
         != VK_SUCCESS) {
@@ -91,12 +92,12 @@ createVulkanSurface(void *pData,
 }
 
 int
-createWindow(Application *pApplication,
-             const WindowCreateInfo *pCreateInfo,
-             Window **ppWindow)
+plCreateWindow(PlApplication *pApplication,
+               const PlWindowCreateInfo *pCreateInfo,
+               PlWindow **ppWindow)
 {
     int out;
-    WindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
+    PlWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
@@ -104,7 +105,7 @@ createWindow(Application *pApplication,
 
     out = 0;
 
-    *ppWindow = (Window *)malloc(sizeof **ppWindow);
+    *ppWindow = (PlWindow *)malloc(sizeof **ppWindow);
     if (*ppWindow == NULL) {
         fprintf(stderr, "failed to allocate the window\n");
         out = 1;
@@ -131,7 +132,7 @@ createWindow(Application *pApplication,
     }
 
     pWindowSystemIntegratorData
-        = (WindowSystemIntegrationCallbacksData *)malloc(
+        = (PlWindowSystemIntegrationCallbacksData *)malloc(
             sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
         fprintf(stderr,
@@ -145,17 +146,18 @@ createWindow(Application *pApplication,
     (*ppWindow)->windowSystemIntegrator.pData
         = (void *)pWindowSystemIntegratorData;
     (*ppWindow)->windowSystemIntegrator.pfnCreateInstanceExtensionNames
-        = createVulkanInstanceExtensionNames;
+        = plCreateVulkanInstanceExtensionNames;
     (*ppWindow)->windowSystemIntegrator.pfnDestroyInstanceExtensionNames
-        = destroyVulkanInstanceExtensionNames;
-    (*ppWindow)->windowSystemIntegrator.pfnCreateSurface = createVulkanSurface;
+        = plDestroyVulkanInstanceExtensionNames;
+    (*ppWindow)->windowSystemIntegrator.pfnCreateSurface
+        = plCreateVulkanSurface;
 
     glfwSetWindowUserPointer((*ppWindow)->pHandle, *ppWindow);
 
     glfwSetFramebufferSizeCallback((*ppWindow)->pHandle,
-                                   onFramebufferSizeChanged);
+                                   plOnFramebufferSizeChanged);
 
-    if (bindApplicationWindow(pApplication, *ppWindow)) {
+    if (plBindApplicationWindow(pApplication, *ppWindow)) {
         out = 1;
         goto window_renderer_callbacks_data_undo;
     }
@@ -180,13 +182,13 @@ exit:
 }
 
 void
-destroyWindow(Application *pApplication, Window *pWindow)
+plDestroyWindow(PlApplication *pApplication, PlWindow *pWindow)
 {
     assert(pApplication != NULL);
     assert(pWindow != NULL);
     assert(pWindow->pHandle != NULL);
 
-    bindApplicationWindow(pApplication, NULL);
+    plBindApplicationWindow(pApplication, NULL);
     free(pWindow->windowSystemIntegrator.pData);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
@@ -194,8 +196,8 @@ destroyWindow(Application *pApplication, Window *pWindow)
 }
 
 void
-getWindowSystemIntegrator(
-    Window *pWindow,
+plGetWindowSystemIntegrator(
+    PlWindow *pWindow,
     const DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator)
 {
     assert(pWindow != NULL);
@@ -205,7 +207,7 @@ getWindowSystemIntegrator(
 }
 
 int
-bindWindowRenderer(Window *pWindow, Renderer *pRenderer)
+plBindWindowRenderer(PlWindow *pWindow, PlRenderer *pRenderer)
 {
     assert(pWindow != NULL);
 
@@ -214,7 +216,7 @@ bindWindowRenderer(Window *pWindow, Renderer *pRenderer)
 }
 
 void
-getWindowCloseFlag(const Window *pWindow, int *pCloseFlag)
+plGetWindowCloseFlag(const PlWindow *pWindow, int *pCloseFlag)
 {
     assert(pWindow != NULL);
     assert(pWindow->pHandle != NULL);
@@ -224,21 +226,21 @@ getWindowCloseFlag(const Window *pWindow, int *pCloseFlag)
 }
 
 int
-pollWindowEvents(const Window *pWindow)
+plPollWindowEvents(const PlWindow *pWindow)
 {
     assert(pWindow != NULL);
-    UNUSED(pWindow);
+    PL_UNUSED(pWindow);
 
     glfwPollEvents();
     return 0;
 }
 
 int
-renderWindowImage(const Window *pWindow)
+plRenderWindowImage(const PlWindow *pWindow)
 {
     assert(pWindow != NULL);
 
-    if (drawRendererImage(pWindow->pRenderer)) {
+    if (plDrawRendererImage(pWindow->pRenderer)) {
         return 1;
     }
 

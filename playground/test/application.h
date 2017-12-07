@@ -3,7 +3,7 @@
 
 #include "test.h"
 
-struct ApplicationCreateInfo {
+struct PlApplicationCreateInfo {
     const char *pName;
     unsigned int majorVersion;
     unsigned int minorVersion;
@@ -11,16 +11,16 @@ struct ApplicationCreateInfo {
 };
 
 int
-createApplication(const ApplicationCreateInfo *pCreateInfo,
-                  Application **ppApplication);
+plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
+                    PlApplication **ppApplication);
 
 void
-destroyApplication(Application *pApplication);
+plDestroyApplication(PlApplication *pApplication);
 
 int
-bindApplicationWindow(Application *pApplication, Window *pWindow);
+plBindApplicationWindow(PlApplication *pApplication, PlWindow *pWindow);
 
 int
-runApplication(Application *pApplication);
+plRunApplication(PlApplication *pApplication);
 
 #endif /* DEKOI_PLAYGROUND_TEST_APPLICATION_H */

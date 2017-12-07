@@ -4,7 +4,7 @@
 #include <errno.h>
 
 int
-openFile(File *pFile, const char *pPath, const char *pMode)
+plOpenFile(PlFile *pFile, const char *pPath, const char *pMode)
 {
     assert(pFile != NULL);
     assert(pPath != NULL);
@@ -23,7 +23,7 @@ openFile(File *pFile, const char *pPath, const char *pMode)
 }
 
 int
-getFileSize(File *pFile, size_t *pSize)
+plGetFileSize(PlFile *pFile, size_t *pSize)
 {
     int out;
     fpos_t position;
@@ -78,7 +78,7 @@ exit:
 }
 
 int
-readFile(File *pFile, size_t size, void *pBuffer)
+plReadFile(PlFile *pFile, size_t size, void *pBuffer)
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
@@ -93,7 +93,7 @@ readFile(File *pFile, size_t size, void *pBuffer)
 }
 
 int
-closeFile(File *pFile)
+plCloseFile(PlFile *pFile)
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);

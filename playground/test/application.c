@@ -7,23 +7,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Application {
+struct PlApplication {
     const char *pName;
     unsigned int majorVersion;
     unsigned int minorVersion;
     unsigned int patchVersion;
-    Window *pWindow;
+    PlWindow *pWindow;
     int stopFlag;
 };
 
 int
-createApplication(const ApplicationCreateInfo *pCreateInfo,
-                  Application **ppApplication)
+plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
+                    PlApplication **ppApplication)
 {
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
 
-    *ppApplication = (Application *)malloc(sizeof **ppApplication);
+    *ppApplication = (PlApplication *)malloc(sizeof **ppApplication);
     if (*ppApplication == NULL) {
         fprintf(stderr, "failed to allocate the application\n");
         return 1;
@@ -38,7 +38,7 @@ createApplication(const ApplicationCreateInfo *pCreateInfo,
 }
 
 void
-destroyApplication(Application *pApplication)
+plDestroyApplication(PlApplication *pApplication)
 {
     assert(pApplication != NULL);
 
@@ -46,7 +46,7 @@ destroyApplication(Application *pApplication)
 }
 
 int
-bindApplicationWindow(Application *pApplication, Window *pWindow)
+plBindApplicationWindow(PlApplication *pApplication, PlWindow *pWindow)
 {
     assert(pApplication != NULL);
 
@@ -55,19 +55,19 @@ bindApplicationWindow(Application *pApplication, Window *pWindow)
 }
 
 int
-runApplication(Application *pApplication)
+plRunApplication(PlApplication *pApplication)
 {
     assert(pApplication != NULL);
     assert(pApplication->pWindow != NULL);
 
     while (1) {
-        pollWindowEvents(pApplication->pWindow);
-        getWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
+        plPollWindowEvents(pApplication->pWindow);
+        plGetWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
         if (pApplication->stopFlag) {
             break;
         }
 
-        if (renderWindowImage(pApplication->pWindow)) {
+        if (plRenderWindowImage(pApplication->pWindow)) {
             return 1;
         }
     }

@@ -5,35 +5,35 @@
 
 struct DkWindowSystemIntegrationCallbacks;
 
-struct WindowCreateInfo {
+struct PlWindowCreateInfo {
     unsigned int width;
     unsigned int height;
     const char *title;
 };
 
 int
-createWindow(Application *pApplication,
-             const WindowCreateInfo *pCreateInfo,
-             Window **ppWindow);
+plCreateWindow(PlApplication *pApplication,
+               const PlWindowCreateInfo *pCreateInfo,
+               PlWindow **ppWindow);
 
 void
-destroyWindow(Application *pApplication, Window *pWindow);
+plDestroyWindow(PlApplication *pApplication, PlWindow *pWindow);
 
 void
-getWindowSystemIntegrator(
-    Window *pWindow,
+plGetWindowSystemIntegrator(
+    PlWindow *pWindow,
     const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator);
 
 int
-bindWindowRenderer(Window *pWindow, Renderer *pRenderer);
+plBindWindowRenderer(PlWindow *pWindow, PlRenderer *pRenderer);
 
 void
-getWindowCloseFlag(const Window *pWindow, int *pCloseFlag);
+plGetWindowCloseFlag(const PlWindow *pWindow, int *pCloseFlag);
 
 int
-pollWindowEvents(const Window *pWindow);
+plPollWindowEvents(const PlWindow *pWindow);
 
 int
-renderWindowImage(const Window *pWindow);
+plRenderWindowImage(const PlWindow *pWindow);
 
 #endif /* DEKOI_PLAYGROUND_TEST_WINDOW_H */

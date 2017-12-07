@@ -1,14 +1,14 @@
 #ifndef DEKOI_PLAYGROUND_TEST_TEST_H
 #define DEKOI_PLAYGROUND_TEST_TEST_H
 
-#define UNUSED(x) (void)(x)
+#define PL_UNUSED(x) (void)(x)
 
-typedef struct Application Application;
-typedef struct ApplicationCreateInfo ApplicationCreateInfo;
-typedef struct Renderer Renderer;
-typedef struct RendererCreateInfo RendererCreateInfo;
-typedef struct ShaderCreateInfo ShaderCreateInfo;
-typedef struct Window Window;
-typedef struct WindowCreateInfo WindowCreateInfo;
+typedef struct PlApplication PlApplication;
+typedef struct PlApplicationCreateInfo PlApplicationCreateInfo;
+typedef struct PlRenderer PlRenderer;
+typedef struct PlRendererCreateInfo PlRendererCreateInfo;
+typedef struct PlShaderCreateInfo PlShaderCreateInfo;
+typedef struct PlWindow PlWindow;
+typedef struct PlWindowCreateInfo PlWindowCreateInfo;
 
 #endif /* DEKOI_PLAYGROUND_TEST_TEST_H */
