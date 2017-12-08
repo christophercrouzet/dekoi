@@ -20,7 +20,7 @@ void
 plDestroyWindow(PlApplication *pApplication, PlWindow *pWindow);
 
 void
-plGetWindowSystemIntegrator(
+plGetDekoiWindowSystemIntegrator(
     PlWindow *pWindow,
     const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator);
 

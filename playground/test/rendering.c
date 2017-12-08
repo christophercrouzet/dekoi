@@ -119,7 +119,7 @@ plCreateRenderer(PlWindow *pWindow,
 
     out = 0;
 
-    plGetWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
+    plGetDekoiWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
 
     if (pCreateInfo->shaderCount > 0) {
         pShaderInfos = (DkShaderCreateInfo *)malloc(sizeof *pShaderInfos
