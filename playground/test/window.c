@@ -40,6 +40,7 @@ plOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 
 static DkResult
 plCreateVulkanInstanceExtensionNames(void *pData,
+                                     const DkLoggingCallbacks *pLogger,
                                      DkUint32 *pExtensionCount,
                                      const char ***pppExtensionNames)
 {
@@ -47,6 +48,7 @@ plCreateVulkanInstanceExtensionNames(void *pData,
     assert(pppExtensionNames != NULL);
 
     PL_UNUSED(pData);
+    PL_UNUSED(pLogger);
 
     *pppExtensionNames
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
@@ -61,11 +63,13 @@ plCreateVulkanInstanceExtensionNames(void *pData,
 
 static void
 plDestroyVulkanInstanceExtensionNames(void *pData,
+                                      const DkLoggingCallbacks *pLogger,
                                       const char **ppExtensionNames)
 {
     assert(ppExtensionNames != NULL);
 
     PL_UNUSED(pData);
+    PL_UNUSED(pLogger);
     PL_UNUSED(ppExtensionNames);
 }
 
@@ -73,11 +77,14 @@ static DkResult
 plCreateVulkanSurface(void *pData,
                       VkInstance instanceHandle,
                       const VkAllocationCallbacks *pBackEndAllocator,
+                      const DkLoggingCallbacks *pLogger,
                       VkSurfaceKHR *pSurfaceHandle)
 {
     assert(pData != NULL);
     assert(instanceHandle != NULL);
     assert(pSurfaceHandle != NULL);
+
+    PL_UNUSED(pLogger);
 
     if (glfwCreateWindowSurface(
             instanceHandle,

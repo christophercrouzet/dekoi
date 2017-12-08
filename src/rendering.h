@@ -18,15 +18,18 @@ typedef struct VkSurfaceKHR_T *VkSurfaceKHR;
 
 typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
     void *pData,
+    const DkLoggingCallbacks *pLogger,
     DkUint32 *pExtensionCount,
     const char ***pppExtensionNames);
 typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(
     void *pData,
+    const DkLoggingCallbacks *pLogger,
     const char **ppExtensionNames);
 typedef DkResult (*DkPfnCreateSurfaceCallback)(
     void *pData,
     VkInstance instanceHandle,
     const VkAllocationCallbacks *pBackEndAllocator,
+    const DkLoggingCallbacks *pLogger,
     VkSurfaceKHR *pSurfaceHandle);
 
 struct DkWindowSystemIntegrationCallbacks {

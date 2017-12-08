@@ -310,6 +310,7 @@ dkpCreateInstanceExtensionNames(
         *pppExtensionNames = NULL;
     } else if (pWindowSystemIntegrator->pfnCreateInstanceExtensionNames(
                    pWindowSystemIntegrator->pData,
+                   pLogger,
                    (DkUint32 *)pExtensionCount,
                    pppExtensionNames)
                != DK_SUCCESS) {
@@ -335,7 +336,7 @@ dkpCreateInstanceExtensionNames(
 
         if (pWindowSystemIntegrator != NULL) {
             pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
-                pWindowSystemIntegrator->pData, *pppExtensionNames);
+                pWindowSystemIntegrator->pData, pLogger, *pppExtensionNames);
         }
 
         *pExtensionCount += 1;
@@ -349,7 +350,8 @@ static void
 dkpDestroyInstanceExtensionNames(
     const char **ppExtensionNames,
     const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator,
-    const DkAllocationCallbacks *pAllocator)
+    const DkAllocationCallbacks *pAllocator,
+    const DkLoggingCallbacks *pLogger)
 {
     DKP_ASSERT(pAllocator != NULL);
 
@@ -358,7 +360,7 @@ dkpDestroyInstanceExtensionNames(
     } else {
         if (pWindowSystemIntegrator != NULL) {
             pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
-                pWindowSystemIntegrator->pData, ppExtensionNames);
+                pWindowSystemIntegrator->pData, pLogger, ppExtensionNames);
         }
     }
 }
@@ -570,7 +572,7 @@ dkpCreateInstance(
 
 extension_names_cleanup:
     dkpDestroyInstanceExtensionNames(
-        ppExtensionNames, pWindowSystemIntegrator, pAllocator);
+        ppExtensionNames, pWindowSystemIntegrator, pAllocator, pLogger);
 
 layer_names_cleanup:
     dkpDestroyInstanceLayerNames(ppLayerNames, pAllocator);
@@ -696,6 +698,7 @@ dkpCreateSurface(
             pWindowSystemIntegrator->pData,
             instanceHandle,
             pBackEndAllocator,
+            pLogger,
             pSurfaceHandle)
         != DK_SUCCESS) {
         DKP_ERROR_0(pLogger,
