@@ -33,6 +33,7 @@ struct PlRendererCreateInfo {
 int
 plCreateRenderer(PlWindow *pWindow,
                  const PlRendererCreateInfo *pCreateInfo,
+                 const PlLoggingCallbacks *pLogger,
                  PlRenderer **ppRenderer);
 
 void

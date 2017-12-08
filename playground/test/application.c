@@ -1,11 +1,11 @@
 #include "application.h"
 
+#include "logging.h"
 #include "test.h"
 #include "window.h"
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 struct PlApplication {
@@ -19,6 +19,7 @@ struct PlApplication {
 
 int
 plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
+                    const PlLoggingCallbacks *pLogger,
                     PlApplication **ppApplication)
 {
     assert(pCreateInfo != NULL);
@@ -26,7 +27,7 @@ plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
 
     *ppApplication = (PlApplication *)malloc(sizeof **ppApplication);
     if (*ppApplication == NULL) {
-        fprintf(stderr, "failed to allocate the application\n");
+        PL_ERROR_0(pLogger, "failed to allocate the application\n");
         return 1;
     }
 

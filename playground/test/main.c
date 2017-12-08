@@ -1,4 +1,5 @@
 #include "application.h"
+#include "logging.h"
 #include "rendering.h"
 #include "test.h"
 #include "window.h"
@@ -18,7 +19,8 @@ const PlShaderCreateInfo pShaderInfos[]
 const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 
 int
-plSetup(PlApplication **ppApplication,
+plSetup(const PlLoggingCallbacks *pLogger,
+        PlApplication **ppApplication,
         PlWindow **ppWindow,
         PlRenderer **ppRenderer)
 {
@@ -38,7 +40,7 @@ plSetup(PlApplication **ppApplication,
     applicationInfo.minorVersion = minorVersion;
     applicationInfo.patchVersion = patchVersion;
 
-    if (plCreateApplication(&applicationInfo, ppApplication)) {
+    if (plCreateApplication(&applicationInfo, pLogger, ppApplication)) {
         out = 1;
         goto exit;
     }
@@ -47,7 +49,7 @@ plSetup(PlApplication **ppApplication,
     windowInfo.height = height;
     windowInfo.title = pApplicationName;
 
-    if (plCreateWindow(*ppApplication, &windowInfo, ppWindow)) {
+    if (plCreateWindow(*ppApplication, &windowInfo, pLogger, ppWindow)) {
         out = 1;
         goto application_undo;
     }
@@ -65,7 +67,7 @@ plSetup(PlApplication **ppApplication,
     rendererInfo.clearColor[2] = clearColor[2];
     rendererInfo.clearColor[3] = clearColor[3];
 
-    if (plCreateRenderer(*ppWindow, &rendererInfo, ppRenderer)) {
+    if (plCreateRenderer(*ppWindow, &rendererInfo, pLogger, ppRenderer)) {
         out = 1;
         goto window_undo;
     }
@@ -98,13 +100,16 @@ int
 main(void)
 {
     int out;
+    const PlLoggingCallbacks *pLogger;
     PlApplication *pApplication;
     PlWindow *pWindow;
     PlRenderer *pRenderer;
 
     out = 0;
 
-    if (plSetup(&pApplication, &pWindow, &pRenderer)) {
+    plGetDefaultLogger(&pLogger);
+
+    if (plSetup(pLogger, &pApplication, &pWindow, &pRenderer)) {
         out = 1;
         goto exit;
     }

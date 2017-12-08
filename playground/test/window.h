@@ -14,6 +14,7 @@ struct PlWindowCreateInfo {
 int
 plCreateWindow(PlApplication *pApplication,
                const PlWindowCreateInfo *pCreateInfo,
+               const PlLoggingCallbacks *pLogger,
                PlWindow **ppWindow);
 
 void

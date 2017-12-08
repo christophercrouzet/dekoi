@@ -5,6 +5,8 @@
 
 typedef struct PlApplication PlApplication;
 typedef struct PlApplicationCreateInfo PlApplicationCreateInfo;
+typedef struct PlDekoiLoggingCallbacksData PlDekoiLoggingCallbacksData;
+typedef struct PlLoggingCallbacks PlLoggingCallbacks;
 typedef struct PlRenderer PlRenderer;
 typedef struct PlRendererCreateInfo PlRendererCreateInfo;
 typedef struct PlShaderCreateInfo PlShaderCreateInfo;

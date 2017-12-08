@@ -3,6 +3,7 @@
 #include "window.h"
 
 #include "application.h"
+#include "logging.h"
 #include "rendering.h"
 #include "test.h"
 
@@ -13,7 +14,6 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 typedef struct PlWindowSystemIntegrationCallbacksData {
@@ -40,7 +40,7 @@ plOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 
 static DkResult
 plCreateVulkanInstanceExtensionNames(void *pData,
-                                     const DkLoggingCallbacks *pLogger,
+                                     const DkLoggingCallbacks *pDekoiLogger,
                                      DkUint32 *pExtensionCount,
                                      const char ***pppExtensionNames)
 {
@@ -48,13 +48,13 @@ plCreateVulkanInstanceExtensionNames(void *pData,
     assert(pppExtensionNames != NULL);
 
     PL_UNUSED(pData);
-    PL_UNUSED(pLogger);
 
     *pppExtensionNames
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
     if (*pppExtensionNames == NULL) {
-        fprintf(stderr,
-                "could not retrieve the Vulkan instance extension names\n");
+        PL_ERROR_0(
+            ((PlDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
+            "could not retrieve the Vulkan instance extension names\n");
         return DK_ERROR;
     }
 
@@ -63,13 +63,13 @@ plCreateVulkanInstanceExtensionNames(void *pData,
 
 static void
 plDestroyVulkanInstanceExtensionNames(void *pData,
-                                      const DkLoggingCallbacks *pLogger,
+                                      const DkLoggingCallbacks *pDekoiLogger,
                                       const char **ppExtensionNames)
 {
     assert(ppExtensionNames != NULL);
 
     PL_UNUSED(pData);
-    PL_UNUSED(pLogger);
+    PL_UNUSED(pDekoiLogger);
     PL_UNUSED(ppExtensionNames);
 }
 
@@ -77,14 +77,12 @@ static DkResult
 plCreateVulkanSurface(void *pData,
                       VkInstance instanceHandle,
                       const VkAllocationCallbacks *pBackEndAllocator,
-                      const DkLoggingCallbacks *pLogger,
+                      const DkLoggingCallbacks *pDekoiLogger,
                       VkSurfaceKHR *pSurfaceHandle)
 {
     assert(pData != NULL);
     assert(instanceHandle != NULL);
     assert(pSurfaceHandle != NULL);
-
-    PL_UNUSED(pLogger);
 
     if (glfwCreateWindowSurface(
             instanceHandle,
@@ -92,7 +90,9 @@ plCreateVulkanSurface(void *pData,
             pBackEndAllocator,
             pSurfaceHandle)
         != VK_SUCCESS) {
-        fprintf(stderr, "failed to create the Vulkan surface\n");
+        PL_ERROR_0(
+            ((PlDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
+            "failed to create the Vulkan surface\n");
         return DK_ERROR;
     }
 
@@ -102,6 +102,7 @@ plCreateVulkanSurface(void *pData,
 int
 plCreateWindow(PlApplication *pApplication,
                const PlWindowCreateInfo *pCreateInfo,
+               const PlLoggingCallbacks *pLogger,
                PlWindow **ppWindow)
 {
     int out;
@@ -115,13 +116,13 @@ plCreateWindow(PlApplication *pApplication,
 
     *ppWindow = (PlWindow *)malloc(sizeof **ppWindow);
     if (*ppWindow == NULL) {
-        fprintf(stderr, "failed to allocate the window\n");
+        PL_ERROR_0(pLogger, "failed to allocate the window\n");
         out = 1;
         goto exit;
     }
 
     if (glfwInit() != GLFW_TRUE) {
-        fprintf(stderr, "failed to initialize GLFW\n");
+        PL_ERROR_0(pLogger, "failed to initialize GLFW\n");
         out = 1;
         goto window_undo;
     }
@@ -134,7 +135,7 @@ plCreateWindow(PlApplication *pApplication,
                                             NULL,
                                             NULL);
     if ((*ppWindow)->pHandle == NULL) {
-        fprintf(stderr, "failed to create the window\n");
+        PL_ERROR_0(pLogger, "failed to create the window\n");
         out = 1;
         goto glfw_undo;
     }
@@ -143,8 +144,9 @@ plCreateWindow(PlApplication *pApplication,
         = (PlWindowSystemIntegrationCallbacksData *)malloc(
             sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
-        fprintf(stderr,
-                "failed to allocate the window renderer callbacks data\n");
+        PL_ERROR_0(
+            pLogger,
+            "failed to allocate the window system integrator callbacks data\n");
         out = 1;
         goto glfw_window_undo;
     }

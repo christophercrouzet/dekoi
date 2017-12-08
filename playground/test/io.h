@@ -12,15 +12,21 @@ typedef struct PlFile {
 } PlFile;
 
 int
-plOpenFile(PlFile *pFile, const char *pPath, const char *pMode);
+plOpenFile(PlFile *pFile,
+           const char *pPath,
+           const char *pMode,
+           const PlLoggingCallbacks *pLogger);
 
 int
-plGetFileSize(PlFile *pFile, size_t *pSize);
+plGetFileSize(PlFile *pFile, const PlLoggingCallbacks *pLogger, size_t *pSize);
 
 int
-plReadFile(PlFile *pFile, size_t size, void *pBuffer);
+plReadFile(PlFile *pFile,
+           size_t size,
+           const PlLoggingCallbacks *pLogger,
+           void *pBuffer);
 
 int
-plCloseFile(PlFile *pFile);
+plCloseFile(PlFile *pFile, const PlLoggingCallbacks *pLogger);
 
 #endif /* DEKOI_PLAYGROUND_TEST_IO_H */

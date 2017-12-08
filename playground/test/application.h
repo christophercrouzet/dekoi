@@ -12,6 +12,7 @@ struct PlApplicationCreateInfo {
 
 int
 plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
+                    const PlLoggingCallbacks *pLogger,
                     PlApplication **ppApplication);
 
 void

@@ -1,6 +1,7 @@
 #include "rendering.h"
 
 #include "io.h"
+#include "logging.h"
 #include "test.h"
 #include "window.h"
 
@@ -9,15 +10,16 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 struct PlRenderer {
+    DkLoggingCallbacks *pDekoiLogger;
     DkRenderer *pHandle;
 };
 
 static int
 plCreateShaderCode(const char *pFilePath,
+                   const PlLoggingCallbacks *pLogger,
                    DkSize *pShaderCodeSize,
                    DkUint32 **ppShaderCode)
 {
@@ -30,12 +32,12 @@ plCreateShaderCode(const char *pFilePath,
 
     out = 0;
 
-    if (plOpenFile(&file, pFilePath, "rb")) {
+    if (plOpenFile(&file, pFilePath, "rb", pLogger)) {
         out = 1;
         goto exit;
     }
 
-    if (plGetFileSize(&file, pShaderCodeSize)) {
+    if (plGetFileSize(&file, pLogger, pShaderCodeSize)) {
         out = 1;
         goto file_closing;
     }
@@ -44,14 +46,14 @@ plCreateShaderCode(const char *pFilePath,
 
     *ppShaderCode = (DkUint32 *)malloc(*pShaderCodeSize);
     if (*ppShaderCode == NULL) {
-        fprintf(stderr,
-                "failed to allocate the shader code for the file '%s'\n",
-                pFilePath);
+        PL_ERROR_1(pLogger,
+                   "failed to allocate the shader code for the file '%s'\n",
+                   pFilePath);
         out = 1;
         goto file_closing;
     }
 
-    if (plReadFile(&file, *pShaderCodeSize, (void *)*ppShaderCode)) {
+    if (plReadFile(&file, *pShaderCodeSize, pLogger, (void *)*ppShaderCode)) {
         out = 1;
         goto code_undo;
     }
@@ -64,7 +66,7 @@ code_undo:
 cleanup:;
 
 file_closing:
-    if (plCloseFile(&file)) {
+    if (plCloseFile(&file, pLogger)) {
         out = 1;
     }
 
@@ -105,6 +107,7 @@ plTranslateShaderStage(PlShaderStage shaderStage)
 int
 plCreateRenderer(PlWindow *pWindow,
                  const PlRendererCreateInfo *pCreateInfo,
+                 const PlLoggingCallbacks *pLogger,
                  PlRenderer **ppRenderer)
 {
     int out;
@@ -125,7 +128,7 @@ plCreateRenderer(PlWindow *pWindow,
         pShaderInfos = (DkShaderCreateInfo *)malloc(sizeof *pShaderInfos
                                                     * pCreateInfo->shaderCount);
         if (pShaderInfos == NULL) {
-            fprintf(stderr, "failed to allocate the shader infos\n");
+            PL_ERROR_0(pLogger, "failed to allocate the shader infos\n");
             out = 1;
             goto exit;
         }
@@ -139,6 +142,7 @@ plCreateRenderer(PlWindow *pWindow,
             DkUint32 *pCode;
 
             if (plCreateShaderCode(pCreateInfo->pShaderInfos[i].pFilePath,
+                                   pLogger,
                                    &codeSize,
                                    &pCode)) {
                 out = 1;
@@ -176,23 +180,34 @@ plCreateRenderer(PlWindow *pWindow,
 
     *ppRenderer = (PlRenderer *)malloc(sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
-        fprintf(stderr, "failed to allocate the renderer\n");
+        PL_ERROR_0(pLogger, "failed to allocate the renderer\n");
         out = 1;
         goto shader_infos_cleanup;
     }
 
-    if (dkCreateRenderer(&backEndInfo, NULL, NULL, &(*ppRenderer)->pHandle)
-        != DK_SUCCESS) {
+    if (plCreateDekoiLoggingCallbacks(pLogger, &(*ppRenderer)->pDekoiLogger)) {
         out = 1;
         goto renderer_undo;
+    }
+
+    if (dkCreateRenderer(&backEndInfo,
+                         NULL,
+                         (*ppRenderer)->pDekoiLogger,
+                         &(*ppRenderer)->pHandle)
+        != DK_SUCCESS) {
+        out = 1;
+        goto dekoi_logger_undo;
     }
 
     if (plBindWindowRenderer(pWindow, *ppRenderer)) {
         out = 1;
-        goto renderer_undo;
+        goto dekoi_logger_undo;
     }
 
     goto cleanup;
+
+dekoi_logger_undo:
+    plDestroyDekoiLoggingCallbacks((*ppRenderer)->pDekoiLogger);
 
 renderer_undo:
     dkDestroyRenderer((*ppRenderer)->pHandle);
@@ -222,6 +237,7 @@ plDestroyRenderer(PlWindow *pWindow, PlRenderer *pRenderer)
 
     plBindWindowRenderer(pWindow, NULL);
     dkDestroyRenderer(pRenderer->pHandle);
+    plDestroyDekoiLoggingCallbacks(pRenderer->pDekoiLogger);
     free(pRenderer);
 }
 
