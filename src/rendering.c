@@ -617,6 +617,9 @@ static void
 dkpInitializeDebugReportCallbackData(DkpDebugReportCallbackData *pData,
                                      const DkLoggingCallbacks *pLogger)
 {
+    DKP_ASSERT(pData != NULL);
+    DKP_ASSERT(pLogger != NULL);
+
     pData->pLogger = pLogger;
 }
 
