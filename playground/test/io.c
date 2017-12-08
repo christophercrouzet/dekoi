@@ -1,7 +1,11 @@
 #include "io.h"
 
+#include "test.h"
+
 #include <assert.h>
 #include <errno.h>
+#include <stddef.h>
+#include <stdio.h>
 
 int
 plOpenFile(PlFile *pFile, const char *pPath, const char *pMode)

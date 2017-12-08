@@ -1,5 +1,6 @@
 #include "application.h"
 
+#include "test.h"
 #include "window.h"
 
 #include <assert.h>

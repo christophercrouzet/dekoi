@@ -3,6 +3,7 @@
 #include "assert.h"
 #include "dekoi.h"
 
+#include "../dekoi.h"
 #include "../memory.h"
 
 #include <stddef.h>

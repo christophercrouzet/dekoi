@@ -4,6 +4,9 @@
 #include "private/dekoi.h"
 #include "private/memory.h"
 
+#include "dekoi.h"
+#include "memory.h"
+
 #include <vulkan/vulkan.h>
 
 #include <stddef.h>

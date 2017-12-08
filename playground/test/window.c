@@ -4,6 +4,7 @@
 
 #include "application.h"
 #include "rendering.h"
+#include "test.h"
 
 #include <GLFW/glfw3.h>
 #include <dekoi/dekoi>

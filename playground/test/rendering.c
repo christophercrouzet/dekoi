@@ -1,6 +1,7 @@
 #include "rendering.h"
 
 #include "io.h"
+#include "test.h"
 #include "window.h"
 
 #include <dekoi/dekoi>
