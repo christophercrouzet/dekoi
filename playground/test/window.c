@@ -26,7 +26,7 @@ struct PlWindow {
     PlRenderer *pRenderer;
 };
 
-void
+static void
 plOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 {
     PlWindow *pWindow;
@@ -38,7 +38,7 @@ plOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
         pWindow->pRenderer, (unsigned int)width, (unsigned int)height);
 }
 
-DkResult
+static DkResult
 plCreateVulkanInstanceExtensionNames(void *pData,
                                      DkUint32 *pExtensionCount,
                                      const char ***pppExtensionNames)
@@ -59,7 +59,7 @@ plCreateVulkanInstanceExtensionNames(void *pData,
     return DK_SUCCESS;
 }
 
-void
+static void
 plDestroyVulkanInstanceExtensionNames(void *pData,
                                       const char **ppExtensionNames)
 {
@@ -69,7 +69,7 @@ plDestroyVulkanInstanceExtensionNames(void *pData,
     PL_UNUSED(ppExtensionNames);
 }
 
-DkResult
+static DkResult
 plCreateVulkanSurface(void *pData,
                       VkInstance instanceHandle,
                       const VkAllocationCallbacks *pBackEndAllocator,
