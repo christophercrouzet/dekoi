@@ -181,7 +181,7 @@ plCreateRenderer(PlWindow *pWindow,
         goto shader_infos_cleanup;
     }
 
-    if (dkCreateRenderer(&backEndInfo, NULL, &(*ppRenderer)->pHandle)
+    if (dkCreateRenderer(&backEndInfo, NULL, NULL, &(*ppRenderer)->pHandle)
         != DK_SUCCESS) {
         out = 1;
         goto renderer_undo;

@@ -60,6 +60,7 @@ struct DkRendererCreateInfo {
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  const DkAllocationCallbacks *pAllocator,
+                 const DkLoggingCallbacks *pLogger,
                  DkRenderer **ppRenderer);
 
 void

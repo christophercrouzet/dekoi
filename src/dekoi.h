@@ -96,6 +96,7 @@ DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 #define DK_TRUE ((DkBool32)1)
 
 typedef struct DkAllocationCallbacks DkAllocationCallbacks;
+typedef struct DkLoggingCallbacks DkLoggingCallbacks;
 typedef struct DkRenderer DkRenderer;
 typedef struct DkRendererCreateInfo DkRendererCreateInfo;
 typedef struct DkShaderCreateInfo DkShaderCreateInfo;
