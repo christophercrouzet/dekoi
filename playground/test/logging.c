@@ -4,6 +4,12 @@
 
 #include <dekoi/logging>
 
+#ifdef PL_PLATFORM_UNIX
+/* Request the POSIX.1 standard features before including standard headers. */
+#define _POSIX_C_SOURCE 1
+#include <unistd.h>
+#endif
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -114,6 +120,8 @@ plLogHelper(void *pData,
 {
     const char *pLevelName;
     PlAnsiColor levelColor;
+    const char *pLevelColorStart;
+    const char *pLevelColorEnd;
 
     assert(pFile != NULL);
     assert(pFormat != NULL);
@@ -122,13 +130,25 @@ plLogHelper(void *pData,
 
     pLevelName = plGetLogLevelString(level);
     levelColor = plGetLogLevelColor(level);
+
+#ifdef PL_PLATFORM_UNIX
+    if (isatty(fileno(stderr))) {
+        pLevelColorStart = plGetAnsiColorString(levelColor);
+        pLevelColorEnd = plGetAnsiColorString(PL_ANSI_COLOR_RESET);
+    } else {
+        pLevelColorStart = pLevelColorEnd = "";
+    }
+#else
+    pLevelColorStart = pLevelColorEnd = "";
+#endif
+
     fprintf(stderr,
             "%s:%d: %s%s%s: ",
             pFile,
             line,
-            plGetAnsiColorString(levelColor),
+            pLevelColorStart,
             pLevelName,
-            plGetAnsiColorString(PL_ANSI_COLOR_RESET));
+            pLevelColorEnd);
     vfprintf(stderr, pFormat, args);
 }
 
