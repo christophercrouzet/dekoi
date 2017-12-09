@@ -119,7 +119,6 @@ plLogHelper(void *pData,
             va_list args)
 {
     const char *pLevelName;
-    PlAnsiColor levelColor;
     const char *pLevelColorStart;
     const char *pLevelColorEnd;
 
@@ -129,10 +128,12 @@ plLogHelper(void *pData,
     PL_UNUSED(pData);
 
     pLevelName = plGetLogLevelString(level);
-    levelColor = plGetLogLevelColor(level);
 
 #ifdef PL_PLATFORM_UNIX
     if (isatty(fileno(stderr))) {
+        PlAnsiColor levelColor;
+
+        levelColor = plGetLogLevelColor(level);
         pLevelColorStart = plGetAnsiColorString(levelColor);
         pLevelColorEnd = plGetAnsiColorString(PL_ANSI_COLOR_RESET);
     } else {
