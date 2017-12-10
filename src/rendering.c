@@ -34,11 +34,6 @@
 #define DKP_CLAMP(x, low, high) \
     (((x) > (high)) ? (high) : (x) < (low) ? (low) : (x))
 
-typedef enum DkpLogging {
-    DKP_LOGGING_DISABLED = 0,
-    DKP_LOGGING_ENABLED = 1
-} DkpLogging;
-
 typedef enum DkpPresentSupport {
     DKP_PRESENT_SUPPORT_DISABLED = 0,
     DKP_PRESENT_SUPPORT_ENABLED = 1
@@ -1058,7 +1053,7 @@ static DkResult
 dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
                            const VkExtent2D *pDesiredImageExtent,
-                           DkpLogging logging,
+                           DkLogLevel notAvailableErrorLogLevel,
                            const DkAllocationCallbacks *pAllocator,
                            const DkLoggingCallbacks *pLogger,
                            DkpSwapChainProperties *pSwapChainProperties)
@@ -1149,21 +1144,20 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     out = dkpPickSwapChainPresentMode(
         presentModeCount, pPresentModes, &pSwapChainProperties->presentMode);
     if (out != DK_SUCCESS) {
-        if (logging == DKP_LOGGING_ENABLED) {
-            DKP_ERROR_0(pLogger, "could not find a suitable present mode\n");
-        }
-
+        DKP_LOG_0(pLogger,
+                  out == DK_ERROR_NOT_AVAILABLE ? notAvailableErrorLogLevel
+                                                : DK_LOG_LEVEL_ERROR,
+                  "could not find a suitable present mode\n");
         goto present_modes_cleanup;
     }
 
     out = dkpPickSwapChainImageUsage(capabilities,
                                      &pSwapChainProperties->imageUsage);
     if (out != DK_SUCCESS) {
-        if (logging == DKP_LOGGING_ENABLED) {
-            DKP_ERROR_0(pLogger,
-                        "one or more image usage flags are not supported\n");
-        }
-
+        DKP_LOG_0(pLogger,
+                  out == DK_ERROR_NOT_AVAILABLE ? notAvailableErrorLogLevel
+                                                : DK_LOG_LEVEL_ERROR,
+                  "one or more image usage flags are not supported\n");
         goto present_modes_cleanup;
     }
 
@@ -1209,7 +1203,7 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
     result = dkpPickSwapChainProperties(physicalDeviceHandle,
                                         surfaceHandle,
                                         &imageExtent,
-                                        DKP_LOGGING_DISABLED,
+                                        DK_LOG_LEVEL_INFO,
                                         pAllocator,
                                         pLogger,
                                         &swapChainProperties);
@@ -1998,7 +1992,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     if (dkpPickSwapChainProperties(pDevice->physicalHandle,
                                    surfaceHandle,
                                    pDesiredImageExtent,
-                                   DKP_LOGGING_ENABLED,
+                                   DK_LOG_LEVEL_ERROR,
                                    pAllocator,
                                    pLogger,
                                    &swapChainProperties)
