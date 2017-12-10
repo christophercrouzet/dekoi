@@ -69,11 +69,11 @@ ObjCSpaceAfterProperty: true
 ObjCSpaceBeforeProtocolList: true
 PenaltyBreakAssignment: 10
 PenaltyBreakBeforeFirstCallParameter: 1
-PenaltyBreakComment: 20
-PenaltyBreakFirstLessLess: 30
-PenaltyBreakString: 2000
-PenaltyExcessCharacter: 10000
-PenaltyReturnTypeOnItsOwnLine: 1000
+PenaltyBreakComment: 10
+PenaltyBreakFirstLessLess: 10
+PenaltyBreakString: 20
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 0
 PointerAlignment: Right
 ReflowComments: true
 SortIncludes: true

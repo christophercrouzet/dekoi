@@ -47,17 +47,10 @@
            ((pLogger)->pData, level, __FILE__, __LINE__, pFormat, _1, _2, _3))
 
 #define PL_LOG_4(pLogger, level, pFormat, _1, _2, _3, _4) \
-    PL_LOG(pLogger, \
-           level, \
-           ((pLogger)->pData, \
-            level, \
-            __FILE__, \
-            __LINE__, \
-            pFormat, \
-            _1, \
-            _2, \
-            _3, \
-            _4))
+    PL_LOG( \
+        pLogger, \
+        level, \
+        ((pLogger)->pData, level, __FILE__, __LINE__, pFormat, _1, _2, _3, _4))
 
 #define PL_LOG_5(pLogger, level, pFormat, _1, _2, _3, _4, _5) \
     PL_LOG(pLogger, \
@@ -202,17 +195,8 @@
     PL_LOG_7(pLogger, PL_LOG_LEVEL_WARNING, pFormat, _1, _2, _3, _4, _5, _6, _7)
 
 #define PL_WARNING_8(pLogger, pFormat, _1, _2, _3, _4, _5, _6, _7, _8) \
-    PL_LOG_8(pLogger, \
-             PL_LOG_LEVEL_WARNING, \
-             pFormat, \
-             _1, \
-             _2, \
-             _3, \
-             _4, \
-             _5, \
-             _6, \
-             _7, \
-             _8)
+    PL_LOG_8( \
+        pLogger, PL_LOG_LEVEL_WARNING, pFormat, _1, _2, _3, _4, _5, _6, _7, _8)
 
 #define PL_ERROR_0(pLogger, pFormat) \
     PL_LOG_0(pLogger, PL_LOG_LEVEL_ERROR, pFormat)

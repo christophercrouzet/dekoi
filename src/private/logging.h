@@ -47,17 +47,10 @@
         ((pLogger)->pData, level, __FILE__, __LINE__, pFormat, _1, _2, _3))
 
 #define DKP_LOG_4(pLogger, level, pFormat, _1, _2, _3, _4) \
-    DKP_LOG(pLogger, \
-            level, \
-            ((pLogger)->pData, \
-             level, \
-             __FILE__, \
-             __LINE__, \
-             pFormat, \
-             _1, \
-             _2, \
-             _3, \
-             _4))
+    DKP_LOG( \
+        pLogger, \
+        level, \
+        ((pLogger)->pData, level, __FILE__, __LINE__, pFormat, _1, _2, _3, _4))
 
 #define DKP_LOG_5(pLogger, level, pFormat, _1, _2, _3, _4, _5) \
     DKP_LOG(pLogger, \
@@ -203,17 +196,8 @@
         pLogger, DK_LOG_LEVEL_WARNING, pFormat, _1, _2, _3, _4, _5, _6, _7)
 
 #define DKP_WARNING_8(pLogger, pFormat, _1, _2, _3, _4, _5, _6, _7, _8) \
-    DKP_LOG_8(pLogger, \
-              DK_LOG_LEVEL_WARNING, \
-              pFormat, \
-              _1, \
-              _2, \
-              _3, \
-              _4, \
-              _5, \
-              _6, \
-              _7, \
-              _8)
+    DKP_LOG_8( \
+        pLogger, DK_LOG_LEVEL_WARNING, pFormat, _1, _2, _3, _4, _5, _6, _7, _8)
 
 #define DKP_ERROR_0(pLogger, pFormat) \
     DKP_LOG_0(pLogger, DK_LOG_LEVEL_ERROR, pFormat)
