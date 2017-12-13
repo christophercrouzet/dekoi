@@ -1885,7 +1885,7 @@ dkpCreateSwapChainImageViews(const DkpDevice *pDevice,
     out = DK_SUCCESS;
 
     *ppImageViewHandles = (VkImageView *)DKP_ALLOCATE(
-        pAllocator, sizeof *ppImageViewHandles * imageCount);
+        pAllocator, sizeof **ppImageViewHandles * imageCount);
     if (*ppImageViewHandles == NULL) {
         DKP_ERROR_0(pLogger, "failed to allocate the swap chain image views\n");
         out = DK_ERROR_ALLOCATION;
