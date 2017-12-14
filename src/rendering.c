@@ -31,7 +31,7 @@
 #endif
 #endif /* DK_ENABLE_VALIDATION_LAYERS */
 
-#define DKP_CLAMP(x, low, high) \
+#define DKP_CLAMP(x, low, high)                                                \
     (((x) > (high)) ? (high) : (x) < (low) ? (low) : (x))
 
 typedef enum DkpPresentSupport {

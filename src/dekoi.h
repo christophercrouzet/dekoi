@@ -16,7 +16,7 @@
 #define DKP_C_EXTENSION
 #endif
 
-#define DKP_STATIC_ASSERT(x, msg) \
+#define DKP_STATIC_ASSERT(x, msg)                                              \
     typedef char DKP_STATIC_ASSERTION_failed_##msg[(x) ? 1 : -1]
 
 /*

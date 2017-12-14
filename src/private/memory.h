@@ -4,9 +4,9 @@
 #include "../dekoi.h"
 #include "../memory.h"
 
-#define DKP_ALLOCATE(pAllocator, size) \
+#define DKP_ALLOCATE(pAllocator, size)                                         \
     ((pAllocator)->pfnAllocate((pAllocator)->pData, size))
-#define DKP_FREE(pAllocator, pMemory) \
+#define DKP_FREE(pAllocator, pMemory)                                          \
     ((pAllocator)->pfnFree((pAllocator)->pData, pMemory))
 
 void
