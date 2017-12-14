@@ -3182,7 +3182,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     (*ppRenderer)->pAllocator = pAllocator;
-    (*ppRenderer)->pBackEndAllocator = pCreateInfo->pBackEndAllocator;
+    (*ppRenderer)->pBackEndAllocator = NULL;
     (*ppRenderer)->pLogger = pLogger;
     (*ppRenderer)->surfaceExtent.width = (uint32_t)pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t)pCreateInfo->surfaceHeight;

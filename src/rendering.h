@@ -57,7 +57,6 @@ struct DkRendererCreateInfo {
     DkUint32 shaderCount;
     const DkShaderCreateInfo *pShaderInfos;
     DkFloat32 clearColor[4];
-    const VkAllocationCallbacks *pBackEndAllocator;
 };
 
 DkResult

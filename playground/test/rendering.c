@@ -176,7 +176,6 @@ plCreateRenderer(PlWindow *pWindow,
     backEndInfo.clearColor[1] = (DkFloat32)pCreateInfo->clearColor[1];
     backEndInfo.clearColor[2] = (DkFloat32)pCreateInfo->clearColor[2];
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
-    backEndInfo.pBackEndAllocator = NULL;
 
     *ppRenderer = (PlRenderer *)malloc(sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
