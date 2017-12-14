@@ -9,10 +9,21 @@
 #include "logging.h"
 #include "memory.h"
 
+/* Provide a C89-compliant code path to Vulkan's inclusion (no stdint.h) */
+#ifndef DK_USE_STD_FIXED_TYPES
+#define VK_NO_STDINT_H
+typedef DkInt8 int8_t;
+typedef DkUint8 uint8_t;
+typedef DkInt16 int16_t;
+typedef DkUint16 uint16_t;
+typedef DkInt32 int32_t;
+typedef DkUint32 uint32_t;
+typedef DkInt64 int64_t;
+typedef DkUint64 uint64_t;
+#endif
 #include <vulkan/vulkan.h>
 
 #include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 
 #ifndef DK_ENABLE_DEBUG_REPORT
@@ -856,8 +867,8 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
     out = DK_SUCCESS;
 
-    pQueueFamilyIndices->graphics = UINT32_MAX;
-    pQueueFamilyIndices->present = UINT32_MAX;
+    pQueueFamilyIndices->graphics = (uint32_t)-1;
+    pQueueFamilyIndices->present = (uint32_t)-1;
 
     vkGetPhysicalDeviceQueueFamilyProperties(
         physicalDeviceHandle, &propertyCount, NULL);
@@ -906,10 +917,10 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
             }
 
             if (graphicsSupported
-                && pQueueFamilyIndices->graphics == UINT32_MAX) {
+                && pQueueFamilyIndices->graphics == (uint32_t)-1) {
                 pQueueFamilyIndices->graphics = i;
             } else if (presentSupported
-                       && pQueueFamilyIndices->present == UINT32_MAX) {
+                       && pQueueFamilyIndices->present == (uint32_t)-1) {
                 pQueueFamilyIndices->present = i;
             }
         }
@@ -1026,8 +1037,8 @@ dkpPickSwapChainImageExtent(VkSurfaceCapabilitiesKHR capabilities,
     DKP_ASSERT(pDesiredImageExtent != NULL);
     DKP_ASSERT(pImageExtent != NULL);
 
-    if (capabilities.currentExtent.width == UINT32_MAX
-        || capabilities.currentExtent.height == UINT32_MAX) {
+    if (capabilities.currentExtent.width == (uint32_t)-1
+        || capabilities.currentExtent.height == (uint32_t)-1) {
         pImageExtent->width = DKP_CLAMP(pDesiredImageExtent->width,
                                         capabilities.minImageExtent.width,
                                         capabilities.maxImageExtent.width);
@@ -1268,9 +1279,9 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
         return DK_ERROR;
     }
 
-    if (pQueueFamilyIndices->graphics == UINT32_MAX
+    if (pQueueFamilyIndices->graphics == (uint32_t)-1
         || (surfaceHandle != VK_NULL_HANDLE
-            && pQueueFamilyIndices->present == UINT32_MAX)) {
+            && pQueueFamilyIndices->present == (uint32_t)-1)) {
         return DK_SUCCESS;
     }
 
@@ -1552,7 +1563,7 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
 
     queueIndex = 0;
 
-    if (pDevice->queueFamilyIndices.graphics != UINT32_MAX) {
+    if (pDevice->queueFamilyIndices.graphics != (uint32_t)-1) {
         vkGetDeviceQueue(pDevice->logicalHandle,
                          pDevice->queueFamilyIndices.graphics,
                          queueIndex,
@@ -1561,7 +1572,7 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
         pQueues->graphicsHandle = NULL;
     }
 
-    if (pDevice->queueFamilyIndices.present != UINT32_MAX) {
+    if (pDevice->queueFamilyIndices.present != (uint32_t)-1) {
         vkGetDeviceQueue(pDevice->logicalHandle,
                          pDevice->queueFamilyIndices.present,
                          queueIndex,
@@ -3411,7 +3422,7 @@ dkDrawRendererImage(DkRenderer *pRenderer)
     switch (vkAcquireNextImageKHR(
         pRenderer->device.logicalHandle,
         pRenderer->swapChain.handle,
-        UINT64_MAX,
+        (uint64_t)-1,
         pRenderer->pSemaphoreHandles[DKP_SEMAPHORE_ID_IMAGE_ACQUIRED],
         VK_NULL_HANDLE,
         &imageIndex)) {
