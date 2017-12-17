@@ -87,7 +87,7 @@ DKP_STATIC_ASSERT(sizeof(DkInt32) == 4, invalid_int32_type);
 DKP_STATIC_ASSERT(sizeof(DkUint32) == 4, invalid_uint32_type);
 DKP_STATIC_ASSERT(sizeof(DkInt64) == 8, invalid_int64_type);
 DKP_STATIC_ASSERT(sizeof(DkUint64) == 8, invalid_uint64_type);
-DKP_STATIC_ASSERT(sizeof(DkSize) == sizeof(void *), invalid_size_type);
+DKP_STATIC_ASSERT(sizeof(DkSize) == sizeof sizeof(void *), invalid_size_type);
 DKP_STATIC_ASSERT(sizeof(DkFloat32) == 4, invalid_float32_type);
 DKP_STATIC_ASSERT(sizeof(DkFloat64) == 8, invalid_float64_type);
 DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
