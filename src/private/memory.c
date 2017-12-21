@@ -16,6 +16,13 @@ dkpAllocate(void *pData, DkSize size)
     return malloc((size_t)size);
 }
 
+static void *
+dkpReallocate(void *pData, void *pOriginal, DkSize size)
+{
+    DKP_UNUSED(pData);
+    return realloc(pOriginal, (size_t)size);
+}
+
 static void
 dkpFree(void *pData, void *pMemory)
 {
@@ -24,7 +31,7 @@ dkpFree(void *pData, void *pMemory)
 }
 
 static const DkAllocationCallbacks dkpDefaultAllocator
-    = {NULL, dkpAllocate, dkpFree};
+    = {NULL, dkpAllocate, dkpReallocate, dkpFree};
 
 void
 dkpGetDefaultAllocator(const DkAllocationCallbacks **ppAllocator)

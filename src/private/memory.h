@@ -6,6 +6,8 @@
 
 #define DKP_ALLOCATE(pAllocator, size)                                         \
     ((pAllocator)->pfnAllocate((pAllocator)->pData, size))
+#define DKP_REALLOCATE(pAllocator, pOriginal, size)                            \
+    ((pAllocator)->pfnAllocate((pAllocator)->pData, pOriginal, size))
 #define DKP_FREE(pAllocator, pMemory)                                          \
     ((pAllocator)->pfnFree((pAllocator)->pData, pMemory))
 
