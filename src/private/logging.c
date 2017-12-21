@@ -20,10 +20,10 @@ dkpLog(void *pData,
     const char *pLevelName;
     va_list args;
 
+    DKP_UNUSED(pData);
+
     DKP_ASSERT(pFile != NULL);
     DKP_ASSERT(pFormat != NULL);
-
-    DKP_UNUSED(pData);
 
     pLevelName = dkGetLogLevelString(level);
 
