@@ -46,9 +46,9 @@ plCreateShaderCode(const char *pFilePath,
 
     *ppShaderCode = (DkUint32 *)malloc(*pShaderCodeSize);
     if (*ppShaderCode == NULL) {
-        PL_ERROR_1(pLogger,
-                   "failed to allocate the shader code for the file '%s'\n",
-                   pFilePath);
+        PL_LOG_ERROR(pLogger,
+                     "failed to allocate the shader code for the file '%s'\n",
+                     pFilePath);
         out = 1;
         goto file_closing;
     }
@@ -128,7 +128,7 @@ plCreateRenderer(PlWindow *pWindow,
         pShaderInfos = (DkShaderCreateInfo *)malloc(sizeof *pShaderInfos
                                                     * pCreateInfo->shaderCount);
         if (pShaderInfos == NULL) {
-            PL_ERROR_0(pLogger, "failed to allocate the shader infos\n");
+            PL_LOG_ERROR(pLogger, "failed to allocate the shader infos\n");
             out = 1;
             goto exit;
         }
@@ -179,7 +179,7 @@ plCreateRenderer(PlWindow *pWindow,
 
     *ppRenderer = (PlRenderer *)malloc(sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
-        PL_ERROR_0(pLogger, "failed to allocate the renderer\n");
+        PL_LOG_ERROR(pLogger, "failed to allocate the renderer\n");
         out = 1;
         goto shader_infos_cleanup;
     }

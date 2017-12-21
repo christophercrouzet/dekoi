@@ -27,7 +27,7 @@ plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
 
     *ppApplication = (PlApplication *)malloc(sizeof **ppApplication);
     if (*ppApplication == NULL) {
-        PL_ERROR_0(pLogger, "failed to allocate the application\n");
+        PL_LOG_ERROR(pLogger, "failed to allocate the application\n");
         return 1;
     }
 

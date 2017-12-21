@@ -22,7 +22,7 @@ plOpenFile(PlFile *pFile,
     errno = 0;
     pFile->pHandle = fopen(pPath, pMode);
     if (pFile->pHandle == NULL) {
-        PL_ERROR_1(pLogger, "could not open the file '%s'\n", pPath);
+        PL_LOG_ERROR(pLogger, "could not open the file '%s'\n", pPath);
         return 1;
     }
 
@@ -45,28 +45,28 @@ plGetFileSize(PlFile *pFile, const PlLoggingCallbacks *pLogger, size_t *pSize)
 
     errno = 0;
     if (fgetpos(pFile->pHandle, &position) != 0) {
-        PL_ERROR_1(pLogger,
-                   "could not retrieve the current cursor position for the "
-                   "file '%s'\n",
-                   pFile->pPath);
+        PL_LOG_ERROR(pLogger,
+                     "could not retrieve the current cursor position for the "
+                     "file '%s'\n",
+                     pFile->pPath);
         out = 1;
         goto exit;
     }
 
     errno = 0;
     if (fseek(pFile->pHandle, 0, SEEK_END) != 0) {
-        PL_ERROR_1(pLogger,
-                   "could not reach the end of the file '%s'\n",
-                   pFile->pPath);
+        PL_LOG_ERROR(pLogger,
+                     "could not reach the end of the file '%s'\n",
+                     pFile->pPath);
         out = 1;
         goto exit;
     }
 
     size = ftell(pFile->pHandle);
     if (size == EOF) {
-        PL_ERROR_1(pLogger,
-                   "could not retrieve the size of the file '%s'\n",
-                   pFile->pPath);
+        PL_LOG_ERROR(pLogger,
+                     "could not retrieve the size of the file '%s'\n",
+                     pFile->pPath);
         out = 1;
         goto position_restoration;
     }
@@ -76,9 +76,10 @@ plGetFileSize(PlFile *pFile, const PlLoggingCallbacks *pLogger, size_t *pSize)
 position_restoration:
     errno = 0;
     if (fsetpos(pFile->pHandle, &position) != 0) {
-        PL_ERROR_1(pLogger,
-                   "could not restore the cursor position for the file '%s'\n",
-                   pFile->pPath);
+        PL_LOG_ERROR(
+            pLogger,
+            "could not restore the cursor position for the file '%s'\n",
+            pFile->pPath);
         out = 1;
     }
 
@@ -97,7 +98,7 @@ plReadFile(PlFile *pFile,
     assert(pBuffer != NULL);
 
     if (fread(pBuffer, 1, size, pFile->pHandle) != size) {
-        PL_ERROR_1(pLogger, "could not read the file '%s'\n", pFile->pPath);
+        PL_LOG_ERROR(pLogger, "could not read the file '%s'\n", pFile->pPath);
         return 1;
     }
 
@@ -111,7 +112,7 @@ plCloseFile(PlFile *pFile, const PlLoggingCallbacks *pLogger)
     assert(pFile->pHandle != NULL);
 
     if (fclose(pFile->pHandle) == EOF) {
-        PL_ERROR_1(pLogger, "could not close the file '%s'\n", pFile->pPath);
+        PL_LOG_ERROR(pLogger, "could not close the file '%s'\n", pFile->pPath);
         return 1;
     }
 

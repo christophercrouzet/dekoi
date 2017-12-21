@@ -211,15 +211,15 @@ plCreateDekoiLoggingCallbacks(const PlLoggingCallbacks *pLogger,
 
     *ppDekoiLogger = (DkLoggingCallbacks *)malloc(sizeof **ppDekoiLogger);
     if (*ppDekoiLogger == NULL) {
-        PL_ERROR_0(pLogger, "failed to allocate Dekoi's logging callbacks\n");
+        PL_LOG_ERROR(pLogger, "failed to allocate Dekoi's logging callbacks\n");
         out = 1;
         goto exit;
     }
 
     pLoggerData = (PlDekoiLoggingCallbacksData *)malloc(sizeof *pLoggerData);
     if (pLoggerData == NULL) {
-        PL_ERROR_0(pLogger,
-                   "failed to allocate Dekoi's logging callbacks data\n");
+        PL_LOG_ERROR(pLogger,
+                     "failed to allocate Dekoi's logging callbacks data\n");
         out = 1;
         goto dekoi_logger_undo;
     }

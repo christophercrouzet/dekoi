@@ -52,7 +52,7 @@ plCreateVulkanInstanceExtensionNames(void *pData,
     *pppExtensionNames
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
     if (*pppExtensionNames == NULL) {
-        PL_ERROR_0(
+        PL_LOG_ERROR(
             ((PlDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
             "could not retrieve the Vulkan instance extension names\n");
         return DK_ERROR;
@@ -90,7 +90,7 @@ plCreateVulkanSurface(void *pData,
             pBackEndAllocator,
             pSurfaceHandle)
         != VK_SUCCESS) {
-        PL_ERROR_0(
+        PL_LOG_ERROR(
             ((PlDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
             "failed to create the Vulkan surface\n");
         return DK_ERROR;
@@ -116,13 +116,13 @@ plCreateWindow(PlApplication *pApplication,
 
     *ppWindow = (PlWindow *)malloc(sizeof **ppWindow);
     if (*ppWindow == NULL) {
-        PL_ERROR_0(pLogger, "failed to allocate the window\n");
+        PL_LOG_ERROR(pLogger, "failed to allocate the window\n");
         out = 1;
         goto exit;
     }
 
     if (glfwInit() != GLFW_TRUE) {
-        PL_ERROR_0(pLogger, "failed to initialize GLFW\n");
+        PL_LOG_ERROR(pLogger, "failed to initialize GLFW\n");
         out = 1;
         goto window_undo;
     }
@@ -135,7 +135,7 @@ plCreateWindow(PlApplication *pApplication,
                                             NULL,
                                             NULL);
     if ((*ppWindow)->pHandle == NULL) {
-        PL_ERROR_0(pLogger, "failed to create the window\n");
+        PL_LOG_ERROR(pLogger, "failed to create the window\n");
         out = 1;
         goto glfw_undo;
     }
@@ -144,7 +144,7 @@ plCreateWindow(PlApplication *pApplication,
         = (PlWindowSystemIntegrationCallbacksData *)malloc(
             sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
-        PL_ERROR_0(
+        PL_LOG_ERROR(
             pLogger,
             "failed to allocate the window system integrator callbacks data\n");
         out = 1;
