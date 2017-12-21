@@ -9,7 +9,7 @@
 #include "logging.h"
 #include "memory.h"
 
-/* Provide a C89-compliant code path to Vulkan's inclusion (no stdint.h) */
+/* Provide a code path to Vulkan's inclusion without using 'stdint.h' */
 #ifndef DK_USE_STD_FIXED_TYPES
 #define VK_NO_STDINT_H
 typedef DkInt8 int8_t;

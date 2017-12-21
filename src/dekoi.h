@@ -10,19 +10,9 @@
 #define DK_DEBUG
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
-#define DKP_C_EXTENSION __extension__
-#else
-#define DKP_C_EXTENSION
-#endif
-
 #define DKP_STATIC_ASSERT(x, msg)                                              \
     typedef char DKP_STATIC_ASSERTION_failed_##msg[(x) ? 1 : -1]
 
-/*
-   Focus on the common ILP32, LP64 and LLP64 data models.
-   64-bit integer types aren't part of C89 but should be available anyways.
-*/
 #ifdef DK_USE_STD_FIXED_TYPES
 #include <stdint.h>
 typedef int8_t DkInt8;
@@ -34,6 +24,7 @@ typedef uint32_t DkUint32;
 typedef int64_t DkInt64;
 typedef uint64_t DkUint64;
 #else
+/* Focus on the common ILP32, LP64 and LLP64 data models. */
 typedef char DkInt8;
 typedef unsigned char DkUint8;
 typedef short DkInt16;
@@ -49,8 +40,8 @@ typedef unsigned int DkUint32;
 typedef __int64 DkInt64;
 typedef unsigned __int64 DkUint64;
 #else
-DKP_C_EXTENSION typedef long long DkInt64;
-DKP_C_EXTENSION typedef unsigned long long DkUint64;
+typedef long long DkInt64;
+typedef unsigned long long DkUint64;
 #endif
 #endif
 

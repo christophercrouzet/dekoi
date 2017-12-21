@@ -1,5 +1,5 @@
 PROJECT := dekoi
-CFLAGS := -std=c89 \
+CFLAGS := -std=c99 \
           -Wpedantic -Wall -Wextra -Waggregate-return -Wcast-align -Wcast-qual \
           -Wconversion -Wfloat-equal -Wpointer-arith -Wshadow \
           -Wstrict-overflow=5 -Wswitch -Wswitch-default -Wundef \
