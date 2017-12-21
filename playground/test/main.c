@@ -39,8 +39,9 @@ plSetup(const PlLoggingCallbacks *pLogger,
     applicationInfo.majorVersion = majorVersion;
     applicationInfo.minorVersion = minorVersion;
     applicationInfo.patchVersion = patchVersion;
+    applicationInfo.pLogger = pLogger;
 
-    if (plCreateApplication(&applicationInfo, pLogger, ppApplication)) {
+    if (plCreateApplication(&applicationInfo, ppApplication)) {
         out = 1;
         goto exit;
     }
@@ -48,8 +49,9 @@ plSetup(const PlLoggingCallbacks *pLogger,
     windowInfo.width = width;
     windowInfo.height = height;
     windowInfo.title = pApplicationName;
+    windowInfo.pLogger = pLogger;
 
-    if (plCreateWindow(*ppApplication, &windowInfo, pLogger, ppWindow)) {
+    if (plCreateWindow(*ppApplication, &windowInfo, ppWindow)) {
         out = 1;
         goto application_undo;
     }
@@ -66,8 +68,9 @@ plSetup(const PlLoggingCallbacks *pLogger,
     rendererInfo.clearColor[1] = clearColor[1];
     rendererInfo.clearColor[2] = clearColor[2];
     rendererInfo.clearColor[3] = clearColor[3];
+    rendererInfo.pLogger = pLogger;
 
-    if (plCreateRenderer(*ppWindow, &rendererInfo, pLogger, ppRenderer)) {
+    if (plCreateRenderer(*ppWindow, &rendererInfo, ppRenderer)) {
         out = 1;
         goto window_undo;
     }

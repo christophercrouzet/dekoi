@@ -102,15 +102,21 @@ plCreateVulkanSurface(void *pData,
 int
 plCreateWindow(PlApplication *pApplication,
                const PlWindowCreateInfo *pCreateInfo,
-               const PlLoggingCallbacks *pLogger,
                PlWindow **ppWindow)
 {
     int out;
+    const PlLoggingCallbacks *pLogger;
     PlWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
     assert(ppWindow != NULL);
+
+    if (pCreateInfo->pLogger == NULL) {
+        plGetDefaultLogger(&pLogger);
+    } else {
+        pLogger = pCreateInfo->pLogger;
+    }
 
     out = 0;
 

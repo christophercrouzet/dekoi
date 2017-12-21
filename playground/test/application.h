@@ -8,11 +8,11 @@ struct PlApplicationCreateInfo {
     unsigned int majorVersion;
     unsigned int minorVersion;
     unsigned int patchVersion;
+    const PlLoggingCallbacks *pLogger;
 };
 
 int
 plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
-                    const PlLoggingCallbacks *pLogger,
                     PlApplication **ppApplication);
 
 void

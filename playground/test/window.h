@@ -9,12 +9,12 @@ struct PlWindowCreateInfo {
     unsigned int width;
     unsigned int height;
     const char *title;
+    const PlLoggingCallbacks *pLogger;
 };
 
 int
 plCreateWindow(PlApplication *pApplication,
                const PlWindowCreateInfo *pCreateInfo,
-               const PlLoggingCallbacks *pLogger,
                PlWindow **ppWindow);
 
 void

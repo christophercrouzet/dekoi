@@ -107,9 +107,9 @@ typedef struct DkpSwapChain {
 } DkpSwapChain;
 
 struct DkRenderer {
+    const DkLoggingCallbacks *pLogger;
     const DkAllocationCallbacks *pAllocator;
     const VkAllocationCallbacks *pBackEndAllocator;
-    const DkLoggingCallbacks *pLogger;
     VkClearValue clearColor;
     VkInstance instanceHandle;
     VkExtent2D surfaceExtent;
@@ -3154,17 +3154,19 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
 
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
-                 const DkAllocationCallbacks *pAllocator,
-                 const DkLoggingCallbacks *pLogger,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
     unsigned int i;
+    const DkLoggingCallbacks *pLogger;
+    const DkAllocationCallbacks *pAllocator;
     int valid;
     int headless;
 
-    if (pLogger == NULL) {
+    if (pCreateInfo == NULL || pCreateInfo->pLogger == NULL) {
         dkpGetDefaultLogger(&pLogger);
+    } else {
+        pLogger = pCreateInfo->pLogger;
     }
 
     out = DK_SUCCESS;
@@ -3187,8 +3189,10 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto exit;
     }
 
-    if (pAllocator == NULL) {
+    if (pCreateInfo->pAllocator == NULL) {
         dkpGetDefaultAllocator(&pAllocator);
+    } else {
+        pAllocator = pCreateInfo->pAllocator;
     }
 
     headless = pCreateInfo->pWindowSystemIntegrator == NULL;
@@ -3200,9 +3204,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto exit;
     }
 
+    (*ppRenderer)->pLogger = pLogger;
     (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->pBackEndAllocator = NULL;
-    (*ppRenderer)->pLogger = pLogger;
     (*ppRenderer)->surfaceExtent.width = (uint32_t)pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t)pCreateInfo->surfaceHeight;
 

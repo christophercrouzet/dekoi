@@ -19,11 +19,18 @@ struct PlApplication {
 
 int
 plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
-                    const PlLoggingCallbacks *pLogger,
                     PlApplication **ppApplication)
 {
+    const PlLoggingCallbacks *pLogger;
+
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
+
+    if (pCreateInfo->pLogger == NULL) {
+        plGetDefaultLogger(&pLogger);
+    } else {
+        pLogger = pCreateInfo->pLogger;
+    }
 
     *ppApplication = (PlApplication *)malloc(sizeof **ppApplication);
     if (*ppApplication == NULL) {

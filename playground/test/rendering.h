@@ -28,12 +28,12 @@ struct PlRendererCreateInfo {
     unsigned int shaderCount;
     const PlShaderCreateInfo *pShaderInfos;
     float clearColor[4];
+    const PlLoggingCallbacks *pLogger;
 };
 
 int
 plCreateRenderer(PlWindow *pWindow,
                  const PlRendererCreateInfo *pCreateInfo,
-                 const PlLoggingCallbacks *pLogger,
                  PlRenderer **ppRenderer);
 
 void

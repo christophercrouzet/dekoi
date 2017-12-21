@@ -107,11 +107,11 @@ plTranslateShaderStage(PlShaderStage shaderStage)
 int
 plCreateRenderer(PlWindow *pWindow,
                  const PlRendererCreateInfo *pCreateInfo,
-                 const PlLoggingCallbacks *pLogger,
                  PlRenderer **ppRenderer)
 {
     int out;
     unsigned int i;
+    const PlLoggingCallbacks *pLogger;
     const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
     DkShaderCreateInfo *pShaderInfos;
     DkRendererCreateInfo backEndInfo;
@@ -119,6 +119,12 @@ plCreateRenderer(PlWindow *pWindow,
     assert(pWindow != NULL);
     assert(pCreateInfo != NULL);
     assert(ppRenderer != NULL);
+
+    if (pCreateInfo->pLogger == NULL) {
+        plGetDefaultLogger(&pLogger);
+    } else {
+        pLogger = pCreateInfo->pLogger;
+    }
 
     out = 0;
 
@@ -160,6 +166,18 @@ plCreateRenderer(PlWindow *pWindow,
         pShaderInfos = NULL;
     }
 
+    *ppRenderer = (PlRenderer *)malloc(sizeof **ppRenderer);
+    if (*ppRenderer == NULL) {
+        PL_LOG_ERROR(pLogger, "failed to allocate the renderer\n");
+        out = 1;
+        goto shader_infos_cleanup;
+    }
+
+    if (plCreateDekoiLoggingCallbacks(pLogger, &(*ppRenderer)->pDekoiLogger)) {
+        out = 1;
+        goto renderer_undo;
+    }
+
     backEndInfo.pApplicationName = pCreateInfo->pApplicationName;
     backEndInfo.applicationMajorVersion
         = (DkUint32)pCreateInfo->applicationMajorVersion;
@@ -176,24 +194,10 @@ plCreateRenderer(PlWindow *pWindow,
     backEndInfo.clearColor[1] = (DkFloat32)pCreateInfo->clearColor[1];
     backEndInfo.clearColor[2] = (DkFloat32)pCreateInfo->clearColor[2];
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
+    backEndInfo.pLogger = (*ppRenderer)->pDekoiLogger;
+    backEndInfo.pAllocator = NULL;
 
-    *ppRenderer = (PlRenderer *)malloc(sizeof **ppRenderer);
-    if (*ppRenderer == NULL) {
-        PL_LOG_ERROR(pLogger, "failed to allocate the renderer\n");
-        out = 1;
-        goto shader_infos_cleanup;
-    }
-
-    if (plCreateDekoiLoggingCallbacks(pLogger, &(*ppRenderer)->pDekoiLogger)) {
-        out = 1;
-        goto renderer_undo;
-    }
-
-    if (dkCreateRenderer(&backEndInfo,
-                         NULL,
-                         (*ppRenderer)->pDekoiLogger,
-                         &(*ppRenderer)->pHandle)
-        != DK_SUCCESS) {
+    if (dkCreateRenderer(&backEndInfo, &(*ppRenderer)->pHandle) != DK_SUCCESS) {
         out = 1;
         goto dekoi_logger_undo;
     }
