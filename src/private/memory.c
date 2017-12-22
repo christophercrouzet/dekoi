@@ -144,7 +144,10 @@ dkpAllocateAligned(void *pData, DkSize size, DkSize alignment)
 }
 
 static void *
-dkpReallocateAligned(void *pData, void *pOriginal, DkSize size, DkSize alignment)
+dkpReallocateAligned(void *pData,
+                     void *pOriginal,
+                     DkSize size,
+                     DkSize alignment)
 {
     DkpAlignedBlockHeader originalHeader;
     void *pOriginalBlock;
