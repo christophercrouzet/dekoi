@@ -4,13 +4,13 @@
 #include "../dekoi.h"
 #include "../logging.h"
 
-#if defined(DK_LOG_DEBUG)
+#if defined(DK_ENABLE_DEBUG_LOGGING)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_DEBUG
-#elif defined(DK_LOG_INFO)
+#elif defined(DK_ENABLE_INFO_LOGGING)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_INFO
-#elif defined(DK_LOG_WARNING)
+#elif defined(DK_ENABLE_WARNING_LOGGING)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_WARNING
-#elif defined(DK_LOG_ERROR)
+#elif defined(DK_ENABLE_ERROR_LOGGING)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_ERROR
 #elif defined(DK_DEBUG)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_WARNING

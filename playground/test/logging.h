@@ -5,13 +5,13 @@
 
 #include <dekoi/logging>
 
-#if defined(PL_LOG_DEBUG)
+#if defined(PL_ENABLE_DEBUG_LOGGING)
 #define PL_LOGGING_LEVEL PL_LOG_LEVEL_DEBUG
-#elif defined(PL_LOG_INFO)
+#elif defined(PL_ENABLE_INFO_LOGGING)
 #define PL_LOGGING_LEVEL PL_LOG_LEVEL_INFO
-#elif defined(PL_LOG_WARNING)
+#elif defined(PL_ENABLE_WARNING_LOGGING)
 #define PL_LOGGING_LEVEL PL_LOG_LEVEL_WARNING
-#elif defined(PL_LOG_ERROR)
+#elif defined(PL_ENABLE_ERROR_LOGGING)
 #define PL_LOGGING_LEVEL PL_LOG_LEVEL_ERROR
 #elif defined(PL_DEBUG)
 #define PL_LOGGING_LEVEL PL_LOG_LEVEL_WARNING
