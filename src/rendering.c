@@ -604,14 +604,14 @@ dkpDestroyInstance(VkInstance instanceHandle,
 }
 
 static VkBool32
-dkpDebugReportCallback(VkDebugReportFlagsEXT flags,
-                       VkDebugReportObjectTypeEXT objectType,
-                       uint64_t object,
-                       size_t location,
-                       int32_t messageCode,
-                       const char *pLayerPrefix,
-                       const char *pMessage,
-                       void *pUserData)
+dkpHandleDebugReport(VkDebugReportFlagsEXT flags,
+                     VkDebugReportObjectTypeEXT objectType,
+                     uint64_t object,
+                     size_t location,
+                     int32_t messageCode,
+                     const char *pLayerPrefix,
+                     const char *pMessage,
+                     void *pUserData)
 {
     DKP_UNUSED(flags);
     DKP_UNUSED(objectType);
@@ -653,7 +653,7 @@ dkpCreateDebugReportCallback(VkInstance instanceHandle,
     createInfo.pNext = NULL;
     createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT
                        | VK_DEBUG_REPORT_WARNING_BIT_EXT;
-    createInfo.pfnCallback = dkpDebugReportCallback;
+    createInfo.pfnCallback = dkpHandleDebugReport;
     createInfo.pUserData = pData;
 
     function = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(

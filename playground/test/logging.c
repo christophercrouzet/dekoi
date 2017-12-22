@@ -172,12 +172,12 @@ plInterpretDekoiLogLevel(DkLogLevel level)
 }
 
 static void
-plDekoiLogCallback(void *pData,
-                   DkLogLevel level,
-                   const char *pFile,
-                   int line,
-                   const char *pFormat,
-                   ...)
+plHandleDekoiLogging(void *pData,
+                     DkLogLevel level,
+                     const char *pFile,
+                     int line,
+                     const char *pFormat,
+                     ...)
 {
     va_list args;
 
@@ -227,7 +227,7 @@ plCreateDekoiLoggingCallbacks(const PlLoggingCallbacks *pLogger,
     pLoggerData->pLogger = pLogger;
 
     (*ppDekoiLogger)->pData = pLoggerData;
-    (*ppDekoiLogger)->pfnLog = plDekoiLogCallback;
+    (*ppDekoiLogger)->pfnLog = plHandleDekoiLogging;
 
     goto exit;
 
