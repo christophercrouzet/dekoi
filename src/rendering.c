@@ -189,6 +189,7 @@ dkpCreateInstanceLayerNames(const DkAllocationCallbacks *pAllocator,
                             const char ***pppLayerNames)
 {
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pLayerCount != NULL);
     DKP_ASSERT(pppLayerNames != NULL);
 
@@ -235,6 +236,7 @@ dkpCheckInstanceLayersSupport(uint32_t requiredLayerCount,
 
     DKP_ASSERT(ppRequiredLayerNames != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSupported != NULL);
 
     out = DK_SUCCESS;
@@ -308,6 +310,7 @@ dkpCreateInstanceExtensionNames(
     const char **ppBuffer;
 
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pExtensionCount != NULL);
     DKP_ASSERT(pppExtensionNames != NULL);
 
@@ -360,6 +363,7 @@ dkpDestroyInstanceExtensionNames(
     const DkLoggingCallbacks *pLogger)
 {
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
 
     if (DKP_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
@@ -386,6 +390,7 @@ dkpCheckInstanceExtensionsSupport(uint32_t requiredExtensionCount,
 
     DKP_ASSERT(ppRequiredExtensionNames != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSupported != NULL);
 
     out = DK_SUCCESS;
@@ -476,6 +481,7 @@ dkpCreateInstance(
 
     DKP_ASSERT(pApplicationName != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pInstanceHandle != NULL);
 
     out = DK_SUCCESS;
