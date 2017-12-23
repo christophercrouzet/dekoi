@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 struct PlRenderer {
+    PlDekoiLoggingCallbacksData dekoiLoggerData;
     DkLoggingCallbacks *pDekoiLogger;
     DkRenderer *pHandle;
 };
@@ -173,7 +174,11 @@ plCreateRenderer(PlWindow *pWindow,
         goto shader_infos_cleanup;
     }
 
-    if (plCreateDekoiLoggingCallbacks(pLogger, &(*ppRenderer)->pDekoiLogger)) {
+    (*ppRenderer)->dekoiLoggerData.pLogger = pLogger;
+
+    if (plCreateDekoiLoggingCallbacks(&(*ppRenderer)->dekoiLoggerData,
+                                      pLogger,
+                                      &(*ppRenderer)->pDekoiLogger)) {
         out = 1;
         goto renderer_undo;
     }

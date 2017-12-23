@@ -66,7 +66,8 @@ void
 plGetDefaultLogger(const PlLoggingCallbacks **ppLogger);
 
 int
-plCreateDekoiLoggingCallbacks(const PlLoggingCallbacks *pLogger,
+plCreateDekoiLoggingCallbacks(PlDekoiLoggingCallbacksData *pData,
+                              const PlLoggingCallbacks *pLogger,
                               DkLoggingCallbacks **ppDekoiLogger);
 
 void

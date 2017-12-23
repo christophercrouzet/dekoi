@@ -198,44 +198,23 @@ plGetDefaultLogger(const PlLoggingCallbacks **ppLogger)
 }
 
 int
-plCreateDekoiLoggingCallbacks(const PlLoggingCallbacks *pLogger,
+plCreateDekoiLoggingCallbacks(PlDekoiLoggingCallbacksData *pData,
+                              const PlLoggingCallbacks *pLogger,
                               DkLoggingCallbacks **ppDekoiLogger)
 {
-    int out;
-    PlDekoiLoggingCallbacksData *pLoggerData;
-
+    assert(pData != NULL);
     assert(pLogger != NULL);
     assert(ppDekoiLogger != NULL);
-
-    out = 0;
 
     *ppDekoiLogger = (DkLoggingCallbacks *)malloc(sizeof **ppDekoiLogger);
     if (*ppDekoiLogger == NULL) {
         PL_LOG_ERROR(pLogger, "failed to allocate Dekoi's logging callbacks\n");
-        out = 1;
-        goto exit;
+        return 1;
     }
 
-    pLoggerData = (PlDekoiLoggingCallbacksData *)malloc(sizeof *pLoggerData);
-    if (pLoggerData == NULL) {
-        PL_LOG_ERROR(pLogger,
-                     "failed to allocate Dekoi's logging callbacks data\n");
-        out = 1;
-        goto dekoi_logger_undo;
-    }
-
-    pLoggerData->pLogger = pLogger;
-
-    (*ppDekoiLogger)->pData = pLoggerData;
+    (*ppDekoiLogger)->pData = pData;
     (*ppDekoiLogger)->pfnLog = plHandleDekoiLogging;
-
-    goto exit;
-
-dekoi_logger_undo:
-    free(*ppDekoiLogger);
-
-exit:
-    return out;
+    return 0;
 }
 
 void
@@ -245,7 +224,6 @@ plDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger)
         return;
     }
 
-    free(pDekoiLogger->pData);
     free(pDekoiLogger);
 }
 
