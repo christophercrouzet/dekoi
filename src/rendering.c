@@ -62,6 +62,11 @@ typedef enum DkpSwapChainSystemScope {
     DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL = 1
 } DkpSwapChainSystemScope;
 
+typedef struct DkpBackEndAllocationCallbacksData {
+    const DkLoggingCallbacks *pLogger;
+    const DkAllocationCallbacks *pAllocator;
+} DkpBackEndAllocationCallbacskData;
+
 typedef struct DkpDebugReportCallbackData {
     const DkLoggingCallbacks *pLogger;
 } DkpDebugReportCallbackData;
@@ -109,7 +114,8 @@ typedef struct DkpSwapChain {
 struct DkRenderer {
     const DkLoggingCallbacks *pLogger;
     const DkAllocationCallbacks *pAllocator;
-    const VkAllocationCallbacks *pBackEndAllocator;
+    DkpBackEndAllocationCallbacskData backEndAllocatorData;
+    VkAllocationCallbacks backEndAllocator;
     VkClearValue clearColor;
     VkInstance instanceHandle;
     VkExtent2D surfaceExtent;
@@ -182,6 +188,100 @@ dkpTranslateShaderStage(DkShaderStage shaderStage)
             DKP_ASSERT(0);
             return (VkShaderStageFlagBits)0;
     }
+}
+
+static void *
+dkpAllocateBackEndMemory(void *pData,
+                         size_t size,
+                         size_t alignment,
+                         VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+    DKP_ASSERT(size != 0);
+
+    return ((DkpBackEndAllocationCallbacskData *)pData)
+        ->pAllocator->pfnAllocateAligned(
+            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
+            size,
+            alignment);
+}
+
+static void
+dkpFreeBackEndMemory(void *pData, void *pMemory)
+{
+    DKP_ASSERT(pData != NULL);
+
+    if (pMemory == NULL) {
+        return;
+    }
+
+    ((DkpBackEndAllocationCallbacskData *)pData)
+        ->pAllocator->pfnFreeAligned(
+            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
+            pMemory);
+}
+
+static void *
+dkpReallocateBackEndMemory(void *pData,
+                           void *pOriginal,
+                           size_t size,
+                           size_t alignment,
+                           VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+
+    if (pOriginal == NULL) {
+        return dkpAllocateBackEndMemory(
+            pData, size, alignment, allocationScope);
+    }
+
+    if (size == 0) {
+        dkpFreeBackEndMemory(pData, pOriginal);
+        return NULL;
+    }
+
+    return ((DkpBackEndAllocationCallbacskData *)pData)
+        ->pAllocator->pfnReallocateAligned(
+            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
+            pOriginal,
+            size,
+            alignment);
+}
+
+static void
+dkpNotifyBackEndInternalAllocation(void *pData,
+                                   size_t size,
+                                   VkInternalAllocationType allocationType,
+                                   VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationType);
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+
+    DKP_LOG_DEBUG(((DkpBackEndAllocationCallbacskData *)pData)->pLogger,
+                  "renderer back-end internal allocation of %zu bytes\n",
+                  size);
+}
+
+static void
+dkpNotifyBackEndInternalFreeing(void *pData,
+                                size_t size,
+                                VkInternalAllocationType allocationType,
+                                VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationType);
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+
+    DKP_LOG_DEBUG(((DkpBackEndAllocationCallbacskData *)pData)->pLogger,
+                  "renderer back-end internal freeing of %zu bytes\n",
+                  size);
 }
 
 static DkResult
@@ -2901,7 +3001,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
                            pRenderer->surfaceHandle,
                            &pRenderer->surfaceExtent,
                            VK_NULL_HANDLE,
-                           pRenderer->pBackEndAllocator,
+                           &pRenderer->backEndAllocator,
                            pRenderer->pAllocator,
                            pRenderer->pLogger,
                            &pRenderer->swapChain)
@@ -2912,7 +3012,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
 
     if (dkpCreateRenderPass(&pRenderer->device,
                             &pRenderer->swapChain,
-                            pRenderer->pBackEndAllocator,
+                            &pRenderer->backEndAllocator,
                             pRenderer->pAllocator,
                             pRenderer->pLogger,
                             &pRenderer->renderPassHandle)
@@ -2922,7 +3022,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
     }
 
     if (dkpCreatePipelineLayout(&pRenderer->device,
-                                pRenderer->pBackEndAllocator,
+                                &pRenderer->backEndAllocator,
                                 pRenderer->pLogger,
                                 &pRenderer->pipelineLayoutHandle)
         != DK_SUCCESS) {
@@ -2936,7 +3036,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
                                   pRenderer->shaderCount,
                                   pRenderer->pShaders,
                                   &pRenderer->swapChain.imageExtent,
-                                  pRenderer->pBackEndAllocator,
+                                  &pRenderer->backEndAllocator,
                                   pRenderer->pAllocator,
                                   pRenderer->pLogger,
                                   &pRenderer->graphicsPipelineHandle)
@@ -2949,7 +3049,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
                               &pRenderer->swapChain,
                               pRenderer->renderPassHandle,
                               &pRenderer->swapChain.imageExtent,
-                              pRenderer->pBackEndAllocator,
+                              &pRenderer->backEndAllocator,
                               pRenderer->pAllocator,
                               pRenderer->pLogger,
                               &pRenderer->pFramebufferHandles)
@@ -2960,7 +3060,7 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
 
     if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
         if (dkpCreateGraphicsCommandPool(&pRenderer->device,
-                                         pRenderer->pBackEndAllocator,
+                                         &pRenderer->backEndAllocator,
                                          pRenderer->pLogger,
                                          &pRenderer->graphicsCommandPoolHandle)
             != DK_SUCCESS) {
@@ -3010,39 +3110,39 @@ graphics_command_buffers_undo:
 graphics_command_pool_undo:
     dkpDestroyGraphicsCommandPool(&pRenderer->device,
                                   pRenderer->graphicsCommandPoolHandle,
-                                  pRenderer->pBackEndAllocator);
+                                  &pRenderer->backEndAllocator);
     pRenderer->graphicsCommandPoolHandle = VK_NULL_HANDLE;
 
 framebuffers_undo:
     dkpDestroyFramebuffers(&pRenderer->device,
                            &pRenderer->swapChain,
                            pRenderer->pFramebufferHandles,
-                           pRenderer->pBackEndAllocator,
+                           &pRenderer->backEndAllocator,
                            pRenderer->pAllocator);
     pRenderer->pFramebufferHandles = NULL;
 
 graphics_pipeline_undo:
     dkpDestroyGraphicsPipeline(&pRenderer->device,
                                pRenderer->graphicsPipelineHandle,
-                               pRenderer->pBackEndAllocator);
+                               &pRenderer->backEndAllocator);
     pRenderer->graphicsPipelineHandle = VK_NULL_HANDLE;
 
 pipeline_layout_undo:
     dkpDestroyPipelineLayout(&pRenderer->device,
                              pRenderer->pipelineLayoutHandle,
-                             pRenderer->pBackEndAllocator);
+                             &pRenderer->backEndAllocator);
     pRenderer->pipelineLayoutHandle = VK_NULL_HANDLE;
 
 render_pass_undo:
     dkpDestroyRenderPass(&pRenderer->device,
                          pRenderer->renderPassHandle,
-                         pRenderer->pBackEndAllocator);
+                         &pRenderer->backEndAllocator);
     pRenderer->renderPassHandle = VK_NULL_HANDLE;
 
 swap_chain_undo:
     dkpDestroySwapChain(&pRenderer->device,
                         &pRenderer->swapChain,
-                        pRenderer->pBackEndAllocator,
+                        &pRenderer->backEndAllocator,
                         pRenderer->pAllocator);
     pRenderer->swapChain.handle = VK_NULL_HANDLE;
 
@@ -3071,39 +3171,39 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
         && pRenderer->graphicsCommandPoolHandle != VK_NULL_HANDLE) {
         dkpDestroyGraphicsCommandPool(&pRenderer->device,
                                       pRenderer->graphicsCommandPoolHandle,
-                                      pRenderer->pBackEndAllocator);
+                                      &pRenderer->backEndAllocator);
     }
 
     if (pRenderer->pFramebufferHandles != NULL) {
         dkpDestroyFramebuffers(&pRenderer->device,
                                &pRenderer->swapChain,
                                pRenderer->pFramebufferHandles,
-                               pRenderer->pBackEndAllocator,
+                               &pRenderer->backEndAllocator,
                                pRenderer->pAllocator);
     }
 
     if (pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE) {
         dkpDestroyGraphicsPipeline(&pRenderer->device,
                                    pRenderer->graphicsPipelineHandle,
-                                   pRenderer->pBackEndAllocator);
+                                   &pRenderer->backEndAllocator);
     }
 
     if (pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE) {
         dkpDestroyPipelineLayout(&pRenderer->device,
                                  pRenderer->pipelineLayoutHandle,
-                                 pRenderer->pBackEndAllocator);
+                                 &pRenderer->backEndAllocator);
     }
 
     if (pRenderer->renderPassHandle != VK_NULL_HANDLE) {
         dkpDestroyRenderPass(&pRenderer->device,
                              pRenderer->renderPassHandle,
-                             pRenderer->pBackEndAllocator);
+                             &pRenderer->backEndAllocator);
     }
 
     if (pRenderer->swapChain.handle != VK_NULL_HANDLE) {
         dkpDestroySwapChain(&pRenderer->device,
                             &pRenderer->swapChain,
-                            pRenderer->pBackEndAllocator,
+                            &pRenderer->backEndAllocator,
                             pRenderer->pAllocator);
     }
 }
@@ -3204,7 +3304,18 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     (*ppRenderer)->pLogger = pLogger;
     (*ppRenderer)->pAllocator = pAllocator;
-    (*ppRenderer)->pBackEndAllocator = NULL;
+    (*ppRenderer)->backEndAllocatorData.pAllocator = pAllocator;
+    (*ppRenderer)->backEndAllocatorData.pLogger = pLogger;
+    (*ppRenderer)->backEndAllocator.pUserData
+        = &(*ppRenderer)->backEndAllocatorData;
+    (*ppRenderer)->backEndAllocator.pfnAllocation = dkpAllocateBackEndMemory;
+    (*ppRenderer)->backEndAllocator.pfnReallocation
+        = dkpReallocateBackEndMemory;
+    (*ppRenderer)->backEndAllocator.pfnFree = dkpFreeBackEndMemory;
+    (*ppRenderer)->backEndAllocator.pfnInternalAllocation
+        = dkpNotifyBackEndInternalAllocation;
+    (*ppRenderer)->backEndAllocator.pfnInternalFree
+        = dkpNotifyBackEndInternalFreeing;
     (*ppRenderer)->surfaceExtent.width = (uint32_t)pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t)pCreateInfo->surfaceHeight;
 
@@ -3218,7 +3329,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           (unsigned int)pCreateInfo->applicationMinorVersion,
                           (unsigned int)pCreateInfo->applicationPatchVersion,
                           pCreateInfo->pWindowSystemIntegrator,
-                          (*ppRenderer)->pBackEndAllocator,
+                          &(*ppRenderer)->backEndAllocator,
                           (*ppRenderer)->pAllocator,
                           (*ppRenderer)->pLogger,
                           &(*ppRenderer)->instanceHandle)
@@ -3232,7 +3343,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     if (dkpCreateDebugReportCallback((*ppRenderer)->instanceHandle,
                                      &(*ppRenderer)->debugReportCallbackData,
-                                     (*ppRenderer)->pBackEndAllocator,
+                                     &(*ppRenderer)->backEndAllocator,
                                      (*ppRenderer)->pLogger,
                                      &(*ppRenderer)->debugReportCallbackHandle)
         != DK_SUCCESS) {
@@ -3244,7 +3355,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     if (!headless) {
         if (dkpCreateSurface((*ppRenderer)->instanceHandle,
                              pCreateInfo->pWindowSystemIntegrator,
-                             (*ppRenderer)->pBackEndAllocator,
+                             &(*ppRenderer)->backEndAllocator,
                              (*ppRenderer)->pLogger,
                              &(*ppRenderer)->surfaceHandle)
             != DK_SUCCESS) {
@@ -3257,7 +3368,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
 
     if (dkpCreateDevice((*ppRenderer)->instanceHandle,
                         (*ppRenderer)->surfaceHandle,
-                        (*ppRenderer)->pBackEndAllocator,
+                        &(*ppRenderer)->backEndAllocator,
                         (*ppRenderer)->pAllocator,
                         (*ppRenderer)->pLogger,
                         &(*ppRenderer)->device)
@@ -3273,7 +3384,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     if (dkpCreateSemaphores(&(*ppRenderer)->device,
-                            (*ppRenderer)->pBackEndAllocator,
+                            &(*ppRenderer)->backEndAllocator,
                             (*ppRenderer)->pAllocator,
                             (*ppRenderer)->pLogger,
                             &(*ppRenderer)->pSemaphoreHandles)
@@ -3286,7 +3397,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     if (dkpCreateShaders(&(*ppRenderer)->device,
                          (uint32_t)pCreateInfo->shaderCount,
                          pCreateInfo->pShaderInfos,
-                         (*ppRenderer)->pBackEndAllocator,
+                         &(*ppRenderer)->backEndAllocator,
                          (*ppRenderer)->pAllocator,
                          (*ppRenderer)->pLogger,
                          &(*ppRenderer)->pShaders)) {
@@ -3309,30 +3420,30 @@ shaders_undo:
     dkpDestroyShaders(&(*ppRenderer)->device,
                       (*ppRenderer)->shaderCount,
                       (*ppRenderer)->pShaders,
-                      (*ppRenderer)->pBackEndAllocator,
+                      &(*ppRenderer)->backEndAllocator,
                       (*ppRenderer)->pAllocator);
 
 semaphores_undo:
     dkpDestroySemaphores(&(*ppRenderer)->device,
                          (*ppRenderer)->pSemaphoreHandles,
-                         (*ppRenderer)->pBackEndAllocator,
+                         &(*ppRenderer)->backEndAllocator,
                          (*ppRenderer)->pAllocator);
 
 device_undo:
-    dkpDestroyDevice(&(*ppRenderer)->device, (*ppRenderer)->pBackEndAllocator);
+    dkpDestroyDevice(&(*ppRenderer)->device, &(*ppRenderer)->backEndAllocator);
 
 surface_undo:
     if (!headless) {
         dkpDestroySurface((*ppRenderer)->instanceHandle,
                           (*ppRenderer)->surfaceHandle,
-                          (*ppRenderer)->pBackEndAllocator);
+                          &(*ppRenderer)->backEndAllocator);
     }
 
 debug_report_callback_undo:
 #if DKP_DEBUG_REPORT == 1
     dkpDestroyDebugReportCallback((*ppRenderer)->instanceHandle,
                                   (*ppRenderer)->debugReportCallbackHandle,
-                                  (*ppRenderer)->pBackEndAllocator,
+                                  &(*ppRenderer)->backEndAllocator,
                                   (*ppRenderer)->pLogger);
 #else
     goto instance_undo;
@@ -3340,7 +3451,7 @@ debug_report_callback_undo:
 
 instance_undo:
     dkpDestroyInstance((*ppRenderer)->instanceHandle,
-                       (*ppRenderer)->pBackEndAllocator);
+                       &(*ppRenderer)->backEndAllocator);
 
 renderer_undo:
     DKP_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
@@ -3371,28 +3482,28 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     dkpDestroyShaders(&pRenderer->device,
                       pRenderer->shaderCount,
                       pRenderer->pShaders,
-                      pRenderer->pBackEndAllocator,
+                      &pRenderer->backEndAllocator,
                       pRenderer->pAllocator);
     dkpDestroySemaphores(&pRenderer->device,
                          pRenderer->pSemaphoreHandles,
-                         pRenderer->pBackEndAllocator,
+                         &pRenderer->backEndAllocator,
                          pRenderer->pAllocator);
-    dkpDestroyDevice(&pRenderer->device, pRenderer->pBackEndAllocator);
+    dkpDestroyDevice(&pRenderer->device, &pRenderer->backEndAllocator);
 
     if (!headless) {
         dkpDestroySurface(pRenderer->instanceHandle,
                           pRenderer->surfaceHandle,
-                          pRenderer->pBackEndAllocator);
+                          &pRenderer->backEndAllocator);
     }
 
 #if DKP_DEBUG_REPORT == 1
     dkpDestroyDebugReportCallback(pRenderer->instanceHandle,
                                   pRenderer->debugReportCallbackHandle,
-                                  pRenderer->pBackEndAllocator,
+                                  &pRenderer->backEndAllocator,
                                   pRenderer->pLogger);
 #endif /* DKP_DEBUG_REPORT */
 
-    dkpDestroyInstance(pRenderer->instanceHandle, pRenderer->pBackEndAllocator);
+    dkpDestroyInstance(pRenderer->instanceHandle, &pRenderer->backEndAllocator);
     DKP_FREE(pRenderer->pAllocator, pRenderer);
 }
 
