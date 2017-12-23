@@ -19,6 +19,14 @@
 #endif
 #endif /* DK_ENABLE_MEMORY_DEBUGGER */
 
+#ifdef __cplusplus
+template<typename T>
+struct DkpAlignmentOfHelper {
+    char first;
+    T second;
+};
+#define DKP_ALIGNMENT_OF(type) offsetof(DkpAlignmentOfHelper<type>, second)
+#else
 #define DKP_ALIGNMENT_OF(type)                                                 \
     offsetof(                                                                  \
         struct {                                                               \
@@ -26,6 +34,7 @@
             type second;                                                       \
         },                                                                     \
         second)
+#endif /* __cplusplus */
 
 #define DKP_IS_POWER_OF_TWO(x)                                                 \
     ((x) == 1 || (x) == 2 || (x) == 4 || (x) == 8 || (x) == 16 || (x) == 32    \
