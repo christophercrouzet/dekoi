@@ -705,6 +705,7 @@ dkpDestroyInstance(VkInstance instanceHandle,
     vkDestroyInstance(instanceHandle, pBackEndAllocator);
 }
 
+#if DKP_DEBUG_REPORT == 1
 static VkBool32
 dkpHandleDebugReport(VkDebugReportFlagsEXT flags,
                      VkDebugReportObjectTypeEXT objectType,
@@ -790,6 +791,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 
     function(instanceHandle, callbackHandle, pBackEndAllocator);
 }
+#endif /* DKP_DEBUG_REPORT */
 
 static DkResult
 dkpCreateSurface(
