@@ -626,16 +626,6 @@ dkpHandleDebugReport(VkDebugReportFlagsEXT flags,
     return VK_FALSE;
 }
 
-static void
-dkpInitializeDebugReportCallbackData(DkpDebugReportCallbackData *pData,
-                                     const DkLoggingCallbacks *pLogger)
-{
-    DKP_ASSERT(pData != NULL);
-    DKP_ASSERT(pLogger != NULL);
-
-    pData->pLogger = pLogger;
-}
-
 static DkResult
 dkpCreateDebugReportCallback(VkInstance instanceHandle,
                              DkpDebugReportCallbackData *pData,
@@ -3236,8 +3226,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     if (DKP_DEBUG_REPORT) {
-        dkpInitializeDebugReportCallbackData(
-            &(*ppRenderer)->debugReportCallbackData, (*ppRenderer)->pLogger);
+        (*ppRenderer)->debugReportCallbackData.pLogger = (*ppRenderer)->pLogger;
 
         if (dkpCreateDebugReportCallback(
                 (*ppRenderer)->instanceHandle,
