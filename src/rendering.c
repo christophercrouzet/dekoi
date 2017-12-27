@@ -1849,7 +1849,7 @@ dkpCreateShaders(const DkpDevice *pDevice,
     }
 
     for (i = 0; i < shaderCount; ++i) {
-        (*ppShaders)[i].moduleHandle = NULL;
+        (*ppShaders)[i].moduleHandle = VK_NULL_HANDLE;
     }
 
     for (i = 0; i < shaderCount; ++i) {
@@ -1873,7 +1873,7 @@ dkpCreateShaders(const DkpDevice *pDevice,
 
 shaders_undo:
     for (i = 0; i < shaderCount; ++i) {
-        if ((*ppShaders)[i].moduleHandle != NULL) {
+        if ((*ppShaders)[i].moduleHandle != VK_NULL_HANDLE) {
             dkpDestroyShaderModule(
                 pDevice, (*ppShaders)[i].moduleHandle, pBackEndAllocator);
         }
