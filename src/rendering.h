@@ -12,9 +12,19 @@ typedef enum DkShaderStage {
     DK_SHADER_STAGE_COMPUTE = 5
 } DkShaderStage;
 
+#define DKP_DEFINE_VULKAN_HANDLE(object) typedef struct object##_T *object
+
+#if DK_ENVIRONMENT == 32
+#define DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(object)                      \
+    typedef DkUint64 object
+#else
+#define DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(object)                      \
+    typedef struct object##_T *object
+#endif /* DK_ENVIRONMENT */
+
 typedef struct VkAllocationCallbacks VkAllocationCallbacks;
-typedef struct VkInstance_T *VkInstance;
-typedef struct VkSurfaceKHR_T *VkSurfaceKHR;
+DKP_DEFINE_VULKAN_HANDLE(VkInstance);
+DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(VkSurfaceKHR);
 
 typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
     void *pData,

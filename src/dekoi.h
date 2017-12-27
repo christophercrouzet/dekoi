@@ -13,6 +13,41 @@
 #define DKP_STATIC_ASSERT(x, msg)                                              \
     typedef char DKP_STATIC_ASSERTION_failed_##msg[(x) ? 1 : -1]
 
+#if defined(__x86_64__) || defined(_M_X64)
+#define DKP_ARCH_X86_64
+#elif defined(__i386) || defined(_M_IX86)
+#define DKP_ARCH_X86_32
+#elif defined(__itanium__) || defined(_M_IA64)
+#define DKP_ARCH_ITANIUM
+#elif defined(__powerpc64__) || defined(__ppc64__)
+#define DKP_ARCH_POWERPC_64
+#elif defined(__powerpc__) || defined(__ppc__)
+#define DKP_ARCH_POWERPC_32
+#elif defined(__aarch64__)
+#define DKP_ARCH_ARM_64
+#elif defined(__arm__)
+#define DKP_ARCH_ARM_32
+#endif
+
+/*
+   The environment macro represents whether the code is to be generated for a
+   32-bit or 64-bit target platform. Some CPUs, such as the x86-64 processors,
+   allow generating code for 32-bit environments using the -m32 or -mx32
+   compiler switches, in which case `DK_ENVIRONMENT` is set to 32.
+*/
+#ifndef DK_ENVIRONMENT
+#if (!defined(DKP_ARCH_X86_64) || defined(__ILP32__))                          \
+    && !defined(DKP_ARCH_ITANIUM) && !defined(DKP_ARCH_POWERPC_64)             \
+    && !defined(DKP_ARCH_ARM_64)
+#define DK_ENVIRONMENT 32
+#else
+#define DK_ENVIRONMENT 64
+#endif
+#endif
+
+DKP_STATIC_ASSERT(DK_ENVIRONMENT == 32 || DK_ENVIRONMENT == 64,
+                  invalid_environment_value);
+
 #ifdef DK_USE_STD_FIXED_TYPES
 #include <stdint.h>
 typedef int8_t DkInt8;
