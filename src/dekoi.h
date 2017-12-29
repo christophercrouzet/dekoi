@@ -59,45 +59,34 @@ typedef uint32_t DkUint32;
 typedef int64_t DkInt64;
 typedef uint64_t DkUint64;
 #else
-/* Focus on the common ILP32, LP64 and LLP64 data models. */
+/*
+   The focus here is on the common data models, that is ILP32 (most recent
+   32-bit systems), LP64 (Linux, macOS, ARM), and LLP64 (Windows). All of these
+   models have the `int` type set to 32 bits, and `long long` to 64 bits.
+*/
 typedef char DkInt8;
 typedef unsigned char DkUint8;
 typedef short DkInt16;
 typedef unsigned short DkUint16;
-#if defined(_MSC_VER)
-typedef __int32 DkInt32;
-typedef unsigned __int32 DkUint32;
-#else
 typedef int DkInt32;
 typedef unsigned int DkUint32;
-#endif
-#if defined(_MSC_VER)
-typedef __int64 DkInt64;
-typedef unsigned __int64 DkUint64;
-#else
 typedef long long DkInt64;
 typedef unsigned long long DkUint64;
-#endif
 #endif
 
 #ifdef DK_USE_STD_BASIC_TYPES
 #include <stddef.h>
 typedef size_t DkSize;
 #else
-#if defined(__GNUC__) || defined(__clang__)
-#if !defined(__x86_64__) && !defined(__ppc64__)
-typedef unsigned int DkSize;
+/*
+   The C standard provides no guarantees about the size of the type `size_t`,
+   and some exotic platforms will in fact provide original values, but this
+   should cover all of the use cases falling in the scope of this project.
+*/
+#if DK_ENVIRONMENT == 32
+typedef DkUint32 DkSize;
 #else
-typedef unsigned long DkSize;
-#endif
-#elif defined(_MSC_VER)
-#if !defined(_WIN64)
-typedef __int32 DkSize;
-#else
-typedef __int64 DkSize;
-#endif
-#else
-typedef unsigned long DkSize;
+typedef DkUint64 DkSize;
 #endif
 #endif
 
