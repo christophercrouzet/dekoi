@@ -38,7 +38,7 @@ plCreateShaderCode(const char *pFilePath,
         goto exit;
     }
 
-    if (plGetFileSize(&file, pLogger, pShaderCodeSize)) {
+    if (plGetFileSize(&file, pLogger, (size_t *)pShaderCodeSize)) {
         out = 1;
         goto file_closing;
     }
