@@ -295,9 +295,8 @@ HELP := \
 "    [default: c]\n" \
 "\n" \
 "  env=<size>\n" \
-"    For x86-64 processors in 64-bit environments, this option forces \n" \
-"    generating code to a given target size, either '16', '32', 'x32', \n" \
-"    or '64' bits.\n" \
+"    For x86-64 processors, this option forces generating code to a given \n" \
+"    target size. Either '16', '32', 'x32', or '64'.\n" \
 "    [default: 64]\n" \
 "\n" \
 "  arch=<type>\n" \
