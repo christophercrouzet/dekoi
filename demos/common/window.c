@@ -113,8 +113,6 @@ dkdCreateWindow(DkdApplication *pApplication,
     assert(pCreateInfo != NULL);
     assert(ppWindow != NULL);
 
-    *ppWindow = NULL;
-
     if (pCreateInfo->pLogger == NULL) {
         dkdGetDefaultLogger(&pLogger);
     } else {

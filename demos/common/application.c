@@ -26,8 +26,6 @@ dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
 
-    *ppApplication = NULL;
-
     if (pCreateInfo->pLogger == NULL) {
         dkdGetDefaultLogger(&pLogger);
     } else {

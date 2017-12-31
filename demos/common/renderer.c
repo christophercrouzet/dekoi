@@ -120,8 +120,6 @@ dkdCreateRenderer(DkdWindow *pWindow,
     assert(pCreateInfo != NULL);
     assert(ppRenderer != NULL);
 
-    *ppRenderer = NULL;
-
     if (pCreateInfo->pLogger == NULL) {
         dkdGetDefaultLogger(&pLogger);
     } else {
