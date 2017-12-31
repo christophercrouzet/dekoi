@@ -3271,7 +3271,9 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     int valid;
     int headless;
 
-    *ppRenderer = NULL;
+    if (ppRenderer != NULL) {
+        *ppRenderer = NULL;
+    }
 
     if (pCreateInfo == NULL || pCreateInfo->pLogger == NULL) {
         dkpGetDefaultLogger(&pLogger);
