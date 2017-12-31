@@ -1,27 +1,27 @@
 #include "application.h"
 
-#include "logging.h"
-#include "test.h"
+#include "common.h"
+#include "logger.h"
 #include "window.h"
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-struct PlApplication {
+struct DkdApplication {
     const char *pName;
     unsigned int majorVersion;
     unsigned int minorVersion;
     unsigned int patchVersion;
-    PlWindow *pWindow;
+    DkdWindow *pWindow;
     int stopFlag;
 };
 
 int
-plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
-                    PlApplication **ppApplication)
+dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
+                     DkdApplication **ppApplication)
 {
-    const PlLoggingCallbacks *pLogger;
+    const DkdLoggingCallbacks *pLogger;
 
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
@@ -29,14 +29,14 @@ plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
     *ppApplication = NULL;
 
     if (pCreateInfo->pLogger == NULL) {
-        plGetDefaultLogger(&pLogger);
+        dkdGetDefaultLogger(&pLogger);
     } else {
         pLogger = pCreateInfo->pLogger;
     }
 
-    *ppApplication = (PlApplication *)malloc(sizeof **ppApplication);
+    *ppApplication = (DkdApplication *)malloc(sizeof **ppApplication);
     if (*ppApplication == NULL) {
-        PL_LOG_ERROR(pLogger, "failed to allocate the application\n");
+        DKD_LOG_ERROR(pLogger, "failed to allocate the application\n");
         return 1;
     }
 
@@ -49,13 +49,13 @@ plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
 }
 
 void
-plDestroyApplication(PlApplication *pApplication)
+dkdDestroyApplication(DkdApplication *pApplication)
 {
     free(pApplication);
 }
 
 int
-plBindApplicationWindow(PlApplication *pApplication, PlWindow *pWindow)
+dkdBindApplicationWindow(DkdApplication *pApplication, DkdWindow *pWindow)
 {
     assert(pApplication != NULL);
 
@@ -64,19 +64,19 @@ plBindApplicationWindow(PlApplication *pApplication, PlWindow *pWindow)
 }
 
 int
-plRunApplication(PlApplication *pApplication)
+dkdRunApplication(DkdApplication *pApplication)
 {
     assert(pApplication != NULL);
     assert(pApplication->pWindow != NULL);
 
     while (1) {
-        plPollWindowEvents(pApplication->pWindow);
-        plGetWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
+        dkdPollWindowEvents(pApplication->pWindow);
+        dkdGetWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
         if (pApplication->stopFlag) {
             break;
         }
 
-        if (plRenderWindowImage(pApplication->pWindow)) {
+        if (dkdRenderWindowImage(pApplication->pWindow)) {
             return 1;
         }
     }

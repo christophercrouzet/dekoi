@@ -3,9 +3,9 @@
 #include "window.h"
 
 #include "application.h"
-#include "logging.h"
-#include "rendering.h"
-#include "test.h"
+#include "common.h"
+#include "logger.h"
+#include "renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <dekoi/dekoi>
@@ -16,44 +16,44 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct PlWindowSystemIntegrationCallbacksData {
+typedef struct DkdWindowSystemIntegrationCallbacksData {
     GLFWwindow *pWindowHandle;
-} PlWindowSystemIntegrationCallbacksData;
+} DkdWindowSystemIntegrationCallbacksData;
 
-struct PlWindow {
+struct DkdWindow {
     GLFWwindow *pHandle;
     DkWindowSystemIntegrationCallbacks windowSystemIntegrator;
-    PlRenderer *pRenderer;
+    DkdRenderer *pRenderer;
 };
 
 static void
-plOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
+dkdOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 {
-    PlWindow *pWindow;
+    DkdWindow *pWindow;
 
     assert(pWindowHandle != NULL);
 
-    pWindow = (PlWindow *)glfwGetWindowUserPointer(pWindowHandle);
-    plResizeRendererSurface(
+    pWindow = (DkdWindow *)glfwGetWindowUserPointer(pWindowHandle);
+    dkdResizeRendererSurface(
         pWindow->pRenderer, (unsigned int)width, (unsigned int)height);
 }
 
 static DkResult
-plCreateVulkanInstanceExtensionNames(void *pData,
-                                     const DkLoggingCallbacks *pDekoiLogger,
-                                     DkUint32 *pExtensionCount,
-                                     const char ***pppExtensionNames)
+dkdCreateVulkanInstanceExtensionNames(void *pData,
+                                      const DkLoggingCallbacks *pDekoiLogger,
+                                      DkUint32 *pExtensionCount,
+                                      const char ***pppExtensionNames)
 {
+    DKD_UNUSED(pData);
+
     assert(pExtensionCount != NULL);
     assert(pppExtensionNames != NULL);
-
-    PL_UNUSED(pData);
 
     *pppExtensionNames
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
     if (*pppExtensionNames == NULL) {
-        PL_LOG_ERROR(
-            ((PlDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
+        DKD_LOG_ERROR(
+            ((DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
             "could not retrieve the Vulkan instance extension names\n");
         return DK_ERROR;
     }
@@ -62,23 +62,23 @@ plCreateVulkanInstanceExtensionNames(void *pData,
 }
 
 static void
-plDestroyVulkanInstanceExtensionNames(void *pData,
-                                      const DkLoggingCallbacks *pDekoiLogger,
-                                      const char **ppExtensionNames)
+dkdDestroyVulkanInstanceExtensionNames(void *pData,
+                                       const DkLoggingCallbacks *pDekoiLogger,
+                                       const char **ppExtensionNames)
 {
-    assert(ppExtensionNames != NULL);
+    DKD_UNUSED(pData);
+    DKD_UNUSED(pDekoiLogger);
+    DKD_UNUSED(ppExtensionNames);
 
-    PL_UNUSED(pData);
-    PL_UNUSED(pDekoiLogger);
-    PL_UNUSED(ppExtensionNames);
+    assert(ppExtensionNames != NULL);
 }
 
 static DkResult
-plCreateVulkanSurface(void *pData,
-                      VkInstance instanceHandle,
-                      const VkAllocationCallbacks *pBackEndAllocator,
-                      const DkLoggingCallbacks *pDekoiLogger,
-                      VkSurfaceKHR *pSurfaceHandle)
+dkdCreateVulkanSurface(void *pData,
+                       VkInstance instanceHandle,
+                       const VkAllocationCallbacks *pBackEndAllocator,
+                       const DkLoggingCallbacks *pDekoiLogger,
+                       VkSurfaceKHR *pSurfaceHandle)
 {
     assert(pData != NULL);
     assert(instanceHandle != NULL);
@@ -86,12 +86,12 @@ plCreateVulkanSurface(void *pData,
 
     if (glfwCreateWindowSurface(
             instanceHandle,
-            ((PlWindowSystemIntegrationCallbacksData *)pData)->pWindowHandle,
+            ((DkdWindowSystemIntegrationCallbacksData *)pData)->pWindowHandle,
             pBackEndAllocator,
             pSurfaceHandle)
         != VK_SUCCESS) {
-        PL_LOG_ERROR(
-            ((PlDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
+        DKD_LOG_ERROR(
+            ((DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
             "failed to create the Vulkan surface\n");
         return DK_ERROR;
     }
@@ -100,13 +100,13 @@ plCreateVulkanSurface(void *pData,
 }
 
 int
-plCreateWindow(PlApplication *pApplication,
-               const PlWindowCreateInfo *pCreateInfo,
-               PlWindow **ppWindow)
+dkdCreateWindow(DkdApplication *pApplication,
+                const DkdWindowCreateInfo *pCreateInfo,
+                DkdWindow **ppWindow)
 {
     int out;
-    const PlLoggingCallbacks *pLogger;
-    PlWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
+    const DkdLoggingCallbacks *pLogger;
+    DkdWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
@@ -115,22 +115,22 @@ plCreateWindow(PlApplication *pApplication,
     *ppWindow = NULL;
 
     if (pCreateInfo->pLogger == NULL) {
-        plGetDefaultLogger(&pLogger);
+        dkdGetDefaultLogger(&pLogger);
     } else {
         pLogger = pCreateInfo->pLogger;
     }
 
     out = 0;
 
-    *ppWindow = (PlWindow *)malloc(sizeof **ppWindow);
+    *ppWindow = (DkdWindow *)malloc(sizeof **ppWindow);
     if (*ppWindow == NULL) {
-        PL_LOG_ERROR(pLogger, "failed to allocate the window\n");
+        DKD_LOG_ERROR(pLogger, "failed to allocate the window\n");
         out = 1;
         goto exit;
     }
 
     if (glfwInit() != GLFW_TRUE) {
-        PL_LOG_ERROR(pLogger, "failed to initialize GLFW\n");
+        DKD_LOG_ERROR(pLogger, "failed to initialize GLFW\n");
         out = 1;
         goto window_undo;
     }
@@ -139,20 +139,20 @@ plCreateWindow(PlApplication *pApplication,
 
     (*ppWindow)->pHandle = glfwCreateWindow((int)pCreateInfo->width,
                                             (int)pCreateInfo->height,
-                                            pCreateInfo->title,
+                                            pCreateInfo->pTitle,
                                             NULL,
                                             NULL);
     if ((*ppWindow)->pHandle == NULL) {
-        PL_LOG_ERROR(pLogger, "failed to create the window\n");
+        DKD_LOG_ERROR(pLogger, "failed to create the window\n");
         out = 1;
         goto glfw_undo;
     }
 
     pWindowSystemIntegratorData
-        = (PlWindowSystemIntegrationCallbacksData *)malloc(
+        = (DkdWindowSystemIntegrationCallbacksData *)malloc(
             sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
-        PL_LOG_ERROR(
+        DKD_LOG_ERROR(
             pLogger,
             "failed to allocate the window system integrator callbacks data\n");
         out = 1;
@@ -164,18 +164,18 @@ plCreateWindow(PlApplication *pApplication,
     (*ppWindow)->windowSystemIntegrator.pData
         = (void *)pWindowSystemIntegratorData;
     (*ppWindow)->windowSystemIntegrator.pfnCreateInstanceExtensionNames
-        = plCreateVulkanInstanceExtensionNames;
+        = dkdCreateVulkanInstanceExtensionNames;
     (*ppWindow)->windowSystemIntegrator.pfnDestroyInstanceExtensionNames
-        = plDestroyVulkanInstanceExtensionNames;
+        = dkdDestroyVulkanInstanceExtensionNames;
     (*ppWindow)->windowSystemIntegrator.pfnCreateSurface
-        = plCreateVulkanSurface;
+        = dkdCreateVulkanSurface;
 
     glfwSetWindowUserPointer((*ppWindow)->pHandle, *ppWindow);
 
     glfwSetFramebufferSizeCallback((*ppWindow)->pHandle,
-                                   plOnFramebufferSizeChanged);
+                                   dkdOnFramebufferSizeChanged);
 
-    if (plBindApplicationWindow(pApplication, *ppWindow)) {
+    if (dkdBindApplicationWindow(pApplication, *ppWindow)) {
         out = 1;
         goto window_renderer_callbacks_data_undo;
     }
@@ -200,11 +200,11 @@ exit:
 }
 
 void
-plDestroyWindow(PlApplication *pApplication, PlWindow *pWindow)
+dkdDestroyWindow(DkdApplication *pApplication, DkdWindow *pWindow)
 {
     assert(pApplication != NULL);
 
-    plBindApplicationWindow(pApplication, NULL);
+    dkdBindApplicationWindow(pApplication, NULL);
 
     if (pWindow == NULL) {
         return;
@@ -219,8 +219,8 @@ plDestroyWindow(PlApplication *pApplication, PlWindow *pWindow)
 }
 
 void
-plGetDekoiWindowSystemIntegrator(
-    PlWindow *pWindow,
+dkdGetDekoiWindowSystemIntegrator(
+    DkdWindow *pWindow,
     const DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator)
 {
     assert(pWindow != NULL);
@@ -230,7 +230,7 @@ plGetDekoiWindowSystemIntegrator(
 }
 
 int
-plBindWindowRenderer(PlWindow *pWindow, PlRenderer *pRenderer)
+dkdBindWindowRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer)
 {
     assert(pWindow != NULL);
 
@@ -239,7 +239,7 @@ plBindWindowRenderer(PlWindow *pWindow, PlRenderer *pRenderer)
 }
 
 void
-plGetWindowCloseFlag(const PlWindow *pWindow, int *pCloseFlag)
+dkdGetWindowCloseFlag(const DkdWindow *pWindow, int *pCloseFlag)
 {
     assert(pWindow != NULL);
     assert(pWindow->pHandle != NULL);
@@ -249,21 +249,22 @@ plGetWindowCloseFlag(const PlWindow *pWindow, int *pCloseFlag)
 }
 
 int
-plPollWindowEvents(const PlWindow *pWindow)
+dkdPollWindowEvents(const DkdWindow *pWindow)
 {
+    DKD_UNUSED(pWindow);
+
     assert(pWindow != NULL);
-    PL_UNUSED(pWindow);
 
     glfwPollEvents();
     return 0;
 }
 
 int
-plRenderWindowImage(const PlWindow *pWindow)
+dkdRenderWindowImage(const DkdWindow *pWindow)
 {
     assert(pWindow != NULL);
 
-    if (plDrawRendererImage(pWindow->pRenderer)) {
+    if (dkdDrawRendererImage(pWindow->pRenderer)) {
         return 1;
     }
 

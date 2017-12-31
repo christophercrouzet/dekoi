@@ -1,7 +1,7 @@
 #include "io.h"
 
-#include "logging.h"
-#include "test.h"
+#include "common.h"
+#include "logger.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -9,10 +9,10 @@
 #include <stdio.h>
 
 int
-plOpenFile(PlFile *pFile,
-           const char *pPath,
-           const char *pMode,
-           const PlLoggingCallbacks *pLogger)
+dkdOpenFile(DkdFile *pFile,
+            const char *pPath,
+            const char *pMode,
+            const DkdLoggingCallbacks *pLogger)
 {
     assert(pFile != NULL);
     assert(pPath != NULL);
@@ -22,7 +22,7 @@ plOpenFile(PlFile *pFile,
     errno = 0;
     pFile->pHandle = fopen(pPath, pMode);
     if (pFile->pHandle == NULL) {
-        PL_LOG_ERROR(pLogger, "could not open the file '%s'\n", pPath);
+        DKD_LOG_ERROR(pLogger, "could not open the file '%s'\n", pPath);
         return 1;
     }
 
@@ -31,7 +31,9 @@ plOpenFile(PlFile *pFile,
 }
 
 int
-plGetFileSize(PlFile *pFile, const PlLoggingCallbacks *pLogger, size_t *pSize)
+dkdGetFileSize(DkdFile *pFile,
+               const DkdLoggingCallbacks *pLogger,
+               size_t *pSize)
 {
     int out;
     fpos_t position;
@@ -45,28 +47,28 @@ plGetFileSize(PlFile *pFile, const PlLoggingCallbacks *pLogger, size_t *pSize)
 
     errno = 0;
     if (fgetpos(pFile->pHandle, &position) != 0) {
-        PL_LOG_ERROR(pLogger,
-                     "could not retrieve the current cursor position for the "
-                     "file '%s'\n",
-                     pFile->pPath);
+        DKD_LOG_ERROR(pLogger,
+                      "could not retrieve the current cursor position for the "
+                      "file '%s'\n",
+                      pFile->pPath);
         out = 1;
         goto exit;
     }
 
     errno = 0;
     if (fseek(pFile->pHandle, 0, SEEK_END) != 0) {
-        PL_LOG_ERROR(pLogger,
-                     "could not reach the end of the file '%s'\n",
-                     pFile->pPath);
+        DKD_LOG_ERROR(pLogger,
+                      "could not reach the end of the file '%s'\n",
+                      pFile->pPath);
         out = 1;
         goto exit;
     }
 
     size = ftell(pFile->pHandle);
     if (size == EOF) {
-        PL_LOG_ERROR(pLogger,
-                     "could not retrieve the size of the file '%s'\n",
-                     pFile->pPath);
+        DKD_LOG_ERROR(pLogger,
+                      "could not retrieve the size of the file '%s'\n",
+                      pFile->pPath);
         out = 1;
         goto position_restoration;
     }
@@ -76,7 +78,7 @@ plGetFileSize(PlFile *pFile, const PlLoggingCallbacks *pLogger, size_t *pSize)
 position_restoration:
     errno = 0;
     if (fsetpos(pFile->pHandle, &position) != 0) {
-        PL_LOG_ERROR(
+        DKD_LOG_ERROR(
             pLogger,
             "could not restore the cursor position for the file '%s'\n",
             pFile->pPath);
@@ -88,17 +90,17 @@ exit:
 }
 
 int
-plReadFile(PlFile *pFile,
-           size_t size,
-           const PlLoggingCallbacks *pLogger,
-           void *pBuffer)
+dkdReadFile(DkdFile *pFile,
+            size_t size,
+            const DkdLoggingCallbacks *pLogger,
+            void *pBuffer)
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
     assert(pBuffer != NULL);
 
     if (fread(pBuffer, 1, size, pFile->pHandle) != size) {
-        PL_LOG_ERROR(pLogger, "could not read the file '%s'\n", pFile->pPath);
+        DKD_LOG_ERROR(pLogger, "could not read the file '%s'\n", pFile->pPath);
         return 1;
     }
 
@@ -106,13 +108,13 @@ plReadFile(PlFile *pFile,
 }
 
 int
-plCloseFile(PlFile *pFile, const PlLoggingCallbacks *pLogger)
+dkdCloseFile(DkdFile *pFile, const DkdLoggingCallbacks *pLogger)
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
 
     if (fclose(pFile->pHandle) == EOF) {
-        PL_LOG_ERROR(pLogger, "could not close the file '%s'\n", pFile->pPath);
+        DKD_LOG_ERROR(pLogger, "could not close the file '%s'\n", pFile->pPath);
         return 1;
     }
 

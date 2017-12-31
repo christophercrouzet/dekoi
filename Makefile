@@ -92,7 +92,7 @@ ALL_HEADERS :=
 # $(3): configuration, e.g.: debug, release.
 # $(4): architecture, e.g. x86-64, i386.
 define EXPAND_LOCALDEP =
-    $(1) := $$($1) $$($(4)_$(3)_$(2)_OBJECTS)
+$(1) := $$($1) $$($(4)_$(3)_$(2)_OBJECTS)
 endef
 
 # Expand a bunch of local object dependencies.
@@ -106,8 +106,8 @@ $$(foreach _i,$(2),$$(eval $$(call \
 endef
 
 # Create build rules for object targets.
-# $(1): source path, e.g.: src, playground/test.
-# $(2): target path, e.g.: dekoi, playground/test.
+# $(1): source path, e.g.: src, demos/test.
+# $(2): target path, e.g.: dekoi, demos/test.
 # $(3): prefix for variable names.
 # $(4): configuration, e.g.: debug, release.
 # $(5): architecture, e.g. x86-64, i386.
@@ -138,13 +138,15 @@ ALL_HEADERS += $$($(5)_$(4)_$(3)_HEADERS)
 endef
 
 # Create build rules for binary targets.
-# $(1): source path, e.g.: src, playground/test.
-# $(2): target path, e.g.: dekoi, playground/test.
+# $(1): source path, e.g.: src, demos/test.
+# $(2): target path, e.g.: dekoi, demos/test.
 # $(3): prefix for variable names.
 # $(4): configuration, e.g.: debug, release.
 # $(5): architecture, e.g. x86-64, i386.
 define CREATE_BINARY_RULES =
 $(5)_$(4)_$(3)_SOURCES := $$(wildcard $(1)/*.c) $$(wildcard $(1)/private/*.c)
+$(5)_$(4)_$(3)_OBJECTS := \
+    $$($(5)_$(4)_$(3)_SOURCES:$(1)/%.c=$$(OBJECTDIR)/$(5)/$(4)/$(2)/%.o)
 $(5)_$(4)_$(3)_TARGET := $$(BINARYDIR)/$(5)/$(4)/$(2)
 $(5)_$(4)_$(3)_DEPS :=
 $(5)_$(4)_$(3)_LDLIBS := \
@@ -168,8 +170,8 @@ endef
 
 # Create architecture specific build rules.
 # $(1): build target, e.g.: BINARY.
-# $(2): source path, e.g.: src, playground/test.
-# $(3): target path, e.g.: dekoi, playground/test.
+# $(2): source path, e.g.: src, demos/test.
+# $(3): target path, e.g.: dekoi, demos/test.
 # $(4): prefix for variable names.
 # $(5): configuration, e.g.: debug, release.
 # $(6): architecture, e.g. x86-64, i386.
@@ -184,8 +186,8 @@ endef
 
 # Create configuration specific build rules.
 # $(1): build target, e.g.: BINARY.
-# $(2): source path, e.g.: src, playground/test.
-# $(3): target path, e.g.: dekoi, playground/test.
+# $(2): source path, e.g.: src, demos/test.
+# $(3): target path, e.g.: dekoi, demos/test.
 # $(4): prefix for variable names.
 # $(5): configuration, e.g.: debug, release.
 define CREATE_CONFIG_RULES =
@@ -199,8 +201,8 @@ endef
 
 # Create all rule variations for a build.
 # $(1): build target, e.g.: BINARY.
-# $(2): source path, e.g.: src, playground/test.
-# $(3): target path, e.g.: dekoi, playground/test.
+# $(2): source path, e.g.: src, demos/test.
+# $(3): target path, e.g.: dekoi, demos/test.
 # $(4): prefix for variable names.
 define CREATE_RULES =
 $$(foreach _i,$$(CONFIG),$$(eval $$(call \
@@ -216,15 +218,16 @@ $(eval $(call \
 
 # ------------------------------------------------------------------------------
 
-PLAYGROUNDS_TARGETS :=
-PLAYGROUNDS_PHONY_TARGETS :=
+DEMOS_TARGETS :=
+DEMOS_PHONYTARGETS :=
 
-# Create the rules to build a playground target.
+# Create the rules to build a demo target.
 # $(1): target name.
 # $(2): path.
 # $(3): prefix for variable names.
-define CREATE_PLAYGROUND_RULES =
-$(3)_$(1)_LOCALDEPS := $$(PROJECT)
+# $(4): target name for code common to all demos.
+define CREATE_DEMO_RULES =
+$(3)_$(1)_LOCALDEPS = $$(PROJECT) $(3)_$(4)
 $(3)_$(1)_LDLIBS := $$(LDLIBS) -lglfw -lrt -lm -ldl
 
 $$(eval $$(call \
@@ -234,25 +237,29 @@ $(3)-$(1): $$($(3)_$(1)_TARGETS)
 
 .PHONY: $(3)-$(1)
 
-PLAYGROUNDS_TARGETS += $$($(3)_$(1)_TARGETS)
-PLAYGROUNDS_PHONY_TARGETS += $(3)-$(1)
+DEMOS_TARGETS += $$($(3)_$(1)_TARGETS)
+DEMOS_PHONYTARGETS += $(3)-$(1)
 endef
 
-# Create the rules for all the playground targets.
+# Create the rules for all the demo targets.
 # $(1): path.
 # $(2): prefix for variable names.
-define CREATE_PLAYGROUNDS_RULES =
-PLAYGROUNDS := $$(notdir $$(wildcard $(1)/*))
-$$(foreach _i,$$(PLAYGROUNDS),$$(eval $$(call \
-    CREATE_PLAYGROUND_RULES,$$(_i),$(1)/$$(_i),$(2))))
+# $(3): target name for code common to all demos.
+define CREATE_DEMOS_RULES =
+$$(eval $$(call \
+    CREATE_RULES,OBJECT,$(1)/$(3),$(1)/$(3),$(2)_$(3)))
 
-playgrounds: $$(PLAYGROUNDS_PHONY_TARGETS)
+DEMOS := $$(notdir $$(wildcard $(1)/*))
+$$(foreach _i,$$(filter-out $(3),$$(DEMOS)),$$(eval $$(call \
+    CREATE_DEMO_RULES,$$(_i),$(1)/$$(_i),$(2),$(3))))
 
-.PHONY: playgrounds
+demos: $$(DEMOS_PHONYTARGETS)
+
+.PHONY: demos
 endef
 
 $(eval $(call \
-    CREATE_PLAYGROUNDS_RULES,playground,playground,common))
+    CREATE_DEMOS_RULES,demos,demo,common))
 
 # ------------------------------------------------------------------------------
 
@@ -299,7 +306,7 @@ clean:
 
 # ------------------------------------------------------------------------------
 
-all: playgrounds shaders
+all: demos shaders
 
 .PHONY: all
 
@@ -342,9 +349,9 @@ Targets:\n \
 \n \
 $(\t)all (default)\n \
 $(\t)clean\n \
+$(\t)demos\n \
+$(\t)$(subst $(space),\n$(\t),$(sort $(strip $(DEMOS_PHONYTARGETS))))\n \
 $(\t)format\n \
-$(\t)playground\n \
-$(\t)$(subst $(space),\n$(\t),$(sort $(strip $(PLAYGROUNDS_PHONY_TARGETS))))\n \
 $(\t)shaders\n \
 $(\t)tidy"
 
