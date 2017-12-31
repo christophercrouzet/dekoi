@@ -211,16 +211,18 @@ dkdCreateRenderer(DkdWindow *pWindow,
 
     if (dkdBindWindowRenderer(pWindow, *ppRenderer)) {
         out = 1;
-        goto dekoi_logger_undo;
+        goto dekoi_renderer_undo;
     }
 
     goto cleanup;
+
+dekoi_renderer_undo:
+    dkDestroyRenderer((*ppRenderer)->pHandle);
 
 dekoi_logger_undo:
     dkdDestroyDekoiLoggingCallbacks((*ppRenderer)->pDekoiLogger);
 
 renderer_undo:
-    dkDestroyRenderer((*ppRenderer)->pHandle);
     free(*ppRenderer);
 
 cleanup:;
