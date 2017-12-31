@@ -1,4 +1,4 @@
-#include "dekoi.h"
+#include "common.h"
 
 const char *
 dkGetResultString(DkResult result)

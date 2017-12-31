@@ -1,5 +1,5 @@
-#ifndef DEKOI_DEKOI_H
-#define DEKOI_DEKOI_H
+#ifndef DEKOI_COMMON_COMMON_H
+#define DEKOI_COMMON_COMMON_H
 
 #define DK_NAME "dekoi"
 #define DK_MAJOR_VERSION 0
@@ -112,11 +112,6 @@ DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 
 typedef struct DkAllocationCallbacks DkAllocationCallbacks;
 typedef struct DkLoggingCallbacks DkLoggingCallbacks;
-typedef struct DkRenderer DkRenderer;
-typedef struct DkRendererCreateInfo DkRendererCreateInfo;
-typedef struct DkShaderCreateInfo DkShaderCreateInfo;
-typedef struct DkWindowSystemIntegrationCallbacks
-    DkWindowSystemIntegrationCallbacks;
 
 typedef enum DkResult {
     DK_SUCCESS = 0,
@@ -129,4 +124,4 @@ typedef enum DkResult {
 const char *
 dkGetResultString(DkResult result);
 
-#endif /* DEKOI_DEKOI_H */
+#endif /* DEKOI_COMMON_COMMON_H */

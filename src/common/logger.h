@@ -1,7 +1,7 @@
-#ifndef DEKOI_LOGGING_H
-#define DEKOI_LOGGING_H
+#ifndef DEKOI_COMMON_LOGGER_H
+#define DEKOI_COMMON_LOGGER_H
 
-#include "dekoi.h"
+#include "common.h"
 
 typedef enum DkLogLevel {
     DK_LOG_LEVEL_DEBUG = 0,
@@ -25,4 +25,4 @@ struct DkLoggingCallbacks {
 const char *
 dkGetLogLevelString(DkLogLevel level);
 
-#endif /* DEKOI_LOGGING_H */
+#endif /* DEKOI_COMMON_LOGGER_H */

@@ -1,10 +1,10 @@
-#include "logging.h"
+#include "logger.h"
 
 #include "assert.h"
-#include "dekoi.h"
+#include "common.h"
 
-#include "../dekoi.h"
-#include "../logging.h"
+#include "../common.h"
+#include "../logger.h"
 
 #include <stdarg.h>
 #include <stdio.h>

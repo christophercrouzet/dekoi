@@ -1,9 +1,9 @@
 #include "memory.h"
 
 #include "assert.h"
-#include "dekoi.h"
+#include "common.h"
 
-#include "../dekoi.h"
+#include "../common.h"
 #include "../memory.h"
 
 #include <stddef.h>

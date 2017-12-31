@@ -1,8 +1,8 @@
-#ifndef DEKOI_PRIVATE_LOGGING_H
-#define DEKOI_PRIVATE_LOGGING_H
+#ifndef DEKOI_COMMON_PRIVATE_LOGGER_H
+#define DEKOI_COMMON_PRIVATE_LOGGER_H
 
-#include "../dekoi.h"
-#include "../logging.h"
+#include "../common.h"
+#include "../logger.h"
 
 #if defined(DK_ENABLE_DEBUG_LOGGING)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_DEBUG
@@ -41,4 +41,4 @@
 void
 dkpGetDefaultLogger(const DkLoggingCallbacks **ppLogger);
 
-#endif /* DEKOI_PRIVATE_LOGGING_H */
+#endif /* DEKOI_COMMON_PRIVATE_LOGGER_H */

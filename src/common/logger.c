@@ -1,4 +1,4 @@
-#include "logging.h"
+#include "logger.h"
 
 const char *
 dkGetLogLevelString(DkLogLevel level)

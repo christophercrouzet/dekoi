@@ -1,7 +1,7 @@
-#ifndef DEKOI_PRIVATE_MEMORY_H
-#define DEKOI_PRIVATE_MEMORY_H
+#ifndef DEKOI_COMMON_PRIVATE_MEMORY_H
+#define DEKOI_COMMON_PRIVATE_MEMORY_H
 
-#include "../dekoi.h"
+#include "../common.h"
 #include "../memory.h"
 
 #define DKP_ALLOCATE(pAllocator, size)                                         \
@@ -22,4 +22,4 @@
 void
 dkpGetDefaultAllocator(const DkAllocationCallbacks **ppAllocator);
 
-#endif /* DEKOI_PRIVATE_MEMORY_H */
+#endif /* DEKOI_COMMON_PRIVATE_MEMORY_H */

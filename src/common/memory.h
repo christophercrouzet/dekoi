@@ -1,7 +1,7 @@
-#ifndef DEKOI_MEMORY_H
-#define DEKOI_MEMORY_H
+#ifndef DEKOI_COMMON_MEMORY_H
+#define DEKOI_COMMON_MEMORY_H
 
-#include "dekoi.h"
+#include "common.h"
 
 typedef void *(*DkPfnAllocateCallback)(void *pData, DkSize size);
 typedef void *(*DkPfnReallocateCallback)(void *pData,
@@ -27,4 +27,4 @@ struct DkAllocationCallbacks {
     DkPfnFreeAlignedCallback pfnFreeAligned;
 };
 
-#endif /* DEKOI_MEMORY_H */
+#endif /* DEKOI_COMMON_MEMORY_H */

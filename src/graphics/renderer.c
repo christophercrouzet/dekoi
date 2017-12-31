@@ -1,13 +1,14 @@
-#include "rendering.h"
+#include "renderer.h"
 
-#include "private/assert.h"
-#include "private/dekoi.h"
-#include "private/logging.h"
-#include "private/memory.h"
+#include "graphics.h"
 
-#include "dekoi.h"
-#include "logging.h"
-#include "memory.h"
+#include "../common/private/assert.h"
+#include "../common/private/common.h"
+#include "../common/private/logger.h"
+#include "../common/private/memory.h"
+#include "../common/common.h"
+#include "../common/logger.h"
+#include "../common/memory.h"
 
 /* Provide a code path to Vulkan's inclusion without using 'stdint.h' */
 #ifndef DK_USE_STD_FIXED_TYPES

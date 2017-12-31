@@ -211,10 +211,42 @@ endef
 
 # ------------------------------------------------------------------------------
 
-$(PROJECT)_LDLIBS := $(LDLIBS)
+PROJECT_MODULES :=
+
+# Create the rules to build a module.
+# $(1): target name.
+# $(2): source path.
+# $(3): target path.
+# $(4): prefix for variable names.
+# $(5): name for code common to all demos.
+define CREATE_MODULE_RULES =
+$(4)_$(1)_LOCALDEPS = $(4)_$(5)
+$(4)_$(1)_LDLIBS := $$(LDLIBS)
+
+$$(eval $$(call \
+    CREATE_RULES,OBJECT,$(2),$(3),$(4)_$(1)))
+
+PROJECT_MODULES += $(4)_$(1)
+endef
+
+# Create the rules for all the modules.
+# $(1): source path.
+# $(2): target path.
+# $(3): prefix for variable names.
+# $(4): name for code common to all modules.
+define CREATE_MODULES_RULES =
+$$(eval $$(call \
+    CREATE_RULES,OBJECT,$(1)/$(4),$(2)/$(4),$(3)_$(4)))
+
+MODULES := $$(notdir $$(wildcard $(1)/*))
+$$(foreach _i,$$(filter-out $(4),$$(MODULES)),$$(eval $$(call \
+    CREATE_MODULE_RULES,$$(_i),$(1)/$$(_i),$(2)/$$(_i),$(3),$(4))))
+
+PROJECT_MODULES += $(3)_$(4)
+endef
 
 $(eval $(call \
-    CREATE_RULES,OBJECT,src,$(PROJECT),$(PROJECT)))
+    CREATE_MODULES_RULES,src,$(PROJECT),$(PROJECT),common))
 
 # ------------------------------------------------------------------------------
 
@@ -225,9 +257,9 @@ DEMOS_PHONYTARGETS :=
 # $(1): target name.
 # $(2): path.
 # $(3): prefix for variable names.
-# $(4): target name for code common to all demos.
+# $(4): name for code common to all demos.
 define CREATE_DEMO_RULES =
-$(3)_$(1)_LOCALDEPS = $$(PROJECT) $(3)_$(4)
+$(3)_$(1)_LOCALDEPS = $$(PROJECT_MODULES) $(3)_$(4)
 $(3)_$(1)_LDLIBS := $$(LDLIBS) -lglfw -lrt -lm -ldl
 
 $$(eval $$(call \
@@ -244,7 +276,7 @@ endef
 # Create the rules for all the demo targets.
 # $(1): path.
 # $(2): prefix for variable names.
-# $(3): target name for code common to all demos.
+# $(3): name for code common to all demos.
 define CREATE_DEMOS_RULES =
 $$(eval $$(call \
     CREATE_RULES,OBJECT,$(1)/$(3),$(1)/$(3),$(2)_$(3)))

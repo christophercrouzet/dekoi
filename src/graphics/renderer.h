@@ -1,7 +1,9 @@
-#ifndef DEKOI_RENDERING_H
-#define DEKOI_RENDERING_H
+#ifndef DEKOI_GRAPHICS_RENDERING_H
+#define DEKOI_GRAPHICS_RENDERING_H
 
-#include "dekoi.h"
+#include "graphics.h"
+
+#include "../common/common.h"
 
 typedef enum DkShaderStage {
     DK_SHADER_STAGE_VERTEX = 0,
@@ -84,4 +86,4 @@ dkResizeRendererSurface(DkRenderer *pRenderer, DkUint32 width, DkUint32 height);
 DkResult
 dkDrawRendererImage(DkRenderer *pRenderer);
 
-#endif /* DEKOI_RENDERING_H */
+#endif /* DEKOI_GRAPHICS_RENDERING_H */

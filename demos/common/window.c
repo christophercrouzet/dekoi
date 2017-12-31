@@ -8,8 +8,9 @@
 #include "renderer.h"
 
 #include <GLFW/glfw3.h>
-#include <dekoi/dekoi>
-#include <dekoi/rendering>
+#include <dekoi/common/common>
+#include <dekoi/graphics/graphics>
+#include <dekoi/graphics/renderer>
 
 #include <assert.h>
 #include <stddef.h>

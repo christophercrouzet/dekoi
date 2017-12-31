@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#include <dekoi/logging>
+#include <dekoi/common/logger>
 
 #if defined(DKD_ENABLE_DEBUG_LOGGING)
 #define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_DEBUG

@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-#include <dekoi/logging>
+#include <dekoi/common/logger>
 
 #include <assert.h>
 #include <stdarg.h>
