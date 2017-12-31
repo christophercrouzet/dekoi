@@ -26,6 +26,8 @@ plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
 
+    *ppApplication = NULL;
+
     if (pCreateInfo->pLogger == NULL) {
         plGetDefaultLogger(&pLogger);
     } else {

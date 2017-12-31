@@ -112,6 +112,8 @@ plCreateWindow(PlApplication *pApplication,
     assert(pCreateInfo != NULL);
     assert(ppWindow != NULL);
 
+    *ppWindow = NULL;
+
     if (pCreateInfo->pLogger == NULL) {
         plGetDefaultLogger(&pLogger);
     } else {

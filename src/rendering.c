@@ -3263,6 +3263,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     int valid;
     int headless;
 
+    *ppRenderer = NULL;
+
     if (pCreateInfo == NULL || pCreateInfo->pLogger == NULL) {
         dkpGetDefaultLogger(&pLogger);
     } else {
