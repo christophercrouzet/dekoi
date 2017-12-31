@@ -76,7 +76,7 @@ PenaltyExcessCharacter: 1000
 PenaltyReturnTypeOnItsOwnLine: 0
 PointerAlignment: Right
 ReflowComments: true
-SortIncludes: true
+SortIncludes: false
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: false
