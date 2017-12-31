@@ -1,5 +1,6 @@
 space :=
 space +=
+\t := $(space)$(space)
 
 # ------------------------------------------------------------------------------
 
@@ -306,49 +307,48 @@ all: playgrounds shaders
 
 # ------------------------------------------------------------------------------
 
-HELP := \
-"Usage:\n" \
-"  make [options] [target] ...\n" \
-"\n" \
-"Options:\n" \
-"\n" \
-"  outdir=<path>\n" \
-"    Output directory for the target and intermediary files.\n" \
-"    [default: build]\n" \
-"\n" \
-"  compiler=<type>\n" \
-"    Compiler to use, either 'c' or 'cc'.\n" \
-"    [default: c]\n" \
-"\n" \
-"  env=<size>\n" \
-"    For x86-64 processors, this option forces generating code to a given \n" \
-"    target size. Either '16', '32', 'x32', or '64'.\n" \
-"    [default: 64]\n" \
-"\n" \
-"  arch=<type>\n" \
-"    Target CPU architecture, e.g.: 'x86-64', 'i386'.\n" \
-"    [default: $(DEFAULT_ARCH)]\n" \
-"\n" \
-"  config=<type>\n" \
-"    Build configuration, either 'debug', 'release', or 'all'.\n" \
-"    [default: release]\n" \
-"\n" \
-"  help\n" \
-"    Show this screen.\n" \
-"\n" \
-"  Other options are provided by make, see 'make --help.'\n" \
-"\n" \
-"Targets:\n" \
-"\n" \
-"  all (default)\n" \
-"  clean\n" \
-"  format\n" \
-"  playground\n" \
-"  $(subst $(space),\n  ,$(sort $(strip $(PLAYGROUND_PHONY_TARGETS))))\n" \
-"  shaders\n" \
-"  tidy\n"
+HELP := "Usage:\n \
+$(\t)make [options] [target] ...\n \
+\n \
+Options:\n \
+\n \
+$(\t)outdir=<path>\n \
+$(\t)$(\t)Output directory for the target and intermediary files.\n \
+$(\t)$(\t)[default: build]\n \
+\n \
+$(\t)compiler=<type>\n \
+$(\t)$(\t)Compiler to use, either 'c' or 'cc'.\n \
+$(\t)$(\t)[default: c]\n \
+\n \
+$(\t)env=<size>\n \
+$(\t)$(\t)For x86-64 processors, this option forces generating code to \n \
+$(\t)$(\t)a given target size. Either '16', '32', 'x32', or '64'.\n \
+$(\t)$(\t)[default: 64]\n \
+\n \
+$(\t)arch=<type>\n \
+$(\t)$(\t)Target CPU architecture, e.g.: 'x86-64', 'i386'.\n \
+$(\t)$(\t)[default: $(DEFAULT_ARCH)]\n \
+\n \
+$(\t)config=<type>\n \
+$(\t)$(\t)Build configuration, either 'debug', 'release', or 'all'.\n \
+$(\t)$(\t)[default: release]\n \
+\n \
+$(\t)help\n \
+$(\t)$(\t)Show this screen.\n \
+\n \
+$(\t)Other options are provided by make, see 'make --help.'\n \
+\n \
+Targets:\n \
+\n \
+$(\t)all (default)\n \
+$(\t)clean\n \
+$(\t)format\n \
+$(\t)playground\n \
+$(\t)$(subst $(space),\n$(\t),$(sort $(strip $(PLAYGROUNDS_PHONY_TARGETS))))\n \
+$(\t)shaders\n \
+$(\t)tidy"
 
 help:
-	@ echo $(HELP)
+	@ echo $(subst \n$(space),\n,$(HELP))
 
 .PHONY: help
