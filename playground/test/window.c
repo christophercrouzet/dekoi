@@ -203,10 +203,15 @@ void
 plDestroyWindow(PlApplication *pApplication, PlWindow *pWindow)
 {
     assert(pApplication != NULL);
-    assert(pWindow != NULL);
-    assert(pWindow->pHandle != NULL);
 
     plBindApplicationWindow(pApplication, NULL);
+
+    if (pWindow == NULL) {
+        return;
+    }
+
+    assert(pWindow->pHandle != NULL);
+
     free(pWindow->windowSystemIntegrator.pData);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();

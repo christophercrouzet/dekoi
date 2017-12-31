@@ -51,8 +51,6 @@ plCreateApplication(const PlApplicationCreateInfo *pCreateInfo,
 void
 plDestroyApplication(PlApplication *pApplication)
 {
-    assert(pApplication != NULL);
-
     free(pApplication);
 }
 

@@ -318,6 +318,8 @@ static void
 dkpDestroyInstanceLayerNames(const char **ppLayerNames,
                              const DkAllocationCallbacks *pAllocator)
 {
+    DKP_ASSERT(pAllocator != NULL);
+
     if (DKP_VALIDATION_LAYERS) {
         DKP_FREE(pAllocator, ppLayerNames);
     }
@@ -778,6 +780,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(callbackHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pLogger != NULL);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
         instanceHandle, "vkDestroyDebugReportCallbackEXT");
@@ -866,6 +869,8 @@ static void
 dkpDestroyDeviceExtensionNames(const char **ppExtensionNames,
                                const DkAllocationCallbacks *pAllocator)
 {
+    DKP_ASSERT(pAllocator != NULL);
+
     DKP_FREE(pAllocator, ppExtensionNames);
 }
 
@@ -2797,6 +2802,10 @@ dkpDestroyFramebuffers(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pSwapChain->imageCount > 0);
+    DKP_ASSERT(pFramebufferHandles != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
         DKP_ASSERT(pFramebufferHandles[i] != VK_NULL_HANDLE);

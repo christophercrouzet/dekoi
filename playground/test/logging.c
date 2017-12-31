@@ -220,10 +220,6 @@ plCreateDekoiLoggingCallbacks(PlDekoiLoggingCallbacksData *pData,
 void
 plDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger)
 {
-    if (pDekoiLogger == NULL) {
-        return;
-    }
-
     free(pDekoiLogger);
 }
 

@@ -78,8 +78,6 @@ exit:
 static void
 plDestroyShaderCode(DkUint32 *pShaderCode)
 {
-    assert(pShaderCode != NULL);
-
     free(pShaderCode);
 }
 
@@ -242,10 +240,16 @@ void
 plDestroyRenderer(PlWindow *pWindow, PlRenderer *pRenderer)
 {
     assert(pWindow != NULL);
-    assert(pRenderer != NULL);
-    assert(pRenderer->pHandle != NULL);
 
     plBindWindowRenderer(pWindow, NULL);
+
+    if (pRenderer == NULL) {
+        return;
+    }
+
+    assert(pRenderer->pHandle != NULL);
+    assert(pRenderer->pDekoiLogger != NULL);
+
     dkDestroyRenderer(pRenderer->pHandle);
     plDestroyDekoiLoggingCallbacks(pRenderer->pDekoiLogger);
     free(pRenderer);
