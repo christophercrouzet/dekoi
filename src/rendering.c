@@ -471,11 +471,9 @@ dkpDestroyInstanceExtensionNames(
 
     if (DKP_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
-    } else {
-        if (pWindowSystemIntegrator != NULL) {
-            pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
-                pWindowSystemIntegrator->pData, pLogger, ppExtensionNames);
-        }
+    } else if (pWindowSystemIntegrator != NULL) {
+        pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
+            pWindowSystemIntegrator->pData, pLogger, ppExtensionNames);
     }
 }
 
