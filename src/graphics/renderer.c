@@ -3464,7 +3464,7 @@ instance_undo:
                        &(*ppRenderer)->backEndAllocator);
 
 renderer_undo:
-    DKP_FREE((*ppRenderer)->pAllocator, (*ppRenderer));
+    DKP_FREE(pAllocator, (*ppRenderer));
     *ppRenderer = NULL;
 
 exit:
