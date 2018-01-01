@@ -88,14 +88,14 @@ static const size_t dkpMinAlignment
           ? DKP_ALIGNMENT_OF(DkpAlignedBlockHeader)
           : sizeof(void *);
 
-#if DKP_DEBUGGING
+#ifndef NDEBUG
 static int
 dkpIsPowerOfTwo(DkSize x)
 {
     /* Complement and compare approach. */
     return (x != 0) && ((x & (~x + 1)) == x);
 }
-#endif /* DKP_DEBUGGING */
+#endif /* NDEBUG */
 
 static void *
 dkpAllocate(void *pData, DkSize size)
