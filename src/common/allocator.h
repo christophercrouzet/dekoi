@@ -1,5 +1,5 @@
-#ifndef DEKOI_COMMON_MEMORY_H
-#define DEKOI_COMMON_MEMORY_H
+#ifndef DEKOI_COMMON_ALLOCATOR_H
+#define DEKOI_COMMON_ALLOCATOR_H
 
 #include "common.h"
 
@@ -27,4 +27,4 @@ struct DkAllocationCallbacks {
     DkPfnFreeAlignedCallback pfnFreeAligned;
 };
 
-#endif /* DEKOI_COMMON_MEMORY_H */
+#endif /* DEKOI_COMMON_ALLOCATOR_H */

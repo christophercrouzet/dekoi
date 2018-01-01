@@ -1,23 +1,23 @@
-#include "memory.h"
+#include "allocator.h"
 
 #include "assert.h"
 #include "common.h"
 
+#include "../allocator.h"
 #include "../common.h"
-#include "../memory.h"
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef DK_ENABLE_MEMORY_DEBUGGER
+#ifndef DK_ENABLE_ALLOCATOR_DEBUGGING
 #ifdef DK_DEBUG
-#define DKP_MEMORY_DEBUGGER 1
+#define DKP_ALLOCATOR_DEBUGGING 1
 #else
-#define DKP_MEMORY_DEBUGGER 0
+#define DKP_ALLOCATOR_DEBUGGING 0
 #endif
-#endif /* DK_ENABLE_MEMORY_DEBUGGER */
+#endif /* DK_ENABLE_ALLOCATOR_DEBUGGING */
 
 #ifdef __cplusplus
 template<typename T>
@@ -67,9 +67,9 @@ struct DkpAlignmentOfHelper {
 typedef struct DkpAlignedBlockHeader {
     ptrdiff_t offset;
     size_t size;
-#ifdef DKP_MEMORY_DEBUGGER
+#ifdef DKP_ALLOCATOR_DEBUGGING
     size_t alignment;
-#endif /* DKP_MEMORY_DEBUGGER */
+#endif /* DKP_ALLOCATOR_DEBUGGING */
 } DkpAlignedBlockHeader;
 
 DKP_STATIC_ASSERT(DKP_IS_POWER_OF_TWO(DKP_ALIGNMENT_OF(DkpAlignedBlockHeader)),
@@ -147,9 +147,9 @@ dkpAllocateAligned(void *pData, DkSize size, DkSize alignment)
     pHeader = &((DkpAlignedBlockHeader *)pOut)[-1];
     pHeader->offset = (unsigned char *)pOut - (unsigned char *)pBlock;
     pHeader->size = size;
-#ifdef DKP_MEMORY_DEBUGGER
+#ifdef DKP_ALLOCATOR_DEBUGGING
     pHeader->alignment = (size_t)alignment;
-#endif /* DKP_MEMORY_DEBUGGER */
+#endif /* DKP_ALLOCATOR_DEBUGGING */
 
     return pOut;
 }
@@ -175,9 +175,9 @@ dkpReallocateAligned(void *pData,
     }
 
     originalHeader = ((DkpAlignedBlockHeader *)pOriginal)[-1];
-#ifdef DKP_MEMORY_DEBUGGER
+#ifdef DKP_ALLOCATOR_DEBUGGING
     DKP_ASSERT(alignment == originalHeader.alignment);
-#endif /* DKP_MEMORY_DEBUGGER */
+#endif /* DKP_ALLOCATOR_DEBUGGING */
 
     pOriginalBlock
         = (void *)((unsigned char *)pOriginal - originalHeader.offset);
