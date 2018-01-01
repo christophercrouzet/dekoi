@@ -27,21 +27,21 @@ typedef DkUint64 uint64_t;
 #include <stddef.h>
 #include <string.h>
 
-#ifndef DK_ENABLE_DEBUG_REPORT
-#ifdef DK_DEBUG
-#define DKP_DEBUG_REPORT 1
+#ifndef DK_RENDERER_DEBUG_REPORT
+#define DKP_RENDERER_DEBUG_REPORT DKP_DEBUGGING
+#elif DK_RENDERER_DEBUG_REPORT
+#define DKP_RENDERER_DEBUG_REPORT 1
 #else
-#define DKP_DEBUG_REPORT 0
-#endif
-#endif /* DK_ENABLE_DEBUG_REPORT */
+#define DKP_RENDERER_DEBUG_REPORT 0
+#endif /* DK_RENDERER_DEBUG_REPORT */
 
-#ifndef DK_ENABLE_VALIDATION_LAYERS
-#ifdef DK_DEBUG
-#define DKP_VALIDATION_LAYERS 1
+#ifndef DK_RENDERER_VALIDATION_LAYERS
+#define DKP_RENDERER_VALIDATION_LAYERS DKP_DEBUGGING
+#elif DK_RENDERER_VALIDATION_LAYERS
+#define DKP_RENDERER_VALIDATION_LAYERS 1
 #else
-#define DKP_VALIDATION_LAYERS 0
-#endif
-#endif /* DK_ENABLE_VALIDATION_LAYERS */
+#define DKP_RENDERER_VALIDATION_LAYERS 0
+#endif /* DK_RENDERER_VALIDATION_LAYERS */
 
 #define DKP_CLAMP(x, low, high)                                                \
     (((x) > (high)) ? (high) : (x) < (low) ? (low) : (x))
@@ -121,10 +121,10 @@ struct DkRenderer {
     VkInstance instanceHandle;
     VkExtent2D surfaceExtent;
     VkSurfaceKHR surfaceHandle;
-#if DKP_DEBUG_REPORT == 1
+#if DKP_RENDERER_DEBUG_REPORT
     DkpDebugReportCallbackData debugReportCallbackData;
     VkDebugReportCallbackEXT debugReportCallbackHandle;
-#endif /* DKP_DEBUG_REPORT */
+#endif /* DKP_RENDERER_DEBUG_REPORT */
     DkpDevice device;
     DkpQueues queues;
     VkSemaphore *pSemaphoreHandles;
@@ -296,7 +296,7 @@ dkpCreateInstanceLayerNames(const DkAllocationCallbacks *pAllocator,
     DKP_ASSERT(pLayerCount != NULL);
     DKP_ASSERT(pppLayerNames != NULL);
 
-    if (DKP_VALIDATION_LAYERS) {
+    if (DKP_RENDERER_VALIDATION_LAYERS) {
         *pLayerCount = 1;
         *pppLayerNames = (const char **)DKP_ALLOCATE(
             pAllocator, sizeof **pppLayerNames * *pLayerCount);
@@ -321,7 +321,7 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
 {
     DKP_ASSERT(pAllocator != NULL);
 
-    if (DKP_VALIDATION_LAYERS) {
+    if (DKP_RENDERER_VALIDATION_LAYERS) {
         DKP_FREE(pAllocator, ppLayerNames);
     }
 }
@@ -431,7 +431,7 @@ dkpCreateInstanceExtensionNames(
         return DK_ERROR;
     }
 
-    if (DKP_DEBUG_REPORT) {
+    if (DKP_RENDERER_DEBUG_REPORT) {
         ppBuffer = (const char **)DKP_ALLOCATE(
             pAllocator, sizeof *ppBuffer * (*pExtensionCount + 1));
         if (ppBuffer == NULL) {
@@ -470,7 +470,7 @@ dkpDestroyInstanceExtensionNames(
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
 
-    if (DKP_DEBUG_REPORT) {
+    if (DKP_RENDERER_DEBUG_REPORT) {
         DKP_FREE(pAllocator, ppExtensionNames);
     } else if (pWindowSystemIntegrator != NULL) {
         pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
@@ -706,7 +706,7 @@ dkpDestroyInstance(VkInstance instanceHandle,
     vkDestroyInstance(instanceHandle, pBackEndAllocator);
 }
 
-#if DKP_DEBUG_REPORT == 1
+#if DKP_RENDERER_DEBUG_REPORT
 static VkBool32
 dkpHandleDebugReport(VkDebugReportFlagsEXT flags,
                      VkDebugReportObjectTypeEXT objectType,
@@ -793,7 +793,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 
     function(instanceHandle, callbackHandle, pBackEndAllocator);
 }
-#endif /* DKP_DEBUG_REPORT */
+#endif /* DKP_RENDERER_DEBUG_REPORT */
 
 static DkResult
 dkpCreateSurface(
@@ -3348,7 +3348,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto renderer_undo;
     }
 
-#if DKP_DEBUG_REPORT == 1
+#if DKP_RENDERER_DEBUG_REPORT
     (*ppRenderer)->debugReportCallbackData.pLogger = (*ppRenderer)->pLogger;
 
     if (dkpCreateDebugReportCallback((*ppRenderer)->instanceHandle,
@@ -3360,7 +3360,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         out = DK_ERROR;
         goto instance_undo;
     }
-#endif /* DKP_DEBUG_REPORT */
+#endif /* DKP_RENDERER_DEBUG_REPORT */
 
     if (!headless) {
         if (dkpCreateSurface((*ppRenderer)->instanceHandle,
@@ -3450,14 +3450,14 @@ surface_undo:
     }
 
 debug_report_callback_undo:
-#if DKP_DEBUG_REPORT == 1
+#if DKP_RENDERER_DEBUG_REPORT
     dkpDestroyDebugReportCallback((*ppRenderer)->instanceHandle,
                                   (*ppRenderer)->debugReportCallbackHandle,
                                   &(*ppRenderer)->backEndAllocator,
                                   (*ppRenderer)->pLogger);
 #else
     goto instance_undo;
-#endif /* DKP_DEBUG_REPORT */
+#endif /* DKP_RENDERER_DEBUG_REPORT */
 
 instance_undo:
     dkpDestroyInstance((*ppRenderer)->instanceHandle,
@@ -3506,12 +3506,12 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                           &pRenderer->backEndAllocator);
     }
 
-#if DKP_DEBUG_REPORT == 1
+#if DKP_RENDERER_DEBUG_REPORT
     dkpDestroyDebugReportCallback(pRenderer->instanceHandle,
                                   pRenderer->debugReportCallbackHandle,
                                   &pRenderer->backEndAllocator,
                                   pRenderer->pLogger);
-#endif /* DKP_DEBUG_REPORT */
+#endif /* DKP_RENDERER_DEBUG_REPORT */
 
     dkpDestroyInstance(pRenderer->instanceHandle, &pRenderer->backEndAllocator);
     DKP_FREE(pRenderer->pAllocator, pRenderer);

@@ -6,10 +6,6 @@
 #define DK_MINOR_VERSION 1
 #define DK_PATCH_VERSION 0
 
-#if defined(DEBUG) || !defined(NDEBUG)
-#define DK_DEBUG
-#endif
-
 #define DKP_STATIC_ASSERT(x, msg)                                              \
     typedef char DKP_STATIC_ASSERTION_failed_##msg[(x) ? 1 : -1]
 

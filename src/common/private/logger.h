@@ -1,6 +1,8 @@
 #ifndef DEKOI_COMMON_PRIVATE_LOGGER_H
 #define DEKOI_COMMON_PRIVATE_LOGGER_H
 
+#include "common.h"
+
 #include "../common.h"
 #include "../logger.h"
 
@@ -12,7 +14,7 @@
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_WARNING
 #elif defined(DK_ENABLE_ERROR_LOGGING)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_ERROR
-#elif defined(DK_DEBUG)
+#elif DKP_DEBUGGING
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_WARNING
 #else
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_ERROR
