@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 struct DkdApplication {
+    const DkdLoggingCallbacks *pLogger;
     const char *pName;
     unsigned int majorVersion;
     unsigned int minorVersion;
@@ -38,6 +39,7 @@ dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
         return 1;
     }
 
+    (*ppApplication)->pLogger = pLogger;
     (*ppApplication)->pName = pCreateInfo->pName;
     (*ppApplication)->majorVersion = pCreateInfo->majorVersion;
     (*ppApplication)->minorVersion = pCreateInfo->minorVersion;

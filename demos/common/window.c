@@ -15,13 +15,13 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 typedef struct DkdWindowSystemIntegrationCallbacksData {
     GLFWwindow *pWindowHandle;
 } DkdWindowSystemIntegrationCallbacksData;
 
 struct DkdWindow {
+    const DkdLoggingCallbacks *pLogger;
     GLFWwindow *pHandle;
     DkWindowSystemIntegrationCallbacks windowSystemIntegrator;
     DkdRenderer *pRenderer;
@@ -139,6 +139,7 @@ dkdCreateWindow(DkdApplication *pApplication,
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
+    (*ppWindow)->pLogger = pLogger;
     (*ppWindow)->pHandle = glfwCreateWindow((int)pCreateInfo->width,
                                             (int)pCreateInfo->height,
                                             pCreateInfo->pTitle,

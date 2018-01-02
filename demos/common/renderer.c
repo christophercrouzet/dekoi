@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 struct DkdRenderer {
+    const DkdLoggingCallbacks *pLogger;
     DkdDekoiLoggingCallbacksData dekoiLoggerData;
     DkLoggingCallbacks *pDekoiLogger;
     DkRenderer *pHandle;
@@ -174,10 +175,11 @@ dkdCreateRenderer(DkdWindow *pWindow,
         goto shader_infos_cleanup;
     }
 
+    (*ppRenderer)->pLogger = pLogger;
     (*ppRenderer)->dekoiLoggerData.pLogger = pLogger;
 
     if (dkdCreateDekoiLoggingCallbacks(&(*ppRenderer)->dekoiLoggerData,
-                                       pLogger,
+                                       (*ppRenderer)->pLogger,
                                        &(*ppRenderer)->pDekoiLogger)) {
         out = 1;
         goto renderer_undo;
