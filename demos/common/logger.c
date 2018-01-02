@@ -24,6 +24,9 @@ dkdLog(void *pData,
     DKD_UNUSED(pFile);
     DKD_UNUSED(line);
 
+    assert(pFile != NULL);
+    assert(pFormat != NULL);
+
     va_start(args, pFormat);
     vfprintf(stderr, pFormat, args);
     va_end(args);
@@ -58,6 +61,10 @@ dkdHandleDekoiLogging(void *pData,
                       ...)
 {
     va_list args;
+
+    assert(pData != NULL);
+    assert(pFile != NULL);
+    assert(pFormat != NULL);
 
     va_start(args, pFormat);
     ((DkdDekoiLoggingCallbacksData *)pData)

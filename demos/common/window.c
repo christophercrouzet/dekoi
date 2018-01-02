@@ -47,6 +47,7 @@ dkdCreateVulkanInstanceExtensionNames(void *pData,
 {
     DKD_UNUSED(pData);
 
+    assert(pDekoiLogger != NULL);
     assert(pExtensionCount != NULL);
     assert(pppExtensionNames != NULL);
 
@@ -71,6 +72,7 @@ dkdDestroyVulkanInstanceExtensionNames(void *pData,
     DKD_UNUSED(pDekoiLogger);
     DKD_UNUSED(ppExtensionNames);
 
+    assert(pDekoiLogger != NULL);
     assert(ppExtensionNames != NULL);
 }
 
@@ -83,6 +85,7 @@ dkdCreateVulkanSurface(void *pData,
 {
     assert(pData != NULL);
     assert(instanceHandle != NULL);
+    assert(pDekoiLogger != NULL);
     assert(pSurfaceHandle != NULL);
 
     if (glfwCreateWindowSurface(

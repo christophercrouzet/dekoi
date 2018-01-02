@@ -29,6 +29,7 @@ dkdCreateShaderCode(const char *pFilePath,
     DkdFile file;
 
     assert(pFilePath != NULL);
+    assert(pLogger != NULL);
     assert(pShaderCodeSize != NULL);
     assert(ppShaderCode != NULL);
 

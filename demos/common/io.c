@@ -17,6 +17,7 @@ dkdOpenFile(DkdFile *pFile,
     assert(pFile != NULL);
     assert(pPath != NULL);
     assert(pMode != NULL);
+    assert(pLogger != NULL);
 
     /* Only POSIX requires `errno` to be set when `fopen()` fails. */
     errno = 0;
@@ -41,6 +42,7 @@ dkdGetFileSize(DkdFile *pFile,
 
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
+    assert(pLogger != NULL);
     assert(pSize != NULL);
 
     out = 0;
@@ -97,6 +99,7 @@ dkdReadFile(DkdFile *pFile,
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
+    assert(pLogger != NULL);
     assert(pBuffer != NULL);
 
     if (fread(pBuffer, 1, size, pFile->pHandle) != size) {
@@ -112,6 +115,7 @@ dkdCloseFile(DkdFile *pFile, const DkdLoggingCallbacks *pLogger)
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
+    assert(pLogger != NULL);
 
     if (fclose(pFile->pHandle) == EOF) {
         DKD_LOG_ERROR(pLogger, "could not close the file '%s'\n", pFile->pPath);
