@@ -29,6 +29,7 @@ struct DkdRendererCreateInfo {
     const DkdShaderCreateInfo *pShaderInfos;
     float clearColor[4];
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
 };
 
 int

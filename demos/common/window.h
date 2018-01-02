@@ -10,6 +10,7 @@ struct DkdWindowCreateInfo {
     unsigned int height;
     const char *pTitle;
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
 };
 
 int

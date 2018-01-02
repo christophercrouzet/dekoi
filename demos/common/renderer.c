@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include "allocator.h"
 #include "common.h"
 #include "io.h"
 #include "logger.h"
@@ -11,17 +12,20 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdlib.h>
 
 struct DkdRenderer {
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
     DkdDekoiLoggingCallbacksData dekoiLoggerData;
     DkLoggingCallbacks *pDekoiLogger;
+    DkdDekoiAllocationCallbacksData dekoiAllocatorData;
+    DkAllocationCallbacks *pDekoiAllocator;
     DkRenderer *pHandle;
 };
 
 static int
 dkdCreateShaderCode(const char *pFilePath,
+                    const DkdAllocationCallbacks *pAllocator,
                     const DkdLoggingCallbacks *pLogger,
                     DkSize *pShaderCodeSize,
                     DkUint32 **ppShaderCode)
@@ -30,6 +34,7 @@ dkdCreateShaderCode(const char *pFilePath,
     DkdFile file;
 
     assert(pFilePath != NULL);
+    assert(pAllocator != NULL);
     assert(pLogger != NULL);
     assert(pShaderCodeSize != NULL);
     assert(ppShaderCode != NULL);
@@ -48,7 +53,7 @@ dkdCreateShaderCode(const char *pFilePath,
 
     assert(*pShaderCodeSize % sizeof **ppShaderCode == 0);
 
-    *ppShaderCode = (DkUint32 *)malloc(*pShaderCodeSize);
+    *ppShaderCode = (DkUint32 *)DKD_ALLOCATE(pAllocator, *pShaderCodeSize);
     if (*ppShaderCode == NULL) {
         DKD_LOG_ERROR(pLogger,
                       "failed to allocate the shader code for the file '%s'\n",
@@ -65,7 +70,7 @@ dkdCreateShaderCode(const char *pFilePath,
     goto cleanup;
 
 code_undo:
-    free(*ppShaderCode);
+    DKD_FREE(pAllocator, *ppShaderCode);
 
 cleanup:;
 
@@ -79,9 +84,12 @@ exit:
 }
 
 static void
-dkdDestroyShaderCode(DkUint32 *pShaderCode)
+dkdDestroyShaderCode(DkUint32 *pShaderCode,
+                     const DkdAllocationCallbacks *pAllocator)
 {
-    free(pShaderCode);
+    assert(pAllocator != NULL);
+
+    DKD_FREE(pAllocator, pShaderCode);
 }
 
 static DkShaderStage
@@ -114,6 +122,7 @@ dkdCreateRenderer(DkdWindow *pWindow,
     int out;
     unsigned int i;
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
     const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
     DkShaderCreateInfo *pShaderInfos;
     DkRendererCreateInfo backEndInfo;
@@ -128,13 +137,19 @@ dkdCreateRenderer(DkdWindow *pWindow,
         pLogger = pCreateInfo->pLogger;
     }
 
+    if (pCreateInfo->pAllocator == NULL) {
+        dkdGetDefaultAllocator(&pAllocator);
+    } else {
+        pAllocator = pCreateInfo->pAllocator;
+    }
+
     out = 0;
 
     dkdGetDekoiWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
 
     if (pCreateInfo->shaderCount > 0) {
-        pShaderInfos = (DkShaderCreateInfo *)malloc(sizeof *pShaderInfos
-                                                    * pCreateInfo->shaderCount);
+        pShaderInfos = (DkShaderCreateInfo *)DKD_ALLOCATE(
+            pAllocator, sizeof *pShaderInfos * pCreateInfo->shaderCount);
         if (pShaderInfos == NULL) {
             DKD_LOG_ERROR(pLogger, "failed to allocate the shader infos\n");
             out = 1;
@@ -150,6 +165,7 @@ dkdCreateRenderer(DkdWindow *pWindow,
             DkUint32 *pCode;
 
             if (dkdCreateShaderCode(pCreateInfo->pShaderInfos[i].pFilePath,
+                                    pAllocator,
                                     pLogger,
                                     &codeSize,
                                     &pCode)) {
@@ -168,7 +184,7 @@ dkdCreateRenderer(DkdWindow *pWindow,
         pShaderInfos = NULL;
     }
 
-    *ppRenderer = (DkdRenderer *)malloc(sizeof **ppRenderer);
+    *ppRenderer = (DkdRenderer *)DKD_ALLOCATE(pAllocator, sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
         DKD_LOG_ERROR(pLogger, "failed to allocate the renderer\n");
         out = 1;
@@ -176,13 +192,24 @@ dkdCreateRenderer(DkdWindow *pWindow,
     }
 
     (*ppRenderer)->pLogger = pLogger;
+    (*ppRenderer)->pAllocator = pAllocator;
     (*ppRenderer)->dekoiLoggerData.pLogger = pLogger;
+    (*ppRenderer)->dekoiAllocatorData.pAllocator = pAllocator;
 
     if (dkdCreateDekoiLoggingCallbacks(&(*ppRenderer)->dekoiLoggerData,
+                                       (*ppRenderer)->pAllocator,
                                        (*ppRenderer)->pLogger,
                                        &(*ppRenderer)->pDekoiLogger)) {
         out = 1;
         goto renderer_undo;
+    }
+
+    if (dkdCreateDekoiAllocationCallbacks(&(*ppRenderer)->dekoiAllocatorData,
+                                          (*ppRenderer)->pAllocator,
+                                          (*ppRenderer)->pLogger,
+                                          &(*ppRenderer)->pDekoiAllocator)) {
+        out = 1;
+        goto dekoi_logger_undo;
     }
 
     backEndInfo.pApplicationName = pCreateInfo->pApplicationName;
@@ -203,11 +230,13 @@ dkdCreateRenderer(DkdWindow *pWindow,
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
     backEndInfo.pLogger
         = pCreateInfo->pLogger == NULL ? NULL : (*ppRenderer)->pDekoiLogger;
-    backEndInfo.pAllocator = NULL;
+    backEndInfo.pAllocator = pCreateInfo->pAllocator == NULL
+                                 ? NULL
+                                 : (*ppRenderer)->pDekoiAllocator;
 
     if (dkCreateRenderer(&backEndInfo, &(*ppRenderer)->pHandle) != DK_SUCCESS) {
         out = 1;
-        goto dekoi_logger_undo;
+        goto dekoi_allocator_undo;
     }
 
     if (dkdBindWindowRenderer(pWindow, *ppRenderer)) {
@@ -220,22 +249,27 @@ dkdCreateRenderer(DkdWindow *pWindow,
 dekoi_renderer_undo:
     dkDestroyRenderer((*ppRenderer)->pHandle);
 
+dekoi_allocator_undo:
+    dkdDestroyDekoiAllocationCallbacks((*ppRenderer)->pDekoiAllocator,
+                                       (*ppRenderer)->pAllocator);
+
 dekoi_logger_undo:
-    dkdDestroyDekoiLoggingCallbacks((*ppRenderer)->pDekoiLogger);
+    dkdDestroyDekoiLoggingCallbacks((*ppRenderer)->pDekoiLogger,
+                                    (*ppRenderer)->pAllocator);
 
 renderer_undo:
-    free(*ppRenderer);
+    DKD_FREE(pAllocator, *ppRenderer);
 
 cleanup:;
 
 shader_infos_cleanup:
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
         if (pShaderInfos[i].pCode != NULL) {
-            dkdDestroyShaderCode(pShaderInfos[i].pCode);
+            dkdDestroyShaderCode(pShaderInfos[i].pCode, pAllocator);
         }
     }
 
-    free(pShaderInfos);
+    DKD_FREE(pAllocator, pShaderInfos);
 
 exit:
     return out;
@@ -256,8 +290,11 @@ dkdDestroyRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer)
     assert(pRenderer->pDekoiLogger != NULL);
 
     dkDestroyRenderer(pRenderer->pHandle);
-    dkdDestroyDekoiLoggingCallbacks(pRenderer->pDekoiLogger);
-    free(pRenderer);
+    dkdDestroyDekoiAllocationCallbacks(pRenderer->pDekoiAllocator,
+                                       pRenderer->pAllocator);
+    dkdDestroyDekoiLoggingCallbacks(pRenderer->pDekoiLogger,
+                                    pRenderer->pAllocator);
+    DKD_FREE(pRenderer->pAllocator, pRenderer);
 }
 
 int

@@ -3,6 +3,7 @@
 #include "window.h"
 
 #include "application.h"
+#include "allocator.h"
 #include "common.h"
 #include "logger.h"
 #include "renderer.h"
@@ -22,6 +23,7 @@ typedef struct DkdWindowSystemIntegrationCallbacksData {
 
 struct DkdWindow {
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
     GLFWwindow *pHandle;
     DkWindowSystemIntegrationCallbacks windowSystemIntegrator;
     DkdRenderer *pRenderer;
@@ -110,6 +112,7 @@ dkdCreateWindow(DkdApplication *pApplication,
 {
     int out;
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
     DkdWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
 
     assert(pApplication != NULL);
@@ -122,9 +125,15 @@ dkdCreateWindow(DkdApplication *pApplication,
         pLogger = pCreateInfo->pLogger;
     }
 
+    if (pCreateInfo->pAllocator == NULL) {
+        dkdGetDefaultAllocator(&pAllocator);
+    } else {
+        pAllocator = pCreateInfo->pAllocator;
+    }
+
     out = 0;
 
-    *ppWindow = (DkdWindow *)malloc(sizeof **ppWindow);
+    *ppWindow = (DkdWindow *)DKD_ALLOCATE(pAllocator, sizeof **ppWindow);
     if (*ppWindow == NULL) {
         DKD_LOG_ERROR(pLogger, "failed to allocate the window\n");
         out = 1;
@@ -140,6 +149,7 @@ dkdCreateWindow(DkdApplication *pApplication,
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     (*ppWindow)->pLogger = pLogger;
+    (*ppWindow)->pAllocator = pAllocator;
     (*ppWindow)->pHandle = glfwCreateWindow((int)pCreateInfo->width,
                                             (int)pCreateInfo->height,
                                             pCreateInfo->pTitle,
@@ -152,8 +162,8 @@ dkdCreateWindow(DkdApplication *pApplication,
     }
 
     pWindowSystemIntegratorData
-        = (DkdWindowSystemIntegrationCallbacksData *)malloc(
-            sizeof *pWindowSystemIntegratorData);
+        = (DkdWindowSystemIntegrationCallbacksData *)DKD_ALLOCATE(
+            (*ppWindow)->pAllocator, sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
         DKD_LOG_ERROR(
             pLogger,
@@ -187,7 +197,8 @@ dkdCreateWindow(DkdApplication *pApplication,
     goto exit;
 
 window_renderer_callbacks_data_undo:
-    free((*ppWindow)->windowSystemIntegrator.pData);
+    DKD_FREE((*ppWindow)->pAllocator,
+             (*ppWindow)->windowSystemIntegrator.pData);
 
 glfw_window_undo:
     glfwDestroyWindow((*ppWindow)->pHandle);
@@ -196,7 +207,7 @@ glfw_undo:
     glfwTerminate();
 
 window_undo:
-    free(*ppWindow);
+    DKD_FREE(pAllocator, *ppWindow);
 
 exit:
     return out;
@@ -215,10 +226,10 @@ dkdDestroyWindow(DkdApplication *pApplication, DkdWindow *pWindow)
 
     assert(pWindow->pHandle != NULL);
 
-    free(pWindow->windowSystemIntegrator.pData);
+    DKD_FREE(pWindow->pAllocator, pWindow->windowSystemIntegrator.pData);
     glfwDestroyWindow(pWindow->pHandle);
     glfwTerminate();
-    free(pWindow);
+    DKD_FREE(pWindow->pAllocator, pWindow);
 }
 
 void

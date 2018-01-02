@@ -3,10 +3,12 @@
 
 #define DKD_UNUSED(x) (void)(x)
 
+typedef struct DkdAllocationCallbacks DkdAllocationCallbacks;
 typedef struct DkdApplication DkdApplication;
 typedef struct DkdApplicationCreateInfo DkdApplicationCreateInfo;
 typedef struct DkdBootstrapCreateInfos DkdBootstrapCreateInfos;
 typedef struct DkdBootstrapHandles DkdBootstrapHandles;
+typedef struct DkdDekoiAllocationCallbacksData DkdDekoiAllocationCallbacksData;
 typedef struct DkdDekoiLoggingCallbacksData DkdDekoiLoggingCallbacksData;
 typedef struct DkdLoggingCallbacks DkdLoggingCallbacks;
 typedef struct DkdRenderer DkdRenderer;

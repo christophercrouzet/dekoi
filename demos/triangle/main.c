@@ -28,11 +28,13 @@ dkdSetup(DkdBootstrapHandles *pHandles)
     createInfos.application.minorVersion = minorVersion;
     createInfos.application.patchVersion = patchVersion;
     createInfos.application.pLogger = NULL;
+    createInfos.application.pAllocator = NULL;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
     createInfos.window.pTitle = pApplicationName;
     createInfos.window.pLogger = NULL;
+    createInfos.window.pAllocator = NULL;
 
     createInfos.renderer.pApplicationName = pApplicationName;
     createInfos.renderer.applicationMajorVersion = majorVersion;
@@ -48,6 +50,7 @@ dkdSetup(DkdBootstrapHandles *pHandles)
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
     createInfos.renderer.pLogger = NULL;
+    createInfos.renderer.pAllocator = NULL;
 
     return dkdSetupBootstrap(&createInfos, pHandles);
 }

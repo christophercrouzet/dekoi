@@ -9,6 +9,7 @@ struct DkdApplicationCreateInfo {
     unsigned int minorVersion;
     unsigned int patchVersion;
     const DkdLoggingCallbacks *pLogger;
+    const DkdAllocationCallbacks *pAllocator;
 };
 
 int

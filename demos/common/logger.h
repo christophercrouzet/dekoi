@@ -67,10 +67,12 @@ dkdGetDefaultLogger(const DkdLoggingCallbacks **ppLogger);
 
 int
 dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
+                               const DkdAllocationCallbacks *pAllocator,
                                const DkdLoggingCallbacks *pLogger,
                                DkLoggingCallbacks **ppDekoiLogger);
 
 void
-dkdDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger);
+dkdDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger,
+                                const DkdAllocationCallbacks *pAllocator);
 
 #endif /* DEKOI_DEMOS_COMMON_LOGGER_H */

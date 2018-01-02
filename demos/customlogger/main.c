@@ -27,11 +27,13 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
     createInfos.application.minorVersion = minorVersion;
     createInfos.application.patchVersion = patchVersion;
     createInfos.application.pLogger = pLogger;
+    createInfos.application.pAllocator = NULL;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
     createInfos.window.pTitle = pApplicationName;
     createInfos.window.pLogger = pLogger;
+    createInfos.window.pAllocator = NULL;
 
     createInfos.renderer.pApplicationName = pApplicationName;
     createInfos.renderer.applicationMajorVersion = majorVersion;
@@ -46,6 +48,7 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
     createInfos.renderer.pLogger = pLogger;
+    createInfos.renderer.pAllocator = NULL;
 
     return dkdSetupBootstrap(&createInfos, pHandles);
 }

@@ -1,5 +1,6 @@
 #include "logger.h"
 
+#include "allocator.h"
 #include "common.h"
 
 #include <dekoi/common/logger>
@@ -88,14 +89,17 @@ dkdGetDefaultLogger(const DkdLoggingCallbacks **ppLogger)
 
 int
 dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
+                               const DkdAllocationCallbacks *pAllocator,
                                const DkdLoggingCallbacks *pLogger,
                                DkLoggingCallbacks **ppDekoiLogger)
 {
     assert(pData != NULL);
+    assert(pAllocator != NULL);
     assert(pLogger != NULL);
     assert(ppDekoiLogger != NULL);
 
-    *ppDekoiLogger = (DkLoggingCallbacks *)malloc(sizeof **ppDekoiLogger);
+    *ppDekoiLogger = (DkLoggingCallbacks *)DKD_ALLOCATE(pAllocator,
+                                                        sizeof **ppDekoiLogger);
     if (*ppDekoiLogger == NULL) {
         DKD_LOG_ERROR(pLogger,
                       "failed to allocate Dekoi's logging callbacks\n");
@@ -108,7 +112,10 @@ dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
 }
 
 void
-dkdDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger)
+dkdDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger,
+                                const DkdAllocationCallbacks *pAllocator)
 {
-    free(pDekoiLogger);
+    assert(pAllocator != NULL);
+
+    DKD_FREE(pAllocator, pDekoiLogger);
 }
