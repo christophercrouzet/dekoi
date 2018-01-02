@@ -91,8 +91,6 @@ dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
                                const DkdLoggingCallbacks *pLogger,
                                DkLoggingCallbacks **ppDekoiLogger)
 {
-    *ppDekoiLogger = NULL;
-
     assert(pData != NULL);
     assert(pLogger != NULL);
     assert(ppDekoiLogger != NULL);
