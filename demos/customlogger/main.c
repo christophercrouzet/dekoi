@@ -13,9 +13,6 @@ const unsigned int minorVersion = 0;
 const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
-const DkdShaderCreateInfo pShaderInfos[]
-    = {{DKD_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
-       {DKD_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
 const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 
 int
@@ -43,7 +40,7 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
     createInfos.renderer.surfaceWidth = width;
     createInfos.renderer.surfaceHeight = height;
     createInfos.renderer.shaderCount = 0;
-    createInfos.renderer.pShaderInfos = pShaderInfos;
+    createInfos.renderer.pShaderInfos = NULL;
     createInfos.renderer.clearColor[0] = clearColor[0];
     createInfos.renderer.clearColor[1] = clearColor[1];
     createInfos.renderer.clearColor[2] = clearColor[2];
