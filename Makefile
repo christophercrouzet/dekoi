@@ -336,6 +336,8 @@ clean:
 	@- rm -rf $(OUTDIR)
 	@- rm -f $(SHADER_OBJECTS:%=%.txt)
 
+.PHONY: clean
+
 # ------------------------------------------------------------------------------
 
 all: demos shaders
