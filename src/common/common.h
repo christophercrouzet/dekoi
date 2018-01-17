@@ -6,8 +6,7 @@
 #define DK_MINOR_VERSION 1
 #define DK_PATCH_VERSION 0
 
-#define DKP_STATIC_ASSERT(x, msg)                                              \
-    typedef char DKP_STATIC_ASSERTION_failed_##msg[(x) ? 1 : -1]
+#define DKP_STATIC_ASSERT(x, msg) typedef char dkp_##msg[(x) ? 1 : -1]
 
 #if defined(__x86_64__) || defined(_M_X64)
 #define DKP_ARCH_X86_64
