@@ -25,6 +25,7 @@ dkdLogVaList(void *pData,
     assert(pFormat != NULL);
 
     vfprintf(stderr, pFormat, args);
+    printf("¯\\_(ツ)_/¯\n");
 }
 
 static void
