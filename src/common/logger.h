@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include <stdarg.h>
+
 typedef enum DkLogLevel {
     DK_LOG_LEVEL_DEBUG = 0,
     DK_LOG_LEVEL_INFO = 1,
@@ -16,10 +18,17 @@ typedef void (*DkPfnLogCallback)(void *pData,
                                  int line,
                                  const char *pFormat,
                                  ...);
+typedef void (*DkPfnLogVaListCallback)(void *pData,
+                                       DkLogLevel level,
+                                       const char *pFile,
+                                       int line,
+                                       const char *pFormat,
+                                       va_list args);
 
 struct DkLoggingCallbacks {
     void *pData;
     DkPfnLogCallback pfnLog;
+    DkPfnLogVaListCallback pfnLogVaList;
 };
 
 const char *

@@ -11,6 +11,25 @@
 #include <stdlib.h>
 
 static void
+dkdLogVaList(void *pData,
+             DkdLogLevel level,
+             const char *pFile,
+             int line,
+             const char *pFormat,
+             va_list args)
+{
+    DKD_UNUSED(pData);
+    DKD_UNUSED(level);
+    DKD_UNUSED(pFile);
+    DKD_UNUSED(line);
+
+    assert(pFile != NULL);
+    assert(pFormat != NULL);
+
+    vfprintf(stderr, pFormat, args);
+}
+
+static void
 dkdLog(void *pData,
        DkdLogLevel level,
        const char *pFile,
@@ -20,20 +39,16 @@ dkdLog(void *pData,
 {
     va_list args;
 
-    DKD_UNUSED(pData);
-    DKD_UNUSED(level);
-    DKD_UNUSED(pFile);
-    DKD_UNUSED(line);
-
     assert(pFile != NULL);
     assert(pFormat != NULL);
 
     va_start(args, pFormat);
-    vfprintf(stderr, pFormat, args);
+    dkdLogVaList(pData, level, pFile, line, pFormat, args);
     va_end(args);
 }
 
-static const DkdLoggingCallbacks dkdDefaultLogger = {NULL, dkdLog};
+static const DkdLoggingCallbacks dkdDefaultLogger
+    = {NULL, dkdLog, dkdLogVaList};
 
 static DkdLogLevel
 dkdInterpretDekoiLogLevel(DkLogLevel level)
@@ -54,6 +69,28 @@ dkdInterpretDekoiLogLevel(DkLogLevel level)
 }
 
 static void
+dkdHandleDekoiLoggingVaList(void *pData,
+                      DkLogLevel level,
+                      const char *pFile,
+                      int line,
+                      const char *pFormat,
+                      va_list args)
+{
+    assert(pData != NULL);
+    assert(pFile != NULL);
+    assert(pFormat != NULL);
+
+    ((DkdDekoiLoggingCallbacksData *)pData)
+        ->pLogger->pfnLogVaList(
+            ((DkdDekoiLoggingCallbacksData *)pData)->pLogger->pData,
+            dkdInterpretDekoiLogLevel(level),
+            pFile,
+            line,
+            pFormat,
+            args);
+}
+
+static void
 dkdHandleDekoiLogging(void *pData,
                       DkLogLevel level,
                       const char *pFile,
@@ -68,14 +105,7 @@ dkdHandleDekoiLogging(void *pData,
     assert(pFormat != NULL);
 
     va_start(args, pFormat);
-    ((DkdDekoiLoggingCallbacksData *)pData)
-        ->pLogger->pfnLog(
-            ((DkdDekoiLoggingCallbacksData *)pData)->pLogger->pData,
-            dkdInterpretDekoiLogLevel(level),
-            pFile,
-            line,
-            pFormat,
-            args);
+    dkdHandleDekoiLoggingVaList(pData, level, pFile, line, pFormat, args);
     va_end(args);
 }
 
@@ -108,6 +138,7 @@ dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
 
     (*ppDekoiLogger)->pData = pData;
     (*ppDekoiLogger)->pfnLog = dkdHandleDekoiLogging;
+    (*ppDekoiLogger)->pfnLogVaList = dkdHandleDekoiLoggingVaList;
     return 0;
 }
 

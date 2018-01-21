@@ -5,6 +5,8 @@
 
 #include <dekoi/common/logger>
 
+#include <stdarg.h>
+
 #if defined(DKD_ENABLE_DEBUG_LOGGING)
 #define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_DEBUG
 #elif defined(DKD_ENABLE_INFO_LOGGING)
@@ -52,10 +54,17 @@ typedef void (*DkdPfnLogCallback)(void *pData,
                                   int line,
                                   const char *pFormat,
                                   ...);
+typedef void (*DkdPfnLogVaListCallback)(void *pData,
+                                        DkdLogLevel level,
+                                        const char *pFile,
+                                        int line,
+                                        const char *pFormat,
+                                        va_list args);
 
 struct DkdLoggingCallbacks {
     void *pData;
     DkdPfnLogCallback pfnLog;
+    DkdPfnLogVaListCallback pfnLogVaList;
 };
 
 struct DkdDekoiLoggingCallbacksData {

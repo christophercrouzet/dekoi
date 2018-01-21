@@ -116,17 +116,16 @@ dkdGetAnsiColorString(DkdAnsiColor color)
 }
 
 static void
-dkdLog(void *pData,
-       DkdLogLevel level,
-       const char *pFile,
-       int line,
-       const char *pFormat,
-       ...)
+dkdLogVaList(void *pData,
+             DkdLogLevel level,
+             const char *pFile,
+             int line,
+             const char *pFormat,
+             va_list args)
 {
     const char *pLevelName;
     const char *pLevelColorStart;
     const char *pLevelColorEnd;
-    va_list args;
 
     DKD_UNUSED(pData);
 
@@ -157,12 +156,28 @@ dkdLog(void *pData,
             pLevelName,
             pLevelColorEnd);
 
-    va_start(args, pFormat);
     vfprintf(stderr, pFormat, args);
+}
+
+static void
+dkdLog(void *pData,
+       DkdLogLevel level,
+       const char *pFile,
+       int line,
+       const char *pFormat,
+       ...)
+{
+    va_list args;
+
+    assert(pFile != NULL);
+    assert(pFormat != NULL);
+
+    va_start(args, pFormat);
+    dkdLogVaList(pData, level, pFile, line, pFormat, args);
     va_end(args);
 }
 
-static const DkdLoggingCallbacks dkdCustomLogger = {NULL, dkdLog};
+static const DkdLoggingCallbacks dkdCustomLogger = {NULL, dkdLog, dkdLogVaList};
 
 void
 dkdGetCustomLogger(const DkdLoggingCallbacks **ppLogger)

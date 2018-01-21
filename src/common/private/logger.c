@@ -10,15 +10,14 @@
 #include <stdio.h>
 
 static void
-dkpLog(void *pData,
-       DkLogLevel level,
-       const char *pFile,
-       int line,
-       const char *pFormat,
-       ...)
+dkpLogVaList(void *pData,
+             DkLogLevel level,
+             const char *pFile,
+             int line,
+             const char *pFormat,
+             va_list args)
 {
     const char *pLevelName;
-    va_list args;
 
     DKP_UNUSED(pData);
 
@@ -27,13 +26,29 @@ dkpLog(void *pData,
 
     pLevelName = dkGetLogLevelString(level);
 
-    va_start(args, pFormat);
     fprintf(stderr, "%s:%d: %s: ", pFile, line, pLevelName);
     vfprintf(stderr, pFormat, args);
+}
+
+static void
+dkpLog(void *pData,
+       DkLogLevel level,
+       const char *pFile,
+       int line,
+       const char *pFormat,
+       ...)
+{
+    va_list args;
+
+    DKP_ASSERT(pFile != NULL);
+    DKP_ASSERT(pFormat != NULL);
+
+    va_start(args, pFormat);
+    dkpLogVaList(pData, level, pFile, line, pFormat, args);
     va_end(args);
 }
 
-static const DkLoggingCallbacks dkpDefaultLogger = {NULL, dkpLog};
+static const DkLoggingCallbacks dkpDefaultLogger = {NULL, dkpLog, dkpLogVaList};
 
 void
 dkpGetDefaultLogger(const DkLoggingCallbacks **ppLogger)
