@@ -10,6 +10,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define ZR_ASSERT assert
+#define ZR_LOGGER_STATIC
+#define ZR_IMPLEMENTATION
+#include <zero/logger.h>
+
+static ZrLogLevel
+dkdTranslateLogLevelToZero(DkdLogLevel level)
+{
+    switch (level) {
+        case DKD_LOG_LEVEL_DEBUG:
+            return ZR_LOG_LEVEL_DEBUG;
+        case DKD_LOG_LEVEL_INFO:
+            return ZR_LOG_LEVEL_INFO;
+        case DKD_LOG_LEVEL_WARNING:
+            return ZR_LOG_LEVEL_WARNING;
+        case DKD_LOG_LEVEL_ERROR:
+            return ZR_LOG_LEVEL_ERROR;
+        default:
+            assert(0);
+            return ZR_LOG_LEVEL_DEBUG;
+    };
+}
+
 static void
 dkdLogVaList(void *pData,
              DkdLogLevel level,
@@ -19,14 +42,11 @@ dkdLogVaList(void *pData,
              va_list args)
 {
     DKD_UNUSED(pData);
-    DKD_UNUSED(level);
-    DKD_UNUSED(pFile);
-    DKD_UNUSED(line);
 
     assert(pFile != NULL);
     assert(pFormat != NULL);
 
-    vfprintf(stderr, pFormat, args);
+    zrLogVaList(dkdTranslateLogLevelToZero(level), pFile, line, pFormat, args);
 }
 
 static void
@@ -70,11 +90,11 @@ dkdTranslateLogLevelFromDekoi(DkLogLevel level)
 
 static void
 dkdHandleDekoiLoggingVaList(void *pData,
-                      DkLogLevel level,
-                      const char *pFile,
-                      int line,
-                      const char *pFormat,
-                      va_list args)
+                            DkLogLevel level,
+                            const char *pFile,
+                            int line,
+                            const char *pFormat,
+                            va_list args)
 {
     assert(pData != NULL);
     assert(pFile != NULL);

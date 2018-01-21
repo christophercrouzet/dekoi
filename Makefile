@@ -54,7 +54,7 @@ BINARYDIR := $(OUTDIR)/bin
 
 CFLAGS := -std=c99
 CXXFLAGS := -std=c++11
-CPPFLAGS := -Iinclude -fPIC \
+CPPFLAGS := -Iinclude -Ideps/zero/include -fPIC -D_POSIX_C_SOURCE=1 \
             -Wpedantic -Wall -Wextra -Waggregate-return -Wcast-align \
             -Wcast-qual -Wconversion -Wfloat-equal -Wpointer-arith -Wshadow \
             -Wstrict-overflow=5 -Wswitch -Wswitch-default -Wundef \

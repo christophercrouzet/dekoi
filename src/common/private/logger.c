@@ -7,7 +7,29 @@
 #include "../logger.h"
 
 #include <stdarg.h>
-#include <stdio.h>
+
+#define ZR_ASSERT DKP_ASSERT
+#define ZR_LOGGER_STATIC
+#define ZR_IMPLEMENTATION
+#include <zero/logger.h>
+
+static ZrLogLevel
+dkpTranslateLogLevelToZero(DkLogLevel level)
+{
+    switch (level) {
+        case DK_LOG_LEVEL_DEBUG:
+            return ZR_LOG_LEVEL_DEBUG;
+        case DK_LOG_LEVEL_INFO:
+            return ZR_LOG_LEVEL_INFO;
+        case DK_LOG_LEVEL_WARNING:
+            return ZR_LOG_LEVEL_WARNING;
+        case DK_LOG_LEVEL_ERROR:
+            return ZR_LOG_LEVEL_ERROR;
+        default:
+            DKP_ASSERT(0);
+            return ZR_LOG_LEVEL_DEBUG;
+    };
+}
 
 static void
 dkpLogVaList(void *pData,
@@ -17,17 +39,12 @@ dkpLogVaList(void *pData,
              const char *pFormat,
              va_list args)
 {
-    const char *pLevelName;
-
     DKP_UNUSED(pData);
 
     DKP_ASSERT(pFile != NULL);
     DKP_ASSERT(pFormat != NULL);
 
-    pLevelName = dkGetLogLevelString(level);
-
-    fprintf(stderr, "%s:%d: %s: ", pFile, line, pLevelName);
-    vfprintf(stderr, pFormat, args);
+    zrLogVaList(dkpTranslateLogLevelToZero(level), pFile, line, pFormat, args);
 }
 
 static void

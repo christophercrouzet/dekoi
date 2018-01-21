@@ -1,0 +1,3 @@
+[submodule "deps/zero"]
+	path = deps/zero
+	url = git@github.com:christophercrouzet/zero.git
