@@ -3,6 +3,13 @@
 
 #include "common.h"
 
+typedef void (*DkdPfnRunCallback)(DkdApplication *pApplication, void *pData);
+
+struct DkdApplicationCallbacks {
+    void *pData;
+    DkdPfnRunCallback pfnRun;
+};
+
 struct DkdApplicationCreateInfo {
     const char *pName;
     unsigned int majorVersion;
@@ -10,6 +17,7 @@ struct DkdApplicationCreateInfo {
     unsigned int patchVersion;
     const DkdLoggingCallbacks *pLogger;
     const DkdAllocationCallbacks *pAllocator;
+    const DkdApplicationCallbacks *pCallbacks;
 };
 
 int

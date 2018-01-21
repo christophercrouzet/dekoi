@@ -11,6 +11,7 @@
 struct DkdApplication {
     const DkdLoggingCallbacks *pLogger;
     const DkdAllocationCallbacks *pAllocator;
+    const DkdApplicationCallbacks *pCallbacks;
     const char *pName;
     unsigned int majorVersion;
     unsigned int minorVersion;
@@ -50,6 +51,7 @@ dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
 
     (*ppApplication)->pLogger = pLogger;
     (*ppApplication)->pAllocator = pAllocator;
+    (*ppApplication)->pCallbacks = pCreateInfo->pCallbacks;
     (*ppApplication)->pName = pCreateInfo->pName;
     (*ppApplication)->majorVersion = pCreateInfo->majorVersion;
     (*ppApplication)->minorVersion = pCreateInfo->minorVersion;
@@ -84,6 +86,12 @@ dkdRunApplication(DkdApplication *pApplication)
         dkdGetWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
         if (pApplication->stopFlag) {
             break;
+        }
+
+        if (pApplication->pCallbacks != NULL
+            && pApplication->pCallbacks->pfnRun != NULL) {
+            pApplication->pCallbacks->pfnRun(pApplication,
+                                             pApplication->pCallbacks->pData);
         }
 
         if (dkdRenderWindowImage(pApplication->pWindow)) {

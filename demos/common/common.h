@@ -7,6 +7,7 @@
 
 typedef struct DkdAllocationCallbacks DkdAllocationCallbacks;
 typedef struct DkdApplication DkdApplication;
+typedef struct DkdApplicationCallbacks DkdApplicationCallbacks;
 typedef struct DkdApplicationCreateInfo DkdApplicationCreateInfo;
 typedef struct DkdBootstrapCreateInfos DkdBootstrapCreateInfos;
 typedef struct DkdBootstrapHandles DkdBootstrapHandles;

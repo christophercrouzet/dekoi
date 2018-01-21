@@ -28,6 +28,7 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
     createInfos.application.patchVersion = patchVersion;
     createInfos.application.pLogger = pLogger;
     createInfos.application.pAllocator = NULL;
+    createInfos.application.pCallbacks = NULL;
 
     createInfos.window.width = width;
     createInfos.window.height = height;

@@ -29,6 +29,7 @@ dkdSetup(DkdBootstrapHandles *pHandles)
     createInfos.application.patchVersion = patchVersion;
     createInfos.application.pLogger = NULL;
     createInfos.application.pAllocator = NULL;
+    createInfos.application.pCallbacks = NULL;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
