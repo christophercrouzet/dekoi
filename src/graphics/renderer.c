@@ -170,7 +170,7 @@ dkpCheckShaderStage(DkShaderStage shaderStage)
 }
 
 static VkShaderStageFlagBits
-dkpTranslateShaderStage(DkShaderStage shaderStage)
+dkpTranslateShaderStageToBackEnd(DkShaderStage shaderStage)
 {
     switch (shaderStage) {
         case DK_SHADER_STAGE_VERTEX:
@@ -1869,7 +1869,8 @@ dkpCreateShaders(const DkpDevice *pDevice,
         }
 
         DKP_ASSERT(dkpCheckShaderStage(pShaderInfos[i].stage));
-        (*ppShaders)[i].stage = dkpTranslateShaderStage(pShaderInfos[i].stage);
+        (*ppShaders)[i].stage
+            = dkpTranslateShaderStageToBackEnd(pShaderInfos[i].stage);
         (*ppShaders)[i].pEntryPointName = pShaderInfos[i].pEntryPointName;
     }
 

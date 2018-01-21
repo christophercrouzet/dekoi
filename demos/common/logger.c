@@ -51,7 +51,7 @@ static const DkdLoggingCallbacks dkdDefaultLogger
     = {NULL, dkdLog, dkdLogVaList};
 
 static DkdLogLevel
-dkdInterpretDekoiLogLevel(DkLogLevel level)
+dkdTranslateLogLevelFromDekoi(DkLogLevel level)
 {
     switch (level) {
         case DK_LOG_LEVEL_DEBUG:
@@ -83,7 +83,7 @@ dkdHandleDekoiLoggingVaList(void *pData,
     ((DkdDekoiLoggingCallbacksData *)pData)
         ->pLogger->pfnLogVaList(
             ((DkdDekoiLoggingCallbacksData *)pData)->pLogger->pData,
-            dkdInterpretDekoiLogLevel(level),
+            dkdTranslateLogLevelFromDekoi(level),
             pFile,
             line,
             pFormat,

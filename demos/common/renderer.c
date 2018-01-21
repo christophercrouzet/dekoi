@@ -93,7 +93,7 @@ dkdDestroyShaderCode(DkUint32 *pShaderCode,
 }
 
 static DkShaderStage
-dkdTranslateShaderStage(DkdShaderStage shaderStage)
+dkdTranslateShaderStageToDekoi(DkdShaderStage shaderStage)
 {
     switch (shaderStage) {
         case DKD_SHADER_STAGE_VERTEX:
@@ -173,8 +173,8 @@ dkdCreateRenderer(DkdWindow *pWindow,
                 goto shader_infos_cleanup;
             }
 
-            pShaderInfos[i].stage
-                = dkdTranslateShaderStage(pCreateInfo->pShaderInfos[i].stage);
+            pShaderInfos[i].stage = dkdTranslateShaderStageToDekoi(
+                pCreateInfo->pShaderInfos[i].stage);
             pShaderInfos[i].codeSize = codeSize;
             pShaderInfos[i].pCode = pCode;
             pShaderInfos[i].pEntryPointName
