@@ -263,13 +263,15 @@ renderer_undo:
 cleanup:;
 
 shader_infos_cleanup:
-    for (i = 0; i < pCreateInfo->shaderCount; ++i) {
-        if (pShaderInfos[i].pCode != NULL) {
-            dkdDestroyShaderCode(pShaderInfos[i].pCode, pAllocator);
+    if (pShaderInfos != NULL) {
+        for (i = 0; i < pCreateInfo->shaderCount; ++i) {
+            if (pShaderInfos[i].pCode != NULL) {
+                dkdDestroyShaderCode(pShaderInfos[i].pCode, pAllocator);
+            }
         }
-    }
 
-    DKD_FREE(pAllocator, pShaderInfos);
+        DKD_FREE(pAllocator, pShaderInfos);
+    }
 
 exit:
     return out;
