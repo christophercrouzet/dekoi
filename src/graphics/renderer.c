@@ -730,6 +730,7 @@ dkpCreateDebugReportCallback(VkInstance instanceHandle,
     PFN_vkCreateDebugReportCallbackEXT function;
 
     DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pCallbackHandle != NULL);
 
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -794,6 +795,7 @@ dkpCreateSurface(
 {
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(pWindowSystemIntegrator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSurfaceHandle != NULL);
 
     if (pWindowSystemIntegrator->pfnCreateSurface(
@@ -831,6 +833,7 @@ dkpCreateDeviceExtensionNames(DkpPresentSupport presentSupport,
                               const char ***pppExtensionNames)
 {
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pExtensionCount != NULL);
     DKP_ASSERT(pppExtensionNames != NULL);
 
@@ -878,6 +881,7 @@ dkpCheckDeviceExtensionsSupport(VkPhysicalDevice physicalDeviceHandle,
 
     DKP_ASSERT(physicalDeviceHandle != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSupported != NULL);
 
     out = DK_SUCCESS;
@@ -959,6 +963,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
     DKP_ASSERT(physicalDeviceHandle != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pQueueFamilyIndices != NULL);
 
     out = DK_SUCCESS;
@@ -1173,6 +1178,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     VkPresentModeKHR *pPresentModes;
 
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSwapChainProperties != NULL);
 
     if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
@@ -1301,6 +1307,12 @@ dkpCheckSwapChainSupport(VkPhysicalDevice physicalDeviceHandle,
     VkExtent2D imageExtent;
     DkpSwapChainProperties swapChainProperties;
 
+    DKP_ASSERT(physicalDeviceHandle != NULL);
+    DKP_ASSERT(surfaceHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
+    DKP_ASSERT(pSupported != NULL);
+
     *pSupported = DKP_FALSE;
 
     /*
@@ -1344,6 +1356,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
 
     DKP_ASSERT(physicalDeviceHandle != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pQueueFamilyIndices != NULL);
     DKP_ASSERT(pSuitable != NULL);
 
@@ -1419,6 +1432,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
 
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pQueueFamilyIndices != NULL);
     DKP_ASSERT(pPhysicalDeviceHandle != NULL);
 
@@ -1511,6 +1525,7 @@ dkpCreateDevice(VkInstance instanceHandle,
 
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pDevice != NULL);
 
     out = DK_SUCCESS;
@@ -1694,6 +1709,9 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
     int i;
     VkSemaphoreCreateInfo createInfo;
 
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppSemaphoreHandles != NULL);
 
     out = DK_SUCCESS;
@@ -1780,6 +1798,7 @@ dkpCreateShaderModule(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pShaderCode != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pShaderModuleHandle != NULL);
 
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -1829,6 +1848,7 @@ dkpCreateShaders(const DkpDevice *pDevice,
     DKP_ASSERT(shaderCount > 0);
     DKP_ASSERT(pShaderInfos != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppShaders != NULL);
 
     out = DK_SUCCESS;
@@ -1915,6 +1935,7 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(swapChainHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pImageCount != NULL);
     DKP_ASSERT(ppImageHandles != NULL);
 
@@ -1991,6 +2012,7 @@ dkpCreateSwapChainImageViews(const DkpDevice *pDevice,
     DKP_ASSERT(imageCount > 0);
     DKP_ASSERT(pImageHandles != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppImageViewHandles != NULL);
 
     out = DK_SUCCESS;
@@ -2097,6 +2119,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->physicalHandle != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSwapChain != NULL);
 
     out = DK_SUCCESS;
@@ -2273,6 +2296,7 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pSwapChain != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pRenderPassHandle != NULL);
 
     out = DK_SUCCESS;
@@ -2411,6 +2435,7 @@ dkpCreatePipelineLayout(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pPipelineLayoutHandle != NULL);
 
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -2484,6 +2509,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
     DKP_ASSERT(pShaders != NULL);
     DKP_ASSERT(pImageExtent != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pPipelineHandle != NULL);
 
     out = DK_SUCCESS;
@@ -2719,6 +2745,7 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pImageExtent != NULL);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppFramebufferHandles != NULL);
 
     out = DK_SUCCESS;
@@ -2815,6 +2842,7 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pCommandPoolHandle != NULL);
 
     createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -2864,6 +2892,7 @@ dkpCreateGraphicsCommandBuffers(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain->imageCount > 0);
     DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppCommandBufferHandles != NULL);
 
     out = DK_SUCCESS;
@@ -2941,6 +2970,8 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
     DKP_ASSERT(pFramebufferHandles != NULL);
     DKP_ASSERT(pCommandBufferHandles != NULL);
     DKP_ASSERT(pImageExtent != NULL);
+    DKP_ASSERT(pClearColor != NULL);
+    DKP_ASSERT(pLogger != NULL);
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
         VkCommandBufferBeginInfo beginInfo;
@@ -3227,6 +3258,7 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
     uint32_t i;
 
     DKP_ASSERT(pCreateInfo != NULL);
+    DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pValid != NULL);
 
     *pValid = DKP_FALSE;
