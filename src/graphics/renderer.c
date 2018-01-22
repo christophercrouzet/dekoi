@@ -10,21 +10,10 @@
 #include "../common/common.h"
 #include "../common/logger.h"
 
-/* Provide a code path to Vulkan's inclusion without using 'stdint.h' */
-#ifndef DK_USE_STD_FIXED_TYPES
-#define VK_NO_STDINT_H
-typedef DkInt8 int8_t;
-typedef DkUint8 uint8_t;
-typedef DkInt16 int16_t;
-typedef DkUint16 uint16_t;
-typedef DkInt32 int32_t;
-typedef DkUint32 uint32_t;
-typedef DkInt64 int64_t;
-typedef DkUint64 uint64_t;
-#endif
 #include <vulkan/vulkan.h>
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #ifndef DK_RENDERER_DEBUG_REPORT
