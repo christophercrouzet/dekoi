@@ -3,17 +3,10 @@
 
 #include "common.h"
 
-typedef enum DkdShaderStage {
-    DKD_SHADER_STAGE_VERTEX = 0,
-    DKD_SHADER_STAGE_TESSELLATION_CONTROL = 1,
-    DKD_SHADER_STAGE_TESSELLATION_EVALUATION = 2,
-    DKD_SHADER_STAGE_GEOMETRY = 3,
-    DKD_SHADER_STAGE_FRAGMENT = 4,
-    DKD_SHADER_STAGE_COMPUTE = 5
-} DkdShaderStage;
+#include <dekoi/graphics/renderer>
 
 struct DkdShaderCreateInfo {
-    DkdShaderStage stage;
+    DkShaderStage stage;
     const char *pFilePath;
     const char *pEntryPointName;
 };

@@ -2,6 +2,8 @@
 #include "../common/bootstrap.h"
 #include "../common/common.h"
 
+#include <dekoi/graphics/renderer>
+
 #include <assert.h>
 #include <stddef.h>
 
@@ -12,8 +14,8 @@ const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
 const DkdShaderCreateInfo pShaderInfos[]
-    = {{DKD_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
-       {DKD_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
+    = {{DK_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
+       {DK_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
 const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 
 int

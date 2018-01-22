@@ -92,28 +92,6 @@ dkdDestroyShaderCode(DkUint32 *pShaderCode,
     DKD_FREE(pAllocator, pShaderCode);
 }
 
-static DkShaderStage
-dkdTranslateShaderStageToDekoi(DkdShaderStage shaderStage)
-{
-    switch (shaderStage) {
-        case DKD_SHADER_STAGE_VERTEX:
-            return DK_SHADER_STAGE_VERTEX;
-        case DKD_SHADER_STAGE_TESSELLATION_CONTROL:
-            return DK_SHADER_STAGE_TESSELLATION_CONTROL;
-        case DKD_SHADER_STAGE_TESSELLATION_EVALUATION:
-            return DK_SHADER_STAGE_TESSELLATION_EVALUATION;
-        case DKD_SHADER_STAGE_GEOMETRY:
-            return DK_SHADER_STAGE_GEOMETRY;
-        case DKD_SHADER_STAGE_FRAGMENT:
-            return DK_SHADER_STAGE_FRAGMENT;
-        case DKD_SHADER_STAGE_COMPUTE:
-            return DK_SHADER_STAGE_COMPUTE;
-        default:
-            assert(0);
-            return (DkShaderStage)0;
-    }
-}
-
 int
 dkdCreateRenderer(DkdWindow *pWindow,
                   const DkdRendererCreateInfo *pCreateInfo,
@@ -173,8 +151,7 @@ dkdCreateRenderer(DkdWindow *pWindow,
                 goto shader_infos_cleanup;
             }
 
-            pShaderInfos[i].stage = dkdTranslateShaderStageToDekoi(
-                pCreateInfo->pShaderInfos[i].stage);
+            pShaderInfos[i].stage = pCreateInfo->pShaderInfos[i].stage;
             pShaderInfos[i].codeSize = codeSize;
             pShaderInfos[i].pCode = pCode;
             pShaderInfos[i].pEntryPointName
