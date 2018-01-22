@@ -27,8 +27,8 @@
 /*
    The environment macro represents whether the code is to be generated for a
    32-bit or 64-bit target platform. Some CPUs, such as the x86-64 processors,
-   allow generating code for 32-bit environments using the -m32 or -mx32
-   compiler switches, in which case `DK_ENVIRONMENT` is set to 32.
+   allow running code in 32-bit mode if compiled using the -m32 or -mx32
+   compiler switches, in which case `ZR_ENVIRONMENT` is set to 32.
 */
 #ifndef DK_ENVIRONMENT
 #if (!defined(DKP_ARCH_X86_64) || defined(__ILP32__))                          \
@@ -56,8 +56,9 @@ typedef uint64_t DkUint64;
 #else
 /*
    The focus here is on the common data models, that is ILP32 (most recent
-   32-bit systems), LP64 (Linux, macOS, ARM), and LLP64 (Windows). All of these
-   models have the `int` type set to 32 bits, and `long long` to 64 bits.
+   32-bit systems), LP64 (Unix-like systems), and LLP64 (Windows). All of these
+   models have the `char` type set to 8 bits, `short` to 16 bits, `int` to
+   32 bits, and `long long` to 64 bits.
 */
 typedef char DkInt8;
 typedef unsigned char DkUint8;
@@ -76,7 +77,7 @@ typedef size_t DkSize;
 /*
    The C standard provides no guarantees about the size of the type `size_t`,
    and some exotic platforms will in fact provide original values, but this
-   should cover all of the use cases falling in the scope of this project.
+   should cover most of the use cases.
 */
 #if DK_ENVIRONMENT == 32
 typedef DkUint32 DkSize;
