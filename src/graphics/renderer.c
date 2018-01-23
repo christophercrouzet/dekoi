@@ -572,6 +572,7 @@ dkpCreateInstance(
     VkInstanceCreateInfo createInfo;
 
     DKP_ASSERT(pApplicationName != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pInstanceHandle != NULL);
@@ -691,6 +692,7 @@ dkpDestroyInstance(VkInstance instanceHandle,
                    const VkAllocationCallbacks *pBackEndAllocator)
 {
     DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyInstance(instanceHandle, pBackEndAllocator);
 }
@@ -730,6 +732,7 @@ dkpCreateDebugReportCallback(VkInstance instanceHandle,
     PFN_vkCreateDebugReportCallbackEXT function;
 
     DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pCallbackHandle != NULL);
 
@@ -769,6 +772,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(callbackHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
 
     function = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
@@ -795,6 +799,7 @@ dkpCreateSurface(
 {
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(pWindowSystemIntegrator != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSurfaceHandle != NULL);
 
@@ -821,6 +826,7 @@ dkpDestroySurface(VkInstance instanceHandle,
 {
     DKP_ASSERT(instanceHandle != NULL);
     DKP_ASSERT(surfaceHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroySurfaceKHR(instanceHandle, surfaceHandle, pBackEndAllocator);
 }
@@ -1524,6 +1530,7 @@ dkpCreateDevice(VkInstance instanceHandle,
     VkDeviceCreateInfo createInfo;
 
     DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pDevice != NULL);
@@ -1662,6 +1669,7 @@ dkpDestroyDevice(DkpDevice *pDevice,
 {
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyDevice(pDevice->logicalHandle, pBackEndAllocator);
 }
@@ -1710,6 +1718,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
     VkSemaphoreCreateInfo createInfo;
 
     DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppSemaphoreHandles != NULL);
@@ -1775,6 +1784,8 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pSemaphoreHandles != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+    DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < DKP_SEMAPHORE_ID_ENUM_COUNT; ++i) {
         DKP_ASSERT(pSemaphoreHandles[i] != VK_NULL_HANDLE);
@@ -1798,6 +1809,7 @@ dkpCreateShaderModule(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pShaderCode != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pShaderModuleHandle != NULL);
 
@@ -1827,6 +1839,7 @@ dkpDestroyShaderModule(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(shaderModuleHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyShaderModule(
         pDevice->logicalHandle, shaderModuleHandle, pBackEndAllocator);
@@ -1847,6 +1860,7 @@ dkpCreateShaders(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(shaderCount > 0);
     DKP_ASSERT(pShaderInfos != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppShaders != NULL);
@@ -1910,6 +1924,7 @@ dkpDestroyShaders(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pShaders != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < shaderCount; ++i) {
@@ -2011,6 +2026,7 @@ dkpCreateSwapChainImageViews(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(imageCount > 0);
     DKP_ASSERT(pImageHandles != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppImageViewHandles != NULL);
@@ -2087,6 +2103,7 @@ dkpDestroySwapChainImageViews(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pImageViewHandles != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < imageCount; ++i) {
@@ -2118,6 +2135,7 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->physicalHandle != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pSwapChain != NULL);
@@ -2261,6 +2279,7 @@ dkpDestroySwapChain(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain->handle != VK_NULL_HANDLE);
     DKP_ASSERT(pSwapChain->pImageHandles != NULL);
     DKP_ASSERT(pSwapChain->pImageViewHandles != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
 
     dkpDestroySwapChainImageViews(pDevice,
@@ -2295,6 +2314,7 @@ dkpCreateRenderPass(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pSwapChain != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pRenderPassHandle != NULL);
@@ -2420,6 +2440,7 @@ dkpDestroyRenderPass(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyRenderPass(
         pDevice->logicalHandle, renderPassHandle, pBackEndAllocator);
@@ -2435,6 +2456,7 @@ dkpCreatePipelineLayout(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pPipelineLayoutHandle != NULL);
 
@@ -2466,6 +2488,7 @@ dkpDestroyPipelineLayout(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pipelineLayoutHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyPipelineLayout(
         pDevice->logicalHandle, pipelineLayoutHandle, pBackEndAllocator);
@@ -2508,6 +2531,7 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
     DKP_ASSERT(shaderCount > 0);
     DKP_ASSERT(pShaders != NULL);
     DKP_ASSERT(pImageExtent != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pPipelineHandle != NULL);
@@ -2719,6 +2743,7 @@ dkpDestroyGraphicsPipeline(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pipelineHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyPipeline(
         pDevice->logicalHandle, pipelineHandle, pBackEndAllocator);
@@ -2744,6 +2769,7 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain->pImageViewHandles != NULL);
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pImageExtent != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(ppFramebufferHandles != NULL);
@@ -2821,6 +2847,7 @@ dkpDestroyFramebuffers(const DkpDevice *pDevice,
     DKP_ASSERT(pSwapChain != NULL);
     DKP_ASSERT(pSwapChain->imageCount > 0);
     DKP_ASSERT(pFramebufferHandles != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
@@ -2842,6 +2869,7 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
     DKP_ASSERT(pCommandPoolHandle != NULL);
 
@@ -2870,6 +2898,7 @@ dkpDestroyGraphicsCommandPool(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
 
     vkDestroyCommandPool(
         pDevice->logicalHandle, commandPoolHandle, pBackEndAllocator);
@@ -2971,6 +3000,7 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
     DKP_ASSERT(pCommandBufferHandles != NULL);
     DKP_ASSERT(pImageExtent != NULL);
     DKP_ASSERT(pClearColor != NULL);
+    DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
