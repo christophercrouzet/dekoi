@@ -1454,7 +1454,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
 
     if (physicalDeviceCount == 0) {
         DKP_LOG_ERROR(pLogger, "no physical device available\n");
-        out = DK_ERROR_NOT_AVAILABLE;
+        out = DK_ERROR;
         goto exit;
     }
 
@@ -1967,7 +1967,7 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
 
     if (*pImageCount == 0) {
         DKP_LOG_ERROR(pLogger, "no swap chain image available\n");
-        out = DK_ERROR_NOT_AVAILABLE;
+        out = DK_ERROR;
         goto exit;
     }
 
