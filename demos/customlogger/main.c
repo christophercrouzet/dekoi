@@ -14,6 +14,8 @@ const unsigned int patchVersion = 0;
 const unsigned int width = 1280;
 const unsigned int height = 720;
 const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+const uint32_t vertexCount = 0;
+const uint32_t instanceCount = 0;
 
 int
 dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
@@ -48,6 +50,14 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
     createInfos.renderer.clearColor[1] = clearColor[1];
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
+    createInfos.renderer.vertexBufferCount = 0;
+    createInfos.renderer.pVertexBufferInfos = NULL;
+    createInfos.renderer.vertexBindingDescriptionCount = 0;
+    createInfos.renderer.pVertexBindingDescriptionInfos = NULL;
+    createInfos.renderer.vertexAttributeDescriptionCount = 0;
+    createInfos.renderer.pVertexAttributeDescriptionInfos = NULL;
+    createInfos.renderer.vertexCount = vertexCount;
+    createInfos.renderer.instanceCount = instanceCount;
     createInfos.renderer.pLogger = pLogger;
     createInfos.renderer.pAllocator = NULL;
 

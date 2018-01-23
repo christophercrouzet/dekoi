@@ -21,6 +21,8 @@ const DkdShaderCreateInfo shaderInfos[]
     = {{DK_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
        {DK_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
 const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+const uint32_t vertexCount = 3;
+const uint32_t instanceCount = 1;
 
 typedef struct DkdApplicationCallbacksData {
     DkdAllocationCallbacks *pAllocator;
@@ -62,6 +64,14 @@ dkdSetup(const DkdAllocationCallbacks *pAllocator,
     createInfos.renderer.clearColor[1] = clearColor[1];
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
+    createInfos.renderer.vertexBufferCount = 0;
+    createInfos.renderer.pVertexBufferInfos = NULL;
+    createInfos.renderer.vertexBindingDescriptionCount = 0;
+    createInfos.renderer.pVertexBindingDescriptionInfos = NULL;
+    createInfos.renderer.vertexAttributeDescriptionCount = 0;
+    createInfos.renderer.pVertexAttributeDescriptionInfos = NULL;
+    createInfos.renderer.vertexCount = vertexCount;
+    createInfos.renderer.instanceCount = instanceCount;
     createInfos.renderer.pLogger = NULL;
     createInfos.renderer.pAllocator = pAllocator;
 

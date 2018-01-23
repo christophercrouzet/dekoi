@@ -205,6 +205,18 @@ dkdCreateRenderer(DkdWindow *pWindow,
     backEndInfo.clearColor[1] = (DkFloat32)pCreateInfo->clearColor[1];
     backEndInfo.clearColor[2] = (DkFloat32)pCreateInfo->clearColor[2];
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
+    backEndInfo.vertexBufferCount = (DkUint32)pCreateInfo->vertexBufferCount;
+    backEndInfo.pVertexBufferInfos = pCreateInfo->pVertexBufferInfos;
+    backEndInfo.vertexBindingDescriptionCount
+        = (DkUint32)pCreateInfo->vertexBindingDescriptionCount;
+    backEndInfo.pVertexBindingDescriptionInfos
+        = pCreateInfo->pVertexBindingDescriptionInfos;
+    backEndInfo.vertexAttributeDescriptionCount
+        = (DkUint32)pCreateInfo->vertexAttributeDescriptionCount;
+    backEndInfo.pVertexAttributeDescriptionInfos
+        = pCreateInfo->pVertexAttributeDescriptionInfos;
+    backEndInfo.vertexCount = (DkUint32)pCreateInfo->vertexCount;
+    backEndInfo.instanceCount = (DkUint32)pCreateInfo->instanceCount;
     backEndInfo.pLogger
         = pCreateInfo->pLogger == NULL ? NULL : (*ppRenderer)->pDekoiLogger;
     backEndInfo.pAllocator = pCreateInfo->pAllocator == NULL

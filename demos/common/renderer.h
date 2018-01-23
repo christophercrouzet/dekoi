@@ -5,6 +5,8 @@
 
 #include <dekoi/graphics/renderer>
 
+#include <stdint.h>
+
 struct DkdShaderCreateInfo {
     DkShaderStage stage;
     const char *pFilePath;
@@ -21,6 +23,15 @@ struct DkdRendererCreateInfo {
     unsigned int shaderCount;
     const DkdShaderCreateInfo *pShaderInfos;
     float clearColor[4];
+    uint32_t vertexBufferCount;
+    const DkVertexBufferCreateInfo *pVertexBufferInfos;
+    uint32_t vertexBindingDescriptionCount;
+    const DkVertexBindingDescriptionCreateInfo *pVertexBindingDescriptionInfos;
+    uint32_t vertexAttributeDescriptionCount;
+    const DkVertexAttributeDescriptionCreateInfo
+        *pVertexAttributeDescriptionInfos;
+    uint32_t vertexCount;
+    uint32_t instanceCount;
     const DkdLoggingCallbacks *pLogger;
     const DkdAllocationCallbacks *pAllocator;
 };

@@ -14,6 +14,16 @@ typedef enum DkShaderStage {
     DK_SHADER_STAGE_COMPUTE = 5
 } DkShaderStage;
 
+typedef enum DkVertexInputRate {
+    DK_VERTEX_INPUT_RATE_VERTEX = 0,
+    DK_VERTEX_INPUT_RATE_INSTANCE = 1
+} DkVertexInputRate;
+
+typedef enum DkFormat {
+    DK_FORMAT_R32G32_SFLOAT = 0,
+    DK_FORMAT_R32G32B32_SFLOAT = 1
+} DkFormat;
+
 #define DKP_DEFINE_VULKAN_HANDLE(object) typedef struct object##_T *object
 
 #if DK_ENVIRONMENT == 32
@@ -58,6 +68,24 @@ struct DkShaderCreateInfo {
     const char *pEntryPointName;
 };
 
+struct DkVertexBufferCreateInfo {
+    DkUint64 size;
+    DkUint64 offset;
+    const void *pData;
+};
+
+struct DkVertexBindingDescriptionCreateInfo {
+    DkUint32 stride;
+    DkVertexInputRate inputRate;
+};
+
+struct DkVertexAttributeDescriptionCreateInfo {
+    DkUint32 binding;
+    DkUint32 location;
+    DkUint32 offset;
+    DkFormat format;
+};
+
 struct DkRendererCreateInfo {
     const char *pApplicationName;
     DkUint32 applicationMajorVersion;
@@ -69,6 +97,15 @@ struct DkRendererCreateInfo {
     DkUint32 shaderCount;
     const DkShaderCreateInfo *pShaderInfos;
     DkFloat32 clearColor[4];
+    DkUint32 vertexBufferCount;
+    const DkVertexBufferCreateInfo *pVertexBufferInfos;
+    DkUint32 vertexBindingDescriptionCount;
+    const DkVertexBindingDescriptionCreateInfo *pVertexBindingDescriptionInfos;
+    DkUint32 vertexAttributeDescriptionCount;
+    const DkVertexAttributeDescriptionCreateInfo
+        *pVertexAttributeDescriptionInfos;
+    DkUint32 vertexCount;
+    DkUint32 instanceCount;
     const DkLoggingCallbacks *pLogger;
     const DkAllocationCallbacks *pAllocator;
 };

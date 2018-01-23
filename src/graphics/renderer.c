@@ -92,6 +92,12 @@ typedef struct DkpShader {
     const char *pEntryPointName;
 } DkpShader;
 
+typedef struct DkpVertexBuffer {
+    VkBuffer handle;
+    VkDeviceMemory memoryHandle;
+    VkDeviceSize offset;
+} DkpVertexBuffer;
+
 typedef struct DkpSwapChain {
     VkSwapchainKHR handle;
     VkSurfaceFormatKHR format;
@@ -107,6 +113,10 @@ struct DkRenderer {
     DkpBackEndAllocationCallbacskData backEndAllocatorData;
     VkAllocationCallbacks backEndAllocator;
     VkClearValue clearColor;
+    uint32_t vertexBindingDescriptionCount;
+    VkVertexInputBindingDescription *pVertexBindingDescriptions;
+    uint32_t vertexAttributeDescriptionCount;
+    VkVertexInputAttributeDescription *pVertexAttributeDescriptions;
     VkInstance instanceHandle;
     VkExtent2D surfaceExtent;
     VkSurfaceKHR surfaceHandle;
@@ -119,6 +129,8 @@ struct DkRenderer {
     VkSemaphore *pSemaphoreHandles;
     uint32_t shaderCount;
     DkpShader *pShaders;
+    uint32_t vertexBufferCount;
+    DkpVertexBuffer *pVertexBuffers;
     DkpSwapChain swapChain;
     VkRenderPass renderPassHandle;
     VkPipelineLayout pipelineLayoutHandle;
@@ -126,6 +138,8 @@ struct DkRenderer {
     VkFramebuffer *pFramebufferHandles;
     VkCommandPool graphicsCommandPoolHandle;
     VkCommandBuffer *pGraphicsCommandBufferHandles;
+    uint32_t vertexCount;
+    uint32_t instanceCount;
 };
 
 static const char *
@@ -177,6 +191,34 @@ dkpTranslateShaderStageToBackEnd(DkShaderStage shaderStage)
         default:
             DKP_ASSERT(0);
             return (VkShaderStageFlagBits)0;
+    }
+}
+
+static VkVertexInputRate
+dkpTranslateVertexInputRateToBackEnd(DkVertexInputRate inputRate)
+{
+    switch (inputRate) {
+        case DK_VERTEX_INPUT_RATE_VERTEX:
+            return VK_VERTEX_INPUT_RATE_VERTEX;
+        case DK_VERTEX_INPUT_RATE_INSTANCE:
+            return VK_VERTEX_INPUT_RATE_INSTANCE;
+        default:
+            DKP_ASSERT(0);
+            return (VkVertexInputRate)0;
+    }
+}
+
+static VkFormat
+dkpTranslateFormatToBackEnd(DkFormat format)
+{
+    switch (format) {
+        case DK_FORMAT_R32G32_SFLOAT:
+            return VK_FORMAT_R32G32_SFLOAT;
+        case DK_FORMAT_R32G32B32_SFLOAT:
+            return VK_FORMAT_R32G32B32_SFLOAT;
+        default:
+            DKP_ASSERT(0);
+            return (VkFormat)0;
     }
 }
 
@@ -1937,6 +1979,211 @@ dkpDestroyShaders(const DkpDevice *pDevice,
 }
 
 static DkResult
+dkpPickMemoryTypeIndex(const DkpDevice *pDevice,
+                       uint32_t typeFilter,
+                       VkMemoryPropertyFlags properties,
+                       const DkLoggingCallbacks *pLogger,
+                       uint32_t *pMemoryTypeIndex)
+{
+    uint32_t i;
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->physicalHandle != NULL);
+    DKP_ASSERT(pLogger != NULL);
+    DKP_ASSERT(pMemoryTypeIndex != NULL);
+
+    vkGetPhysicalDeviceMemoryProperties(pDevice->physicalHandle,
+                                        &memoryProperties);
+    for (i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+        if (typeFilter & ((uint32_t)1 << i)
+            && (memoryProperties.memoryTypes[i].propertyFlags & properties)
+                   == properties) {
+            *pMemoryTypeIndex = i;
+            return DK_SUCCESS;
+        }
+    }
+
+    DKP_LOG_ERROR(pLogger, "could not find a suitable memory type\n");
+    return DK_ERROR;
+}
+
+static DkResult
+dkpCreateVertexBuffers(const DkpDevice *pDevice,
+                       uint32_t vertexBufferCount,
+                       const DkVertexBufferCreateInfo *pVertexBufferInfos,
+                       const VkAllocationCallbacks *pBackEndAllocator,
+                       const DkAllocationCallbacks *pAllocator,
+                       const DkLoggingCallbacks *pLogger,
+                       DkpVertexBuffer **ppVertexBuffers)
+{
+    DkResult out;
+    uint32_t i;
+
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
+    DKP_ASSERT(ppVertexBuffers != NULL);
+
+    out = DK_SUCCESS;
+
+    if (vertexBufferCount == 0) {
+        *ppVertexBuffers = NULL;
+        goto exit;
+    }
+
+    *ppVertexBuffers = (DkpVertexBuffer *)DKP_ALLOCATE(
+        pAllocator, sizeof **ppVertexBuffers * vertexBufferCount);
+    if (*ppVertexBuffers == NULL) {
+        DKP_LOG_ERROR(pLogger, "failed to allocate the vertex buffers\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    for (i = 0; i < vertexBufferCount; ++i) {
+        (*ppVertexBuffers)[i].handle = VK_NULL_HANDLE;
+        (*ppVertexBuffers)[i].memoryHandle = VK_NULL_HANDLE;
+        (*ppVertexBuffers)[i].offset
+            = (VkDeviceSize)pVertexBufferInfos[i].offset;
+    }
+
+    for (i = 0; i < vertexBufferCount; ++i) {
+        VkBufferCreateInfo bufferInfo;
+        VkMemoryRequirements memoryRequirements;
+        VkMemoryAllocateInfo allocateInfo;
+        void *pData;
+
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.pNext = NULL;
+        bufferInfo.flags = 0;
+        bufferInfo.size = (VkDeviceSize)pVertexBufferInfos[i].size;
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferInfo.queueFamilyIndexCount = 0;
+        bufferInfo.pQueueFamilyIndices = NULL;
+
+        if (vkCreateBuffer(pDevice->logicalHandle,
+                           &bufferInfo,
+                           pBackEndAllocator,
+                           &(*ppVertexBuffers)[i].handle)
+            != VK_SUCCESS) {
+            DKP_LOG_ERROR(pLogger, "failed to create a vertex buffer\n");
+            out = DK_ERROR;
+            goto vertex_buffers_undo;
+        }
+
+        vkGetBufferMemoryRequirements(pDevice->logicalHandle,
+                                      (*ppVertexBuffers)[i].handle,
+                                      &memoryRequirements);
+
+        allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocateInfo.pNext = NULL;
+        allocateInfo.allocationSize = memoryRequirements.size;
+
+        dkpPickMemoryTypeIndex(pDevice,
+                               memoryRequirements.memoryTypeBits,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                                   | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                               pLogger,
+                               &allocateInfo.memoryTypeIndex);
+
+        if (vkAllocateMemory(pDevice->logicalHandle,
+                             &allocateInfo,
+                             pBackEndAllocator,
+                             &(*ppVertexBuffers)[i].memoryHandle)
+            != VK_SUCCESS) {
+            DKP_LOG_ERROR(pLogger,
+                          "failed to allocate a vertex buffer memory\n");
+            out = DK_ERROR;
+            goto vertex_buffers_undo;
+        }
+
+        if (vkBindBufferMemory(pDevice->logicalHandle,
+                               (*ppVertexBuffers)[i].handle,
+                               (*ppVertexBuffers)[i].memoryHandle,
+                               0)
+            != VK_SUCCESS) {
+            DKP_LOG_ERROR(pLogger, "failed to bind a vertex buffer memory\n");
+            out = DK_ERROR;
+            goto vertex_buffers_undo;
+        }
+
+        if (vkMapMemory(pDevice->logicalHandle,
+                        (*ppVertexBuffers)[i].memoryHandle,
+                        (VkDeviceSize)pVertexBufferInfos[i].offset,
+                        (VkDeviceSize)pVertexBufferInfos[i].size,
+                        0,
+                        &pData)
+            != VK_SUCCESS) {
+            DKP_LOG_ERROR(pLogger, "failed to map a vertex buffer memory\n");
+            out = DK_ERROR;
+            goto vertex_buffers_undo;
+        }
+
+        memcpy(pData,
+               pVertexBufferInfos[i].pData,
+               (size_t)pVertexBufferInfos[i].size);
+        vkUnmapMemory(pDevice->logicalHandle,
+                      (*ppVertexBuffers)[i].memoryHandle);
+    }
+
+    goto exit;
+
+vertex_buffers_undo:
+    for (i = 0; i < vertexBufferCount; ++i) {
+        if ((*ppVertexBuffers)[i].memoryHandle != VK_NULL_HANDLE) {
+            vkFreeMemory(pDevice->logicalHandle,
+                         (*ppVertexBuffers)[i].memoryHandle,
+                         pBackEndAllocator);
+        }
+
+        if ((*ppVertexBuffers)[i].handle != VK_NULL_HANDLE) {
+            vkDestroyBuffer(pDevice->logicalHandle,
+                            (*ppVertexBuffers)[i].handle,
+                            pBackEndAllocator);
+        }
+    }
+
+    DKP_FREE(pAllocator, *ppVertexBuffers);
+
+exit:
+    return out;
+}
+
+static void
+dkpDestroyVertexBuffers(const DkpDevice *pDevice,
+                        uint32_t vertexBufferCount,
+                        DkpVertexBuffer *pVertexBuffers,
+                        const VkAllocationCallbacks *pBackEndAllocator,
+                        const DkAllocationCallbacks *pAllocator)
+{
+    uint32_t i;
+
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+
+    for (i = 0; i < vertexBufferCount; ++i) {
+        DKP_ASSERT(pVertexBuffers[i].handle != VK_NULL_HANDLE);
+        DKP_ASSERT(pVertexBuffers[i].memoryHandle != VK_NULL_HANDLE);
+
+        vkFreeMemory(pDevice->logicalHandle,
+                     pVertexBuffers[i].memoryHandle,
+                     pBackEndAllocator);
+        vkDestroyBuffer(pDevice->logicalHandle,
+                        pVertexBuffers[i].handle,
+                        pBackEndAllocator);
+    }
+
+    if (pVertexBuffers != NULL) {
+        DKP_FREE(pAllocator, pVertexBuffers);
+    }
+}
+
+static DkResult
 dkpCreateSwapChainImages(const DkpDevice *pDevice,
                          VkSwapchainKHR swapChainHandle,
                          const DkAllocationCallbacks *pAllocator,
@@ -2495,16 +2742,21 @@ dkpDestroyPipelineLayout(const DkpDevice *pDevice,
 }
 
 static DkResult
-dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
-                          VkPipelineLayout pipelineLayoutHandle,
-                          VkRenderPass renderPassHandle,
-                          uint32_t shaderCount,
-                          const DkpShader *pShaders,
-                          const VkExtent2D *pImageExtent,
-                          const VkAllocationCallbacks *pBackEndAllocator,
-                          const DkAllocationCallbacks *pAllocator,
-                          const DkLoggingCallbacks *pLogger,
-                          VkPipeline *pPipelineHandle)
+dkpCreateGraphicsPipeline(
+    const DkpDevice *pDevice,
+    VkPipelineLayout pipelineLayoutHandle,
+    VkRenderPass renderPassHandle,
+    uint32_t shaderCount,
+    const DkpShader *pShaders,
+    const VkExtent2D *pImageExtent,
+    uint32_t vertexBindingDescriptionCount,
+    const VkVertexInputBindingDescription *pVertexBindingDescriptions,
+    uint32_t vertexAttributeDescriptionCount,
+    const VkVertexInputAttributeDescription *pVertexAttributeDescriptions,
+    const VkAllocationCallbacks *pBackEndAllocator,
+    const DkAllocationCallbacks *pAllocator,
+    const DkLoggingCallbacks *pLogger,
+    VkPipeline *pPipelineHandle)
 {
     DkResult out;
     uint32_t i;
@@ -2614,10 +2866,14 @@ dkpCreateGraphicsPipeline(const DkpDevice *pDevice,
         = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputStateInfo.pNext = NULL;
     vertexInputStateInfo.flags = 0;
-    vertexInputStateInfo.vertexBindingDescriptionCount = 0;
-    vertexInputStateInfo.pVertexBindingDescriptions = NULL;
-    vertexInputStateInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputStateInfo.pVertexAttributeDescriptions = NULL;
+    vertexInputStateInfo.vertexBindingDescriptionCount
+        = vertexBindingDescriptionCount;
+    vertexInputStateInfo.pVertexBindingDescriptions
+        = pVertexBindingDescriptions;
+    vertexInputStateInfo.vertexAttributeDescriptionCount
+        = vertexAttributeDescriptionCount;
+    vertexInputStateInfo.pVertexAttributeDescriptions
+        = pVertexAttributeDescriptions;
 
     inputAssemblyStateInfo.sType
         = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -2989,9 +3245,17 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
                                 VkCommandBuffer *pCommandBufferHandles,
                                 const VkExtent2D *pImageExtent,
                                 const VkClearValue *pClearColor,
+                                uint32_t vertexBufferCount,
+                                const DkpVertexBuffer *pVertexBuffers,
+                                uint32_t vertexCount,
+                                uint32_t instanceCount,
+                                const DkAllocationCallbacks *pAllocator,
                                 const DkLoggingCallbacks *pLogger)
 {
+    DkResult out;
     uint32_t i;
+    VkBuffer *pBuffers;
+    VkDeviceSize *pOffsets;
 
     DKP_ASSERT(pSwapChain != NULL);
     DKP_ASSERT(renderPassHandle != VK_NULL_HANDLE);
@@ -3002,6 +3266,37 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
     DKP_ASSERT(pClearColor != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
+
+    out = DK_SUCCESS;
+
+    if (vertexBufferCount > 0) {
+        DKP_ASSERT(pVertexBuffers != NULL);
+
+        pBuffers = (VkBuffer *)DKP_ALLOCATE(
+            pAllocator, sizeof *pBuffers * vertexBufferCount);
+        if (pBuffers == NULL) {
+            DKP_LOG_ERROR(pLogger, "failed to create the vertex buffers\n");
+            out = DK_ERROR_ALLOCATION;
+            goto exit;
+        }
+
+        pOffsets = (VkDeviceSize *)DKP_ALLOCATE(
+            pAllocator, sizeof *pOffsets * vertexBufferCount);
+        if (pOffsets == NULL) {
+            DKP_LOG_ERROR(pLogger,
+                          "failed to create the vertex buffer offsets\n");
+            out = DK_ERROR_ALLOCATION;
+            goto buffers_cleanup;
+        }
+
+        for (i = 0; i < vertexBufferCount; ++i) {
+            pBuffers[i] = pVertexBuffers[i].handle;
+            pOffsets[i] = pVertexBuffers[i].offset;
+        }
+    } else {
+        pBuffers = NULL;
+        pOffsets = NULL;
+    }
 
     for (i = 0; i < pSwapChain->imageCount; ++i) {
         VkCommandBufferBeginInfo beginInfo;
@@ -3016,7 +3311,8 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
             != VK_SUCCESS) {
             DKP_LOG_ERROR(pLogger,
                           "could not begin the command buffer recording\n");
-            return DK_ERROR;
+            out = DK_ERROR;
+            goto offsets_cleanup;
         }
 
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -3035,17 +3331,33 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
         vkCmdBindPipeline(pCommandBufferHandles[i],
                           VK_PIPELINE_BIND_POINT_GRAPHICS,
                           pipelineHandle);
-        vkCmdDraw(pCommandBufferHandles[i], 3, 1, 0, 0);
+        if (vertexBufferCount > 0) {
+            vkCmdBindVertexBuffers(
+                pCommandBufferHandles[i], 0, 1, pBuffers, pOffsets);
+        }
+        vkCmdDraw(pCommandBufferHandles[i], vertexCount, instanceCount, 0, 0);
         vkCmdEndRenderPass(pCommandBufferHandles[i]);
 
         if (vkEndCommandBuffer(pCommandBufferHandles[i]) != VK_SUCCESS) {
             DKP_LOG_ERROR(pLogger,
                           "could not end the command buffer recording\n");
-            return DK_ERROR;
+            out = DK_ERROR;
+            goto offsets_cleanup;
         }
     }
 
-    return DK_SUCCESS;
+buffers_cleanup:
+    if (pBuffers != NULL) {
+        DKP_FREE(pAllocator, pBuffers);
+    }
+
+offsets_cleanup:
+    if (pOffsets != NULL) {
+        DKP_FREE(pAllocator, pOffsets);
+    }
+
+exit:
+    return out;
 }
 
 static DkResult
@@ -3097,6 +3409,10 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
                                   pRenderer->shaderCount,
                                   pRenderer->pShaders,
                                   &pRenderer->swapChain.imageExtent,
+                                  pRenderer->vertexBindingDescriptionCount,
+                                  pRenderer->pVertexBindingDescriptions,
+                                  pRenderer->vertexAttributeDescriptionCount,
+                                  pRenderer->pVertexAttributeDescriptions,
                                   &pRenderer->backEndAllocator,
                                   pRenderer->pAllocator,
                                   pRenderer->pLogger,
@@ -3150,6 +3466,11 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
             pRenderer->pGraphicsCommandBufferHandles,
             &pRenderer->swapChain.imageExtent,
             &pRenderer->clearColor,
+            pRenderer->vertexBufferCount,
+            pRenderer->pVertexBuffers,
+            pRenderer->vertexCount,
+            pRenderer->instanceCount,
+            pRenderer->pAllocator,
             pRenderer->pLogger)
         != DK_SUCCESS) {
         out = DK_ERROR;
@@ -3312,6 +3633,115 @@ dkpCheckRendererCreateInfo(const DkRendererCreateInfo *pCreateInfo,
     *pValid = DKP_TRUE;
 }
 
+static DkResult
+dkpCreateVertexBindingDescriptions(
+    uint32_t vertexBindingDescriptionCount,
+    const DkVertexBindingDescriptionCreateInfo *pCreateInfos,
+    const DkAllocationCallbacks *pAllocator,
+    const DkLoggingCallbacks *pLogger,
+    VkVertexInputBindingDescription **ppVertexBindingDescriptions)
+{
+    uint32_t i;
+
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
+    DKP_ASSERT(ppVertexBindingDescriptions != NULL);
+
+    if (vertexBindingDescriptionCount == 0 || pCreateInfos == NULL) {
+        *ppVertexBindingDescriptions = NULL;
+        return DK_SUCCESS;
+    }
+
+    *ppVertexBindingDescriptions
+        = (VkVertexInputBindingDescription *)DKP_ALLOCATE(
+            pAllocator,
+            sizeof **ppVertexBindingDescriptions
+                * vertexBindingDescriptionCount);
+    if (*ppVertexBindingDescriptions == NULL) {
+        DKP_LOG_ERROR(pLogger,
+                      "failed to allocate the vertex binding descriptions\n");
+        return DK_ERROR_ALLOCATION;
+    }
+
+    for (i = 0; i < vertexBindingDescriptionCount; ++i) {
+        (*ppVertexBindingDescriptions)[i].binding = (uint32_t)i;
+        (*ppVertexBindingDescriptions)[i].stride
+            = (uint32_t)pCreateInfos[i].stride;
+        (*ppVertexBindingDescriptions)[i].inputRate
+            = dkpTranslateVertexInputRateToBackEnd(pCreateInfos[i].inputRate);
+    }
+
+    return DK_SUCCESS;
+}
+
+static void
+dkpDestroyVertexBindingDescriptions(
+    VkVertexInputBindingDescription *pVertexBindingDescriptions,
+    const DkAllocationCallbacks *pAllocator)
+{
+    DKP_ASSERT(pAllocator != NULL);
+
+    if (pVertexBindingDescriptions != NULL) {
+        DKP_FREE(pAllocator, pVertexBindingDescriptions);
+    }
+}
+
+static DkResult
+dkpCreateVertexAttributeDescriptions(
+    uint32_t vertexAttributeDescriptionCount,
+    const DkVertexAttributeDescriptionCreateInfo *pCreateInfos,
+    const DkAllocationCallbacks *pAllocator,
+    const DkLoggingCallbacks *pLogger,
+    VkVertexInputAttributeDescription **ppVertexAttributeDescriptions)
+{
+    uint32_t i;
+
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
+    DKP_ASSERT(ppVertexAttributeDescriptions != NULL);
+
+    if (vertexAttributeDescriptionCount == 0 || pCreateInfos == NULL) {
+        *ppVertexAttributeDescriptions = NULL;
+        return DK_SUCCESS;
+    }
+
+    *ppVertexAttributeDescriptions
+        = (VkVertexInputAttributeDescription *)DKP_ALLOCATE(
+            pAllocator,
+            sizeof **ppVertexAttributeDescriptions
+                * vertexAttributeDescriptionCount);
+    if (*ppVertexAttributeDescriptions == NULL) {
+        DKP_LOG_ERROR(pLogger,
+                      "failed to allocate the vertex attribute descriptions\n");
+        return DK_ERROR_ALLOCATION;
+    }
+
+    for (i = 0; i < vertexAttributeDescriptionCount; ++i) {
+        (*ppVertexAttributeDescriptions)[i].location
+            = (uint32_t)pCreateInfos[i].location;
+        (*ppVertexAttributeDescriptions)[i].binding
+            = (uint32_t)pCreateInfos[i].binding;
+        (*ppVertexAttributeDescriptions)[i].offset
+            = (uint32_t)pCreateInfos[i].offset;
+        (*ppVertexAttributeDescriptions)[i].format
+            = dkpTranslateFormatToBackEnd(pCreateInfos[i].format);
+    }
+
+    return DK_SUCCESS;
+}
+
+static void
+dkpDestroyVertexAttributeDescriptions(
+    VkVertexInputAttributeDescription *pVertexAttributeDescriptions,
+    const DkAllocationCallbacks *pAllocator)
+{
+    DKP_ASSERT(pAllocator != NULL);
+
+    if (pVertexAttributeDescriptions != NULL) {
+        DKP_FREE(pAllocator, pVertexAttributeDescriptions);
+    }
+}
+
 DkResult
 dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer)
@@ -3378,12 +3808,41 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         = dkpNotifyBackEndInternalAllocation;
     (*ppRenderer)->backEndAllocator.pfnInternalFree
         = dkpNotifyBackEndInternalFreeing;
+
     (*ppRenderer)->surfaceExtent.width = (uint32_t)pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t)pCreateInfo->surfaceHeight;
+    (*ppRenderer)->vertexCount = (uint32_t)pCreateInfo->vertexCount;
+    (*ppRenderer)->instanceCount = (uint32_t)pCreateInfo->instanceCount;
 
     for (i = 0; i < 4; ++i) {
         (*ppRenderer)->clearColor.color.float32[i]
             = (float)pCreateInfo->clearColor[i];
+    }
+
+    (*ppRenderer)->vertexBindingDescriptionCount
+        = (uint32_t)pCreateInfo->vertexBindingDescriptionCount;
+    if (dkpCreateVertexBindingDescriptions(
+            (*ppRenderer)->vertexBindingDescriptionCount,
+            pCreateInfo->pVertexBindingDescriptionInfos,
+            (*ppRenderer)->pAllocator,
+            (*ppRenderer)->pLogger,
+            &(*ppRenderer)->pVertexBindingDescriptions)
+        != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto renderer_undo;
+    }
+
+    (*ppRenderer)->vertexAttributeDescriptionCount
+        = (uint32_t)pCreateInfo->vertexAttributeDescriptionCount;
+    if (dkpCreateVertexAttributeDescriptions(
+            (*ppRenderer)->vertexAttributeDescriptionCount,
+            pCreateInfo->pVertexAttributeDescriptionInfos,
+            (*ppRenderer)->pAllocator,
+            (*ppRenderer)->pLogger,
+            &(*ppRenderer)->pVertexAttributeDescriptions)
+        != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto vertex_binding_descriptions_undo;
     }
 
     if (dkpCreateInstance(pCreateInfo->pApplicationName,
@@ -3397,7 +3856,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                           &(*ppRenderer)->instanceHandle)
         != DK_SUCCESS) {
         out = DK_ERROR;
-        goto renderer_undo;
+        goto vertex_attribute_descriptions_undo;
     }
 
 #if DKP_RENDERER_DEBUG_REPORT
@@ -3455,16 +3914,30 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto device_undo;
     }
 
-    (*ppRenderer)->shaderCount = pCreateInfo->shaderCount;
+    (*ppRenderer)->shaderCount = (uint32_t)pCreateInfo->shaderCount;
     if (dkpCreateShaders(&(*ppRenderer)->device,
-                         (uint32_t)pCreateInfo->shaderCount,
+                         (*ppRenderer)->shaderCount,
                          pCreateInfo->pShaderInfos,
                          &(*ppRenderer)->backEndAllocator,
                          (*ppRenderer)->pAllocator,
                          (*ppRenderer)->pLogger,
-                         &(*ppRenderer)->pShaders)) {
+                         &(*ppRenderer)->pShaders)
+        != DK_SUCCESS) {
         out = DK_ERROR;
         goto semaphores_undo;
+    }
+
+    (*ppRenderer)->vertexBufferCount = (uint32_t)pCreateInfo->vertexBufferCount;
+    if (dkpCreateVertexBuffers(&(*ppRenderer)->device,
+                               (*ppRenderer)->vertexBufferCount,
+                               pCreateInfo->pVertexBufferInfos,
+                               &(*ppRenderer)->backEndAllocator,
+                               (*ppRenderer)->pAllocator,
+                               (*ppRenderer)->pLogger,
+                               &(*ppRenderer)->pVertexBuffers)
+        != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto shaders_undo;
     }
 
     if (!headless) {
@@ -3472,11 +3945,18 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                                              DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL)
             != DK_SUCCESS) {
             out = DK_ERROR;
-            goto shaders_undo;
+            goto vertex_buffers_undo;
         }
     }
 
     goto exit;
+
+vertex_buffers_undo:
+    dkpDestroyVertexBuffers(&(*ppRenderer)->device,
+                            (*ppRenderer)->vertexBufferCount,
+                            (*ppRenderer)->pVertexBuffers,
+                            &(*ppRenderer)->backEndAllocator,
+                            (*ppRenderer)->pAllocator);
 
 shaders_undo:
     dkpDestroyShaders(&(*ppRenderer)->device,
@@ -3515,6 +3995,14 @@ instance_undo:
     dkpDestroyInstance((*ppRenderer)->instanceHandle,
                        &(*ppRenderer)->backEndAllocator);
 
+vertex_attribute_descriptions_undo:
+    dkpDestroyVertexAttributeDescriptions(
+        (*ppRenderer)->pVertexAttributeDescriptions, (*ppRenderer)->pAllocator);
+
+vertex_binding_descriptions_undo:
+    dkpDestroyVertexBindingDescriptions(
+        (*ppRenderer)->pVertexBindingDescriptions, (*ppRenderer)->pAllocator);
+
 renderer_undo:
     DKP_FREE(pAllocator, (*ppRenderer));
     *ppRenderer = NULL;
@@ -3541,6 +4029,11 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                                           DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL);
     }
 
+    dkpDestroyVertexBuffers(&pRenderer->device,
+                            pRenderer->vertexBufferCount,
+                            pRenderer->pVertexBuffers,
+                            &pRenderer->backEndAllocator,
+                            pRenderer->pAllocator);
     dkpDestroyShaders(&pRenderer->device,
                       pRenderer->shaderCount,
                       pRenderer->pShaders,
@@ -3566,6 +4059,10 @@ dkDestroyRenderer(DkRenderer *pRenderer)
 #endif /* DKP_RENDERER_DEBUG_REPORT */
 
     dkpDestroyInstance(pRenderer->instanceHandle, &pRenderer->backEndAllocator);
+    dkpDestroyVertexAttributeDescriptions(
+        pRenderer->pVertexAttributeDescriptions, pRenderer->pAllocator);
+    dkpDestroyVertexBindingDescriptions(pRenderer->pVertexBindingDescriptions,
+                                        pRenderer->pAllocator);
     DKP_FREE(pRenderer->pAllocator, pRenderer);
 }
 
