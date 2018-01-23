@@ -1,0 +1,133 @@
+#include "../common/application.h"
+#include "../common/bootstrap.h"
+#include "../common/common.h"
+
+#include <dekoi/graphics/renderer>
+
+#include <assert.h>
+#include <stddef.h>
+
+typedef struct Vector2 {
+    float x;
+    float y;
+} Vector2;
+
+typedef struct Vector3 {
+    float x;
+    float y;
+    float z;
+} Vector3;
+
+typedef struct Vertex {
+    Vector2 position;
+    Vector3 color;
+} Vertex;
+
+const Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                           {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                           {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+
+const char *pApplicationName = "vertexbuffer";
+const unsigned int majorVersion = 1;
+const unsigned int minorVersion = 0;
+const unsigned int patchVersion = 0;
+const unsigned int width = 1280;
+const unsigned int height = 720;
+const DkdShaderCreateInfo shaderInfos[]
+    = {{DK_SHADER_STAGE_VERTEX, "shaders/passthrough.vert.spv", "main"},
+       {DK_SHADER_STAGE_FRAGMENT, "shaders/passthrough.frag.spv", "main"}};
+const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+const DkVertexBufferCreateInfo vertexBufferInfos[]
+    = {{sizeof vertices, 0, vertices}};
+const DkVertexBindingDescriptionCreateInfo bindingDescriptionInfos[]
+    = {{sizeof(Vertex), DK_VERTEX_INPUT_RATE_VERTEX}};
+const DkVertexAttributeDescriptionCreateInfo attributeDescriptionInfos[]
+    = {{0, 0, offsetof(Vertex, position), DK_FORMAT_R32G32_SFLOAT},
+       {0, 1, offsetof(Vertex, color), DK_FORMAT_R32G32B32_SFLOAT}};
+const uint32_t vertexCount = sizeof vertices / sizeof *vertices;
+const uint32_t instanceCount = 1;
+
+int
+dkdSetup(DkdBootstrapHandles *pHandles)
+{
+    DkdBootstrapCreateInfos createInfos;
+
+    assert(pHandles != NULL);
+
+    createInfos.application.pName = pApplicationName;
+    createInfos.application.majorVersion = majorVersion;
+    createInfos.application.minorVersion = minorVersion;
+    createInfos.application.patchVersion = patchVersion;
+    createInfos.application.pLogger = NULL;
+    createInfos.application.pAllocator = NULL;
+    createInfos.application.pCallbacks = NULL;
+
+    createInfos.window.width = width;
+    createInfos.window.height = height;
+    createInfos.window.pTitle = pApplicationName;
+    createInfos.window.pLogger = NULL;
+    createInfos.window.pAllocator = NULL;
+
+    createInfos.renderer.pApplicationName = pApplicationName;
+    createInfos.renderer.applicationMajorVersion = majorVersion;
+    createInfos.renderer.applicationMinorVersion = minorVersion;
+    createInfos.renderer.applicationPatchVersion = patchVersion;
+    createInfos.renderer.surfaceWidth = width;
+    createInfos.renderer.surfaceHeight = height;
+    createInfos.renderer.shaderCount = sizeof shaderInfos / sizeof *shaderInfos;
+    createInfos.renderer.pShaderInfos = shaderInfos;
+    createInfos.renderer.clearColor[0] = clearColor[0];
+    createInfos.renderer.clearColor[1] = clearColor[1];
+    createInfos.renderer.clearColor[2] = clearColor[2];
+    createInfos.renderer.clearColor[3] = clearColor[3];
+    createInfos.renderer.vertexBufferCount
+        = sizeof vertexBufferInfos / sizeof *vertexBufferInfos;
+    createInfos.renderer.pVertexBufferInfos = vertexBufferInfos;
+    createInfos.renderer.vertexBindingDescriptionCount
+        = sizeof bindingDescriptionInfos / sizeof *bindingDescriptionInfos;
+    createInfos.renderer.pVertexBindingDescriptionInfos
+        = bindingDescriptionInfos;
+    createInfos.renderer.vertexAttributeDescriptionCount
+        = sizeof attributeDescriptionInfos / sizeof *attributeDescriptionInfos;
+    createInfos.renderer.pVertexAttributeDescriptionInfos
+        = attributeDescriptionInfos;
+    createInfos.renderer.vertexCount = vertexCount;
+    createInfos.renderer.instanceCount = instanceCount;
+    createInfos.renderer.pLogger = NULL;
+    createInfos.renderer.pAllocator = NULL;
+
+    return dkdSetupBootstrap(&createInfos, pHandles);
+}
+
+void
+dkdCleanup(DkdBootstrapHandles *pHandles)
+{
+    assert(pHandles != NULL);
+
+    dkdCleanupBootstrap(pHandles);
+}
+
+int
+main(void)
+{
+    int out;
+    DkdBootstrapHandles handles;
+
+    out = 0;
+
+    if (dkdSetup(&handles)) {
+        out = 1;
+        goto exit;
+    }
+
+    if (dkdRunApplication(handles.pApplication)) {
+        out = 1;
+        goto cleanup;
+    }
+
+cleanup:
+    dkdCleanup(&handles);
+
+exit:
+    return out;
+}
