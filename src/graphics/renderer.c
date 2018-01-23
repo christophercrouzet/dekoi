@@ -1714,7 +1714,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
                     VkSemaphore **ppSemaphoreHandles)
 {
     DkResult out;
-    int i;
+    unsigned int i;
     VkSemaphoreCreateInfo createInfo;
 
     DKP_ASSERT(pDevice != NULL);
@@ -1779,7 +1779,7 @@ dkpDestroySemaphores(const DkpDevice *pDevice,
                      const VkAllocationCallbacks *pBackEndAllocator,
                      const DkAllocationCallbacks *pAllocator)
 {
-    int i;
+    unsigned int i;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
@@ -3317,7 +3317,7 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                  DkRenderer **ppRenderer)
 {
     DkResult out;
-    unsigned int i;
+    uint32_t i;
     const DkLoggingCallbacks *pLogger;
     const DkAllocationCallbacks *pAllocator;
     int valid;
