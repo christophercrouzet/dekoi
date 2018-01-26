@@ -92,11 +92,11 @@ typedef struct DkpShader {
     const char *pEntryPointName;
 } DkpShader;
 
-typedef struct DkpVertexBuffer {
+typedef struct DkpBuffer {
     VkBuffer handle;
     VkDeviceMemory memoryHandle;
     VkDeviceSize offset;
-} DkpVertexBuffer;
+} DkpBuffer;
 
 typedef struct DkpSwapChain {
     VkSwapchainKHR handle;
@@ -130,7 +130,7 @@ struct DkRenderer {
     uint32_t shaderCount;
     DkpShader *pShaders;
     uint32_t vertexBufferCount;
-    DkpVertexBuffer *pVertexBuffers;
+    DkpBuffer *pVertexBuffers;
     DkpSwapChain swapChain;
     VkRenderPass renderPassHandle;
     VkPipelineLayout pipelineLayoutHandle;
@@ -220,6 +220,138 @@ dkpTranslateFormatToBackEnd(DkFormat format)
             DKP_ASSERT(0);
             return (VkFormat)0;
     }
+}
+
+static DkResult
+dkpPickMemoryTypeIndex(const DkpDevice *pDevice,
+                       uint32_t typeFilter,
+                       VkMemoryPropertyFlags properties,
+                       const DkLoggingCallbacks *pLogger,
+                       uint32_t *pMemoryTypeIndex)
+{
+    uint32_t i;
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->physicalHandle != NULL);
+    DKP_ASSERT(pLogger != NULL);
+    DKP_ASSERT(pMemoryTypeIndex != NULL);
+
+    vkGetPhysicalDeviceMemoryProperties(pDevice->physicalHandle,
+                                        &memoryProperties);
+    for (i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+        if (typeFilter & ((uint32_t)1 << i)
+            && (memoryProperties.memoryTypes[i].propertyFlags & properties)
+                   == properties) {
+            *pMemoryTypeIndex = i;
+            return DK_SUCCESS;
+        }
+    }
+
+    DKP_LOG_ERROR(pLogger, "could not find a suitable memory type\n");
+    return DK_ERROR;
+}
+
+static DkResult
+dkpMakeBuffer(const DkpDevice *pDevice,
+              DkpBuffer *pBuffer,
+              VkDeviceSize size,
+              VkBufferUsageFlags usage,
+              VkMemoryPropertyFlags memoryProperties,
+              const VkAllocationCallbacks *pBackEndAllocator,
+              const DkLoggingCallbacks *pLogger)
+{
+    DkResult out;
+    VkBufferCreateInfo bufferInfo;
+    VkMemoryRequirements memoryRequirements;
+    VkMemoryAllocateInfo allocateInfo;
+
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBuffer != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
+
+    out = DK_SUCCESS;
+
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.pNext = NULL;
+    bufferInfo.flags = 0;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bufferInfo.queueFamilyIndexCount = 0;
+    bufferInfo.pQueueFamilyIndices = NULL;
+
+    if (vkCreateBuffer(pDevice->logicalHandle,
+                       &bufferInfo,
+                       pBackEndAllocator,
+                       &pBuffer->handle)
+        != VK_SUCCESS) {
+        DKP_LOG_ERROR(pLogger, "failed to create the buffer\n");
+        out = DK_ERROR;
+        goto exit;
+    }
+
+    vkGetBufferMemoryRequirements(
+        pDevice->logicalHandle, pBuffer->handle, &memoryRequirements);
+
+    allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocateInfo.pNext = NULL;
+    allocateInfo.allocationSize = memoryRequirements.size;
+
+    dkpPickMemoryTypeIndex(pDevice,
+                           memoryRequirements.memoryTypeBits,
+                           memoryProperties,
+                           pLogger,
+                           &allocateInfo.memoryTypeIndex);
+
+    if (vkAllocateMemory(pDevice->logicalHandle,
+                         &allocateInfo,
+                         pBackEndAllocator,
+                         &pBuffer->memoryHandle)
+        != VK_SUCCESS) {
+        DKP_LOG_ERROR(pLogger, "failed to allocate the buffer memory\n");
+        out = DK_ERROR;
+        goto buffer_undo;
+    }
+
+    if (vkBindBufferMemory(
+            pDevice->logicalHandle, pBuffer->handle, pBuffer->memoryHandle, 0)
+        != VK_SUCCESS) {
+        DKP_LOG_ERROR(pLogger, "failed to bind the buffer memory\n");
+        out = DK_ERROR;
+        goto allocate_memory_undo;
+    }
+
+    goto exit;
+
+allocate_memory_undo:
+    vkFreeMemory(
+        pDevice->logicalHandle, pBuffer->memoryHandle, pBackEndAllocator);
+
+buffer_undo:
+    vkDestroyBuffer(pDevice->logicalHandle, pBuffer->handle, pBackEndAllocator);
+
+exit:
+    return out;
+}
+
+static void
+dkpDiscardBuffer(const DkpDevice *pDevice,
+                 DkpBuffer *pBuffer,
+                 const VkAllocationCallbacks *pBackEndAllocator)
+{
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pBuffer != NULL);
+    DKP_ASSERT(pBuffer->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBuffer->memoryHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+
+    vkFreeMemory(
+        pDevice->logicalHandle, pBuffer->memoryHandle, pBackEndAllocator);
+    vkDestroyBuffer(pDevice->logicalHandle, pBuffer->handle, pBackEndAllocator);
 }
 
 static void *
@@ -1984,43 +2116,13 @@ dkpDestroyShaders(const DkpDevice *pDevice,
 }
 
 static DkResult
-dkpPickMemoryTypeIndex(const DkpDevice *pDevice,
-                       uint32_t typeFilter,
-                       VkMemoryPropertyFlags properties,
-                       const DkLoggingCallbacks *pLogger,
-                       uint32_t *pMemoryTypeIndex)
-{
-    uint32_t i;
-    VkPhysicalDeviceMemoryProperties memoryProperties;
-
-    DKP_ASSERT(pDevice != NULL);
-    DKP_ASSERT(pDevice->physicalHandle != NULL);
-    DKP_ASSERT(pLogger != NULL);
-    DKP_ASSERT(pMemoryTypeIndex != NULL);
-
-    vkGetPhysicalDeviceMemoryProperties(pDevice->physicalHandle,
-                                        &memoryProperties);
-    for (i = 0; i < memoryProperties.memoryTypeCount; ++i) {
-        if (typeFilter & ((uint32_t)1 << i)
-            && (memoryProperties.memoryTypes[i].propertyFlags & properties)
-                   == properties) {
-            *pMemoryTypeIndex = i;
-            return DK_SUCCESS;
-        }
-    }
-
-    DKP_LOG_ERROR(pLogger, "could not find a suitable memory type\n");
-    return DK_ERROR;
-}
-
-static DkResult
 dkpCreateVertexBuffers(const DkpDevice *pDevice,
                        uint32_t vertexBufferCount,
                        const DkVertexBufferCreateInfo *pVertexBufferInfos,
                        const VkAllocationCallbacks *pBackEndAllocator,
                        const DkAllocationCallbacks *pAllocator,
                        const DkLoggingCallbacks *pLogger,
-                       DkpVertexBuffer **ppVertexBuffers)
+                       DkpBuffer **ppVertexBuffers)
 {
     DkResult out;
     uint32_t i;
@@ -2039,7 +2141,7 @@ dkpCreateVertexBuffers(const DkpDevice *pDevice,
         goto exit;
     }
 
-    *ppVertexBuffers = (DkpVertexBuffer *)DKP_ALLOCATE(
+    *ppVertexBuffers = (DkpBuffer *)DKP_ALLOCATE(
         pAllocator, sizeof **ppVertexBuffers * vertexBufferCount);
     if (*ppVertexBuffers == NULL) {
         DKP_LOG_ERROR(pLogger, "failed to allocate the vertex buffers\n");
@@ -2050,70 +2152,28 @@ dkpCreateVertexBuffers(const DkpDevice *pDevice,
     for (i = 0; i < vertexBufferCount; ++i) {
         (*ppVertexBuffers)[i].handle = VK_NULL_HANDLE;
         (*ppVertexBuffers)[i].memoryHandle = VK_NULL_HANDLE;
-        (*ppVertexBuffers)[i].offset
-            = (VkDeviceSize)pVertexBufferInfos[i].offset;
     }
 
     for (i = 0; i < vertexBufferCount; ++i) {
-        VkBufferCreateInfo bufferInfo;
-        VkMemoryRequirements memoryRequirements;
-        VkMemoryAllocateInfo allocateInfo;
         void *pData;
 
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.pNext = NULL;
-        bufferInfo.flags = 0;
-        bufferInfo.size = (VkDeviceSize)pVertexBufferInfos[i].size;
-        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        bufferInfo.queueFamilyIndexCount = 0;
-        bufferInfo.pQueueFamilyIndices = NULL;
-
-        if (vkCreateBuffer(pDevice->logicalHandle,
-                           &bufferInfo,
-                           pBackEndAllocator,
-                           &(*ppVertexBuffers)[i].handle)
-            != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger, "failed to create a vertex buffer\n");
+        if (dkpMakeBuffer(pDevice,
+                          &(*ppVertexBuffers)[i],
+                          (VkDeviceSize)pVertexBufferInfos[i].size,
+                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                              | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          pBackEndAllocator,
+                          pLogger)
+            != DK_SUCCESS) {
             out = DK_ERROR;
+            (*ppVertexBuffers)[i].handle = VK_NULL_HANDLE;
+            (*ppVertexBuffers)[i].memoryHandle = VK_NULL_HANDLE;
             goto vertex_buffers_undo;
         }
 
-        vkGetBufferMemoryRequirements(pDevice->logicalHandle,
-                                      (*ppVertexBuffers)[i].handle,
-                                      &memoryRequirements);
-
-        allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocateInfo.pNext = NULL;
-        allocateInfo.allocationSize = memoryRequirements.size;
-
-        dkpPickMemoryTypeIndex(pDevice,
-                               memoryRequirements.memoryTypeBits,
-                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                                   | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                               pLogger,
-                               &allocateInfo.memoryTypeIndex);
-
-        if (vkAllocateMemory(pDevice->logicalHandle,
-                             &allocateInfo,
-                             pBackEndAllocator,
-                             &(*ppVertexBuffers)[i].memoryHandle)
-            != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger,
-                          "failed to allocate a vertex buffer memory\n");
-            out = DK_ERROR;
-            goto vertex_buffers_undo;
-        }
-
-        if (vkBindBufferMemory(pDevice->logicalHandle,
-                               (*ppVertexBuffers)[i].handle,
-                               (*ppVertexBuffers)[i].memoryHandle,
-                               0)
-            != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger, "failed to bind a vertex buffer memory\n");
-            out = DK_ERROR;
-            goto vertex_buffers_undo;
-        }
+        (*ppVertexBuffers)[i].offset
+            = (VkDeviceSize)pVertexBufferInfos[i].offset;
 
         if (vkMapMemory(pDevice->logicalHandle,
                         (*ppVertexBuffers)[i].memoryHandle,
@@ -2138,16 +2198,10 @@ dkpCreateVertexBuffers(const DkpDevice *pDevice,
 
 vertex_buffers_undo:
     for (i = 0; i < vertexBufferCount; ++i) {
-        if ((*ppVertexBuffers)[i].memoryHandle != VK_NULL_HANDLE) {
-            vkFreeMemory(pDevice->logicalHandle,
-                         (*ppVertexBuffers)[i].memoryHandle,
-                         pBackEndAllocator);
-        }
-
-        if ((*ppVertexBuffers)[i].handle != VK_NULL_HANDLE) {
-            vkDestroyBuffer(pDevice->logicalHandle,
-                            (*ppVertexBuffers)[i].handle,
-                            pBackEndAllocator);
+        if ((*ppVertexBuffers)[i].handle != VK_NULL_HANDLE
+            || (*ppVertexBuffers)[i].memoryHandle != VK_NULL_HANDLE) {
+            dkpDiscardBuffer(
+                pDevice, &(*ppVertexBuffers)[i], pBackEndAllocator);
         }
     }
 
@@ -2160,7 +2214,7 @@ exit:
 static void
 dkpDestroyVertexBuffers(const DkpDevice *pDevice,
                         uint32_t vertexBufferCount,
-                        DkpVertexBuffer *pVertexBuffers,
+                        DkpBuffer *pVertexBuffers,
                         const VkAllocationCallbacks *pBackEndAllocator,
                         const DkAllocationCallbacks *pAllocator)
 {
@@ -2174,13 +2228,7 @@ dkpDestroyVertexBuffers(const DkpDevice *pDevice,
     for (i = 0; i < vertexBufferCount; ++i) {
         DKP_ASSERT(pVertexBuffers[i].handle != VK_NULL_HANDLE);
         DKP_ASSERT(pVertexBuffers[i].memoryHandle != VK_NULL_HANDLE);
-
-        vkFreeMemory(pDevice->logicalHandle,
-                     pVertexBuffers[i].memoryHandle,
-                     pBackEndAllocator);
-        vkDestroyBuffer(pDevice->logicalHandle,
-                        pVertexBuffers[i].handle,
-                        pBackEndAllocator);
+        dkpDiscardBuffer(pDevice, &pVertexBuffers[i], pBackEndAllocator);
     }
 
     if (pVertexBuffers != NULL) {
@@ -3251,7 +3299,7 @@ dkpRecordGraphicsCommandBuffers(const DkpSwapChain *pSwapChain,
                                 const VkExtent2D *pImageExtent,
                                 const VkClearValue *pClearColor,
                                 uint32_t vertexBufferCount,
-                                const DkpVertexBuffer *pVertexBuffers,
+                                const DkpBuffer *pVertexBuffers,
                                 uint32_t vertexCount,
                                 uint32_t instanceCount,
                                 const DkAllocationCallbacks *pAllocator,
