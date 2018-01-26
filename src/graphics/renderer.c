@@ -354,100 +354,6 @@ dkpDiscardBuffer(const DkpDevice *pDevice,
     vkDestroyBuffer(pDevice->logicalHandle, pBuffer->handle, pBackEndAllocator);
 }
 
-static void *
-dkpAllocateBackEndMemory(void *pData,
-                         size_t size,
-                         size_t alignment,
-                         VkSystemAllocationScope allocationScope)
-{
-    DKP_UNUSED(allocationScope);
-
-    DKP_ASSERT(pData != NULL);
-    DKP_ASSERT(size != 0);
-
-    return ((DkpBackEndAllocationCallbacskData *)pData)
-        ->pAllocator->pfnAllocateAligned(
-            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
-            size,
-            alignment);
-}
-
-static void
-dkpFreeBackEndMemory(void *pData, void *pMemory)
-{
-    DKP_ASSERT(pData != NULL);
-
-    if (pMemory == NULL) {
-        return;
-    }
-
-    ((DkpBackEndAllocationCallbacskData *)pData)
-        ->pAllocator->pfnFreeAligned(
-            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
-            pMemory);
-}
-
-static void *
-dkpReallocateBackEndMemory(void *pData,
-                           void *pOriginal,
-                           size_t size,
-                           size_t alignment,
-                           VkSystemAllocationScope allocationScope)
-{
-    DKP_UNUSED(allocationScope);
-
-    DKP_ASSERT(pData != NULL);
-
-    if (pOriginal == NULL) {
-        return dkpAllocateBackEndMemory(
-            pData, size, alignment, allocationScope);
-    }
-
-    if (size == 0) {
-        dkpFreeBackEndMemory(pData, pOriginal);
-        return NULL;
-    }
-
-    return ((DkpBackEndAllocationCallbacskData *)pData)
-        ->pAllocator->pfnReallocateAligned(
-            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
-            pOriginal,
-            size,
-            alignment);
-}
-
-static void
-dkpNotifyBackEndInternalAllocation(void *pData,
-                                   size_t size,
-                                   VkInternalAllocationType allocationType,
-                                   VkSystemAllocationScope allocationScope)
-{
-    DKP_UNUSED(allocationType);
-    DKP_UNUSED(allocationScope);
-
-    DKP_ASSERT(pData != NULL);
-
-    DKP_LOG_DEBUG(((DkpBackEndAllocationCallbacskData *)pData)->pLogger,
-                  "renderer back-end internal allocation of %zu bytes\n",
-                  size);
-}
-
-static void
-dkpNotifyBackEndInternalFreeing(void *pData,
-                                size_t size,
-                                VkInternalAllocationType allocationType,
-                                VkSystemAllocationScope allocationScope)
-{
-    DKP_UNUSED(allocationType);
-    DKP_UNUSED(allocationScope);
-
-    DKP_ASSERT(pData != NULL);
-
-    DKP_LOG_DEBUG(((DkpBackEndAllocationCallbacskData *)pData)->pLogger,
-                  "renderer back-end internal freeing of %zu bytes\n",
-                  size);
-}
-
 static DkResult
 dkpCreateInstanceLayerNames(const DkAllocationCallbacks *pAllocator,
                             const DkLoggingCallbacks *pLogger,
@@ -3779,6 +3685,100 @@ dkpDestroyVertexAttributeDescriptions(
     if (pVertexAttributeDescriptions != NULL) {
         DKP_FREE(pAllocator, pVertexAttributeDescriptions);
     }
+}
+
+static void *
+dkpAllocateBackEndMemory(void *pData,
+                         size_t size,
+                         size_t alignment,
+                         VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+    DKP_ASSERT(size != 0);
+
+    return ((DkpBackEndAllocationCallbacskData *)pData)
+        ->pAllocator->pfnAllocateAligned(
+            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
+            size,
+            alignment);
+}
+
+static void
+dkpFreeBackEndMemory(void *pData, void *pMemory)
+{
+    DKP_ASSERT(pData != NULL);
+
+    if (pMemory == NULL) {
+        return;
+    }
+
+    ((DkpBackEndAllocationCallbacskData *)pData)
+        ->pAllocator->pfnFreeAligned(
+            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
+            pMemory);
+}
+
+static void *
+dkpReallocateBackEndMemory(void *pData,
+                           void *pOriginal,
+                           size_t size,
+                           size_t alignment,
+                           VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+
+    if (pOriginal == NULL) {
+        return dkpAllocateBackEndMemory(
+            pData, size, alignment, allocationScope);
+    }
+
+    if (size == 0) {
+        dkpFreeBackEndMemory(pData, pOriginal);
+        return NULL;
+    }
+
+    return ((DkpBackEndAllocationCallbacskData *)pData)
+        ->pAllocator->pfnReallocateAligned(
+            ((DkpBackEndAllocationCallbacskData *)pData)->pAllocator->pData,
+            pOriginal,
+            size,
+            alignment);
+}
+
+static void
+dkpNotifyBackEndInternalAllocation(void *pData,
+                                   size_t size,
+                                   VkInternalAllocationType allocationType,
+                                   VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationType);
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+
+    DKP_LOG_DEBUG(((DkpBackEndAllocationCallbacskData *)pData)->pLogger,
+                  "renderer back-end internal allocation of %zu bytes\n",
+                  size);
+}
+
+static void
+dkpNotifyBackEndInternalFreeing(void *pData,
+                                size_t size,
+                                VkInternalAllocationType allocationType,
+                                VkSystemAllocationScope allocationScope)
+{
+    DKP_UNUSED(allocationType);
+    DKP_UNUSED(allocationScope);
+
+    DKP_ASSERT(pData != NULL);
+
+    DKP_LOG_DEBUG(((DkpBackEndAllocationCallbacskData *)pData)->pLogger,
+                  "renderer back-end internal freeing of %zu bytes\n",
+                  size);
 }
 
 DkResult
