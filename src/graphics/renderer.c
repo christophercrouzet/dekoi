@@ -3487,13 +3487,11 @@ graphics_command_buffers_undo:
                                      pRenderer->graphicsCommandPoolHandle,
                                      pRenderer->pGraphicsCommandBufferHandles,
                                      pRenderer->pAllocator);
-    pRenderer->pGraphicsCommandBufferHandles = NULL;
 
 graphics_command_pool_undo:
     dkpDestroyGraphicsCommandPool(&pRenderer->device,
                                   pRenderer->graphicsCommandPoolHandle,
                                   &pRenderer->backEndAllocator);
-    pRenderer->graphicsCommandPoolHandle = VK_NULL_HANDLE;
 
 framebuffers_undo:
     dkpDestroyFramebuffers(&pRenderer->device,
@@ -3501,32 +3499,27 @@ framebuffers_undo:
                            pRenderer->pFramebufferHandles,
                            &pRenderer->backEndAllocator,
                            pRenderer->pAllocator);
-    pRenderer->pFramebufferHandles = NULL;
 
 graphics_pipeline_undo:
     dkpDestroyGraphicsPipeline(&pRenderer->device,
                                pRenderer->graphicsPipelineHandle,
                                &pRenderer->backEndAllocator);
-    pRenderer->graphicsPipelineHandle = VK_NULL_HANDLE;
 
 pipeline_layout_undo:
     dkpDestroyPipelineLayout(&pRenderer->device,
                              pRenderer->pipelineLayoutHandle,
                              &pRenderer->backEndAllocator);
-    pRenderer->pipelineLayoutHandle = VK_NULL_HANDLE;
 
 render_pass_undo:
     dkpDestroyRenderPass(&pRenderer->device,
                          pRenderer->renderPassHandle,
                          &pRenderer->backEndAllocator);
-    pRenderer->renderPassHandle = VK_NULL_HANDLE;
 
 swap_chain_undo:
     dkpDestroySwapChain(&pRenderer->device,
                         &pRenderer->swapChain,
                         &pRenderer->backEndAllocator,
                         pRenderer->pAllocator);
-    pRenderer->swapChain.handle = VK_NULL_HANDLE;
 
 exit:
     return out;
@@ -3540,54 +3533,40 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
-    if (pRenderer->pGraphicsCommandBufferHandles != NULL) {
-        dkpDestroyGraphicsCommandBuffers(
-            &pRenderer->device,
-            &pRenderer->swapChain,
-            pRenderer->graphicsCommandPoolHandle,
-            pRenderer->pGraphicsCommandBufferHandles,
-            pRenderer->pAllocator);
-    }
+    dkpDestroyGraphicsCommandBuffers(&pRenderer->device,
+                                     &pRenderer->swapChain,
+                                     pRenderer->graphicsCommandPoolHandle,
+                                     pRenderer->pGraphicsCommandBufferHandles,
+                                     pRenderer->pAllocator);
 
-    if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL
-        && pRenderer->graphicsCommandPoolHandle != VK_NULL_HANDLE) {
+    if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
         dkpDestroyGraphicsCommandPool(&pRenderer->device,
                                       pRenderer->graphicsCommandPoolHandle,
                                       &pRenderer->backEndAllocator);
     }
 
-    if (pRenderer->pFramebufferHandles != NULL) {
-        dkpDestroyFramebuffers(&pRenderer->device,
-                               &pRenderer->swapChain,
-                               pRenderer->pFramebufferHandles,
-                               &pRenderer->backEndAllocator,
-                               pRenderer->pAllocator);
-    }
+    dkpDestroyFramebuffers(&pRenderer->device,
+                           &pRenderer->swapChain,
+                           pRenderer->pFramebufferHandles,
+                           &pRenderer->backEndAllocator,
+                           pRenderer->pAllocator);
 
-    if (pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE) {
-        dkpDestroyGraphicsPipeline(&pRenderer->device,
-                                   pRenderer->graphicsPipelineHandle,
-                                   &pRenderer->backEndAllocator);
-    }
+    dkpDestroyGraphicsPipeline(&pRenderer->device,
+                               pRenderer->graphicsPipelineHandle,
+                               &pRenderer->backEndAllocator);
 
-    if (pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE) {
-        dkpDestroyPipelineLayout(&pRenderer->device,
-                                 pRenderer->pipelineLayoutHandle,
-                                 &pRenderer->backEndAllocator);
-    }
-
-    if (pRenderer->renderPassHandle != VK_NULL_HANDLE) {
-        dkpDestroyRenderPass(&pRenderer->device,
-                             pRenderer->renderPassHandle,
+    dkpDestroyPipelineLayout(&pRenderer->device,
+                             pRenderer->pipelineLayoutHandle,
                              &pRenderer->backEndAllocator);
-    }
 
-    if (pRenderer->swapChain.handle != VK_NULL_HANDLE) {
-        dkpDestroySwapChain(&pRenderer->device,
-                            &pRenderer->swapChain,
-                            &pRenderer->backEndAllocator,
-                            pRenderer->pAllocator);
-    }
+    dkpDestroyRenderPass(&pRenderer->device,
+                         pRenderer->renderPassHandle,
+                         &pRenderer->backEndAllocator);
+
+    dkpDestroySwapChain(&pRenderer->device,
+                        &pRenderer->swapChain,
+                        &pRenderer->backEndAllocator,
+                        pRenderer->pAllocator);
 }
 
 static DkResult
