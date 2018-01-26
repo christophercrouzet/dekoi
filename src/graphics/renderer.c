@@ -855,7 +855,7 @@ dkpCreateSurface(
             pSurfaceHandle)
         != DK_SUCCESS) {
         DKP_LOG_ERROR(pLogger,
-                      "the window manager interface's 'createSurface' callback "
+                      "the window system integrator's 'createSurface' callback "
                       "returned an error\n");
         return DK_ERROR;
     }
@@ -1251,7 +1251,7 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     }
 
     if (formatCount == 0) {
-        DKP_LOG_ERROR(pLogger, "no surface format available\n");
+        DKP_LOG_ERROR(pLogger, "could not find a suitable surface format\n");
         out = DK_ERROR_NOT_AVAILABLE;
         goto exit;
     }
@@ -1283,7 +1283,8 @@ dkpPickSwapChainProperties(VkPhysicalDevice physicalDeviceHandle,
     }
 
     if (presentModeCount == 0) {
-        DKP_LOG_ERROR(pLogger, "no surface present mode available\n");
+        DKP_LOG_ERROR(pLogger,
+                      "could not find a suitable surface present mode\n");
         out = DK_ERROR_NOT_AVAILABLE;
         goto formats_cleanup;
     }
@@ -1499,7 +1500,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
     }
 
     if (physicalDeviceCount == 0) {
-        DKP_LOG_ERROR(pLogger, "no physical device available\n");
+        DKP_LOG_ERROR(pLogger, "could not fine a suitable physical device\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -1691,7 +1692,7 @@ dkpCreateDevice(VkInstance instanceHandle,
             out = DK_ERROR;
             goto queue_infos_cleanup;
         default:
-            DKP_LOG_ERROR(pLogger, "failed to create a device\n");
+            DKP_LOG_ERROR(pLogger, "failed to create the device\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
     }
@@ -1795,7 +1796,7 @@ dkpCreateSemaphores(const DkpDevice *pDevice,
                               &(*ppSemaphoreHandles)[i])
             != VK_SUCCESS) {
             DKP_LOG_ERROR(pLogger,
-                          "failed to create the '%s' semaphores\n",
+                          "failed to create a '%s' semaphore\n",
                           dkpGetSemaphoreIdString((DkpSemaphoreId)i));
             out = DK_ERROR;
             goto semaphores_undo;
@@ -1870,7 +1871,7 @@ dkpCreateShaderModule(const DkpDevice *pDevice,
                              pBackEndAllocator,
                              pShaderModuleHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create a shader module\n");
+        DKP_LOG_ERROR(pLogger, "failed to create the shader module\n");
         return DK_ERROR;
     }
 
@@ -2217,7 +2218,7 @@ dkpCreateSwapChainImages(const DkpDevice *pDevice,
     }
 
     if (*pImageCount == 0) {
-        DKP_LOG_ERROR(pLogger, "no swap chain image available\n");
+        DKP_LOG_ERROR(pLogger, "could not find a suitable swap chain image\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -4097,12 +4098,14 @@ dkDrawRendererImage(DkRenderer *pRenderer)
         case VK_SUCCESS:
             break;
         case VK_NOT_READY:
-            DKP_LOG_ERROR(pRenderer->pLogger, "no image was available\n");
+            DKP_LOG_ERROR(pRenderer->pLogger,
+                          "could not find a suitable image\n");
             out = DK_ERROR_NOT_AVAILABLE;
             goto exit;
         case VK_TIMEOUT:
-            DKP_LOG_ERROR(pRenderer->pLogger,
-                          "no image was available within the time allowed\n");
+            DKP_LOG_ERROR(
+                pRenderer->pLogger,
+                "could not find a suitable image within the time allowed\n");
             out = DK_ERROR_NOT_AVAILABLE;
             goto exit;
         case VK_SUBOPTIMAL_KHR:
@@ -4180,7 +4183,7 @@ dkDrawRendererImage(DkRenderer *pRenderer)
             pRenderer->queues.graphicsHandle, 1, &submitInfo, VK_NULL_HANDLE)
         != VK_SUCCESS) {
         DKP_LOG_ERROR(pRenderer->pLogger,
-                      "could not submit the graphics queue\n");
+                      "could not submit the graphics command buffer\n");
         out = DK_ERROR;
         goto signal_semaphores_cleanup;
     }
