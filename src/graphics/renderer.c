@@ -353,6 +353,7 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
     DKP_ASSERT(pAllocator != NULL);
 
     if (DKP_RENDERER_VALIDATION_LAYERS) {
+        DKP_ASSERT(ppLayerNames != NULL);
         DKP_FREE(pAllocator, ppLayerNames);
     }
 }
@@ -502,6 +503,7 @@ dkpDestroyInstanceExtensionNames(
     DKP_ASSERT(pLogger != NULL);
 
     if (DKP_RENDERER_DEBUG_REPORT) {
+        DKP_ASSERT(ppExtensionNames != NULL);
         DKP_FREE(pAllocator, ppExtensionNames);
     } else if (pWindowSystemIntegrator != NULL) {
         pWindowSystemIntegrator->pfnDestroyInstanceExtensionNames(
@@ -910,7 +912,9 @@ dkpDestroyDeviceExtensionNames(const char **ppExtensionNames,
 {
     DKP_ASSERT(pAllocator != NULL);
 
-    DKP_FREE(pAllocator, ppExtensionNames);
+    if (ppExtensionNames != NULL) {
+        DKP_FREE(pAllocator, ppExtensionNames);
+    }
 }
 
 static DkResult
@@ -3530,6 +3534,13 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
                                   DkpSwapChainSystemScope scope)
 {
     DKP_ASSERT(pRenderer != NULL);
+    DKP_ASSERT(pRenderer->pGraphicsCommandBufferHandles != NULL);
+    DKP_ASSERT(pRenderer->graphicsCommandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pRenderer->pFramebufferHandles != NULL);
+    DKP_ASSERT(pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pRenderer->renderPassHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pRenderer->swapChain.handle != VK_NULL_HANDLE);
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
