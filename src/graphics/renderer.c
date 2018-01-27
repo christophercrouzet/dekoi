@@ -61,6 +61,11 @@ typedef struct DkpDebugReportCallbackData {
     const DkLoggingCallbacks *pLogger;
 } DkpDebugReportCallbackData;
 
+typedef struct DkpQueues {
+    VkQueue graphicsHandle;
+    VkQueue presentHandle;
+} DkpQueues;
+
 typedef struct DkpQueueFamilyIndices {
     uint32_t graphics;
     uint32_t present;
@@ -80,11 +85,6 @@ typedef struct DkpSwapChainProperties {
     VkSurfaceFormatKHR format;
     VkPresentModeKHR presentMode;
 } DkpSwapChainProperties;
-
-typedef struct DkpQueues {
-    VkQueue graphicsHandle;
-    VkQueue presentHandle;
-} DkpQueues;
 
 typedef struct DkpShader {
     VkShaderModule moduleHandle;
