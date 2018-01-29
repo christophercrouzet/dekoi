@@ -224,6 +224,42 @@ dkpTranslateFormatToBackEnd(DkFormat format)
     }
 }
 
+static void
+dkpFilterQueueFamilyIndices(const uint32_t *pQueueFamilyIndices,
+                            uint32_t *pFilteredQueueFamilyCount,
+                            uint32_t *pFilteredQueueFamilyIndices)
+{
+    uint32_t i;
+    uint32_t j;
+
+    DKP_ASSERT(pQueueFamilyIndices != NULL);
+    DKP_ASSERT(pFilteredQueueFamilyCount != NULL);
+    DKP_ASSERT(pFilteredQueueFamilyIndices != NULL);
+
+    *pFilteredQueueFamilyCount = 0;
+    for (i = 0; i < DKP_QUEUE_FAMILY_ID_ENUM_COUNT; ++i) {
+        int found;
+
+        if (pQueueFamilyIndices[i] == (uint32_t)-1) {
+            continue;
+        }
+
+        found = DKP_FALSE;
+        for (j = 0; j < *pFilteredQueueFamilyCount; ++j) {
+            if (pFilteredQueueFamilyIndices[j] == pQueueFamilyIndices[i]) {
+                found = DKP_TRUE;
+                break;
+            }
+        }
+
+        if (!found) {
+            pFilteredQueueFamilyIndices[*pFilteredQueueFamilyCount]
+                = pQueueFamilyIndices[i];
+            ++*pFilteredQueueFamilyCount;
+        }
+    }
+}
+
 static DkResult
 dkpPickMemoryTypeIndex(const DkpDevice *pDevice,
                        uint32_t typeFilter,
@@ -1616,7 +1652,8 @@ dkpCreateDevice(VkInstance instanceHandle,
     const char **ppExtensionNames;
     uint32_t queueCount;
     float *pQueuePriorities;
-    uint32_t queueInfoCount;
+    uint32_t queueFamilyCount;
+    uint32_t queueFamilyIndices[DKP_QUEUE_FAMILY_ID_ENUM_COUNT];
     VkDeviceQueueCreateInfo *pQueueInfos;
     VkDeviceCreateInfo createInfo;
 
@@ -1669,42 +1706,30 @@ dkpCreateDevice(VkInstance instanceHandle,
         pQueuePriorities[i] = 1.0f;
     }
 
-    queueInfoCount
-        = (presentSupport == DKP_PRESENT_SUPPORT_ENABLED
-           && pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS]
-                  != pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT])
-              ? 2
-              : 1;
+    dkpFilterQueueFamilyIndices(
+        pDevice->queueFamilyIndices, &queueFamilyCount, queueFamilyIndices);
+
     pQueueInfos = (VkDeviceQueueCreateInfo *)DKP_ALLOCATE(
-        pAllocator, sizeof *pQueueInfos * queueInfoCount);
+        pAllocator, sizeof *pQueueInfos * queueFamilyCount);
     if (pQueueInfos == NULL) {
         DKP_LOG_ERROR(pLogger, "failed to allocate the device queue infos\n");
         out = DK_ERROR_ALLOCATION;
         goto queue_priorities_cleanup;
     }
 
-    pQueueInfos[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    pQueueInfos[0].pNext = NULL;
-    pQueueInfos[0].flags = 0;
-    pQueueInfos[0].queueFamilyIndex
-        = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS];
-    pQueueInfos[0].queueCount = queueCount;
-    pQueueInfos[0].pQueuePriorities = pQueuePriorities;
-
-    if (queueInfoCount == 2) {
-        pQueueInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        pQueueInfos[1].pNext = NULL;
-        pQueueInfos[1].flags = 0;
-        pQueueInfos[1].queueFamilyIndex
-            = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT];
-        pQueueInfos[1].queueCount = queueCount;
-        pQueueInfos[1].pQueuePriorities = pQueuePriorities;
+    for (i = 0; i < queueFamilyCount; ++i) {
+        pQueueInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        pQueueInfos[i].pNext = NULL;
+        pQueueInfos[i].flags = 0;
+        pQueueInfos[i].queueFamilyIndex = queueFamilyIndices[i];
+        pQueueInfos[i].queueCount = queueCount;
+        pQueueInfos[i].pQueuePriorities = pQueuePriorities;
     }
 
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
-    createInfo.queueCreateInfoCount = queueInfoCount;
+    createInfo.queueCreateInfoCount = queueFamilyCount;
     createInfo.pQueueCreateInfos = pQueueInfos;
     createInfo.enabledLayerCount = 0;
     createInfo.ppEnabledLayerNames = NULL;
