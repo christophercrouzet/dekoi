@@ -40,6 +40,13 @@ typedef enum DkpPresentSupport {
     DKP_PRESENT_SUPPORT_ENABLED = 1
 } DkpPresentSupport;
 
+typedef enum DkpQueueFamilyId {
+    DKP_QUEUE_FAMILY_ID_GRAPHICS = 0,
+    DKP_QUEUE_FAMILY_ID_PRESENT = 1,
+    DKP_QUEUE_FAMILY_ID_ENUM_LAST = DKP_QUEUE_FAMILY_ID_PRESENT,
+    DKP_QUEUE_FAMILY_ID_ENUM_COUNT = DKP_QUEUE_FAMILY_ID_ENUM_LAST + 1
+} DkpQueueFamilyId;
+
 typedef enum DkpSemaphoreId {
     DKP_SEMAPHORE_ID_IMAGE_ACQUIRED = 0,
     DKP_SEMAPHORE_ID_PRESENT_COMPLETED = 1,
@@ -66,13 +73,8 @@ typedef struct DkpQueues {
     VkQueue presentHandle;
 } DkpQueues;
 
-typedef struct DkpQueueFamilyIndices {
-    uint32_t graphics;
-    uint32_t present;
-} DkpQueueFamilyIndices;
-
 typedef struct DkpDevice {
-    DkpQueueFamilyIndices queueFamilyIndices;
+    uint32_t queueFamilyIndices[DKP_QUEUE_FAMILY_ID_ENUM_COUNT];
     VkPhysicalDevice physicalHandle;
     VkDevice logicalHandle;
 } DkpDevice;
@@ -1044,7 +1046,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
                            const DkAllocationCallbacks *pAllocator,
                            const DkLoggingCallbacks *pLogger,
-                           DkpQueueFamilyIndices *pQueueFamilyIndices)
+                           uint32_t *pQueueFamilyIndices)
 {
     DkResult out;
     uint32_t i;
@@ -1058,8 +1060,9 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
     out = DK_SUCCESS;
 
-    pQueueFamilyIndices->graphics = (uint32_t)-1;
-    pQueueFamilyIndices->present = (uint32_t)-1;
+    for (i = 0; i < DKP_QUEUE_FAMILY_ID_ENUM_COUNT; ++i) {
+        pQueueFamilyIndices[i] = (uint32_t)-1;
+    }
 
     vkGetPhysicalDeviceQueueFamilyProperties(
         physicalDeviceHandle, &propertyCount, NULL);
@@ -1088,7 +1091,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
         if (surfaceHandle == VK_NULL_HANDLE) {
             if (graphicsSupported) {
-                pQueueFamilyIndices->graphics = i;
+                pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS] = i;
                 break;
             }
         } else {
@@ -1102,17 +1105,19 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
             }
 
             if (graphicsSupported && presentSupported) {
-                pQueueFamilyIndices->graphics = i;
-                pQueueFamilyIndices->present = i;
+                pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS] = i;
+                pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT] = i;
                 break;
             }
 
             if (graphicsSupported
-                && pQueueFamilyIndices->graphics == (uint32_t)-1) {
-                pQueueFamilyIndices->graphics = i;
+                && pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS]
+                       == (uint32_t)-1) {
+                pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS] = i;
             } else if (presentSupported
-                       && pQueueFamilyIndices->present == (uint32_t)-1) {
-                pQueueFamilyIndices->present = i;
+                       && pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT]
+                              == (uint32_t)-1) {
+                pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT] = i;
             }
         }
     }
@@ -1438,7 +1443,7 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
                          const char *const *ppExtensionNames,
                          const DkAllocationCallbacks *pAllocator,
                          const DkLoggingCallbacks *pLogger,
-                         DkpQueueFamilyIndices *pQueueFamilyIndices,
+                         uint32_t *pQueueFamilyIndices,
                          int *pSuitable)
 {
     VkPhysicalDeviceProperties properties;
@@ -1481,9 +1486,10 @@ dkpInspectPhysicalDevice(VkPhysicalDevice physicalDeviceHandle,
         return DK_ERROR;
     }
 
-    if (pQueueFamilyIndices->graphics == (uint32_t)-1
+    if (pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS] == (uint32_t)-1
         || (surfaceHandle != VK_NULL_HANDLE
-            && pQueueFamilyIndices->present == (uint32_t)-1)) {
+            && pQueueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT]
+                   == (uint32_t)-1)) {
         return DK_SUCCESS;
     }
 
@@ -1513,7 +1519,7 @@ dkpPickPhysicalDevice(VkInstance instanceHandle,
                       const char *const *ppExtensionNames,
                       const DkAllocationCallbacks *pAllocator,
                       const DkLoggingCallbacks *pLogger,
-                      DkpQueueFamilyIndices *pQueueFamilyIndices,
+                      uint32_t *pQueueFamilyIndices,
                       VkPhysicalDevice *pPhysicalDeviceHandle)
 {
     DkResult out;
@@ -1642,7 +1648,7 @@ dkpCreateDevice(VkInstance instanceHandle,
                               ppExtensionNames,
                               pAllocator,
                               pLogger,
-                              &pDevice->queueFamilyIndices,
+                              pDevice->queueFamilyIndices,
                               &pDevice->physicalHandle)
         != DK_SUCCESS) {
         out = DK_ERROR;
@@ -1663,11 +1669,12 @@ dkpCreateDevice(VkInstance instanceHandle,
         pQueuePriorities[i] = 1.0f;
     }
 
-    queueInfoCount = (presentSupport == DKP_PRESENT_SUPPORT_ENABLED
-                      && pDevice->queueFamilyIndices.graphics
-                             != pDevice->queueFamilyIndices.present)
-                         ? 2
-                         : 1;
+    queueInfoCount
+        = (presentSupport == DKP_PRESENT_SUPPORT_ENABLED
+           && pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS]
+                  != pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT])
+              ? 2
+              : 1;
     pQueueInfos = (VkDeviceQueueCreateInfo *)DKP_ALLOCATE(
         pAllocator, sizeof *pQueueInfos * queueInfoCount);
     if (pQueueInfos == NULL) {
@@ -1679,7 +1686,8 @@ dkpCreateDevice(VkInstance instanceHandle,
     pQueueInfos[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     pQueueInfos[0].pNext = NULL;
     pQueueInfos[0].flags = 0;
-    pQueueInfos[0].queueFamilyIndex = pDevice->queueFamilyIndices.graphics;
+    pQueueInfos[0].queueFamilyIndex
+        = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS];
     pQueueInfos[0].queueCount = queueCount;
     pQueueInfos[0].pQueuePriorities = pQueuePriorities;
 
@@ -1687,7 +1695,8 @@ dkpCreateDevice(VkInstance instanceHandle,
         pQueueInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         pQueueInfos[1].pNext = NULL;
         pQueueInfos[1].flags = 0;
-        pQueueInfos[1].queueFamilyIndex = pDevice->queueFamilyIndices.present;
+        pQueueInfos[1].queueFamilyIndex
+            = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT];
         pQueueInfos[1].queueCount = queueCount;
         pQueueInfos[1].pQueuePriorities = pQueuePriorities;
     }
@@ -1762,30 +1771,38 @@ dkpDestroyDevice(DkpDevice *pDevice,
 static DkResult
 dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
 {
-    uint32_t queueIndex;
+    uint32_t i;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
     DKP_ASSERT(pQueues != NULL);
 
-    queueIndex = 0;
+    pQueues->graphicsHandle = NULL;
+    pQueues->presentHandle = NULL;
 
-    if (pDevice->queueFamilyIndices.graphics != (uint32_t)-1) {
-        vkGetDeviceQueue(pDevice->logicalHandle,
-                         pDevice->queueFamilyIndices.graphics,
-                         queueIndex,
-                         &pQueues->graphicsHandle);
-    } else {
-        pQueues->graphicsHandle = NULL;
-    }
+    for (i = 0; i < DKP_QUEUE_FAMILY_ID_ENUM_COUNT; ++i) {
+        VkQueue *pQueue;
 
-    if (pDevice->queueFamilyIndices.present != (uint32_t)-1) {
+        if (pDevice->queueFamilyIndices[i] == (uint32_t)-1) {
+            continue;
+        }
+
+        switch (i) {
+            case DKP_QUEUE_FAMILY_ID_GRAPHICS:
+                pQueue = &pQueues->graphicsHandle;
+                break;
+            case DKP_QUEUE_FAMILY_ID_PRESENT:
+                pQueue = &pQueues->presentHandle;
+                break;
+            default:
+                DKP_ASSERT(0);
+                return DK_ERROR;
+        }
+
         vkGetDeviceQueue(pDevice->logicalHandle,
-                         pDevice->queueFamilyIndices.present,
-                         queueIndex,
-                         &pQueues->presentHandle);
-    } else {
-        pQueues->presentHandle = NULL;
+                         pDevice->queueFamilyIndices[i],
+                         0,
+                         pQueue);
     }
 
     return DK_SUCCESS;
@@ -2360,21 +2377,24 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
         goto exit;
     }
 
-    if (pDevice->queueFamilyIndices.graphics
-        != pDevice->queueFamilyIndices.present) {
+    if (pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS]
+        != pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT]) {
         imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         queueFamilyIndexCount = 2;
         pQueueFamilyIndices = (uint32_t *)DKP_ALLOCATE(
             pAllocator, sizeof *pQueueFamilyIndices * queueFamilyIndexCount);
         if (pQueueFamilyIndices == NULL) {
-            DKP_LOG_ERROR(pLogger,
-                          "failed to allocate the queue family indices\n");
+            DKP_LOG_ERROR(
+                pLogger,
+                "failed to allocate the swap chain's queue family indices\n");
             out = DK_ERROR_ALLOCATION;
             goto exit;
         }
 
-        pQueueFamilyIndices[0] = pDevice->queueFamilyIndices.graphics;
-        pQueueFamilyIndices[1] = pDevice->queueFamilyIndices.present;
+        pQueueFamilyIndices[0]
+            = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS];
+        pQueueFamilyIndices[1]
+            = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_PRESENT];
     } else {
         imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         queueFamilyIndexCount = 0;
@@ -3091,7 +3111,8 @@ dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
     createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
-    createInfo.queueFamilyIndex = pDevice->queueFamilyIndices.graphics;
+    createInfo.queueFamilyIndex
+        = pDevice->queueFamilyIndices[DKP_QUEUE_FAMILY_ID_GRAPHICS];
 
     if (vkCreateCommandPool(pDevice->logicalHandle,
                             &createInfo,
