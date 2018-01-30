@@ -23,29 +23,29 @@ typedef struct Vertex {
     Vector3 color;
 } Vertex;
 
-const Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                           {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                           {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+static const Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                  {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                  {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
-const char *pApplicationName = "vertexbuffer";
-const unsigned int majorVersion = 1;
-const unsigned int minorVersion = 0;
-const unsigned int patchVersion = 0;
-const unsigned int width = 1280;
-const unsigned int height = 720;
-const DkdShaderCreateInfo shaderInfos[]
+static const char *pApplicationName = "vertexbuffer";
+static const unsigned int majorVersion = 1;
+static const unsigned int minorVersion = 0;
+static const unsigned int patchVersion = 0;
+static const unsigned int width = 1280;
+static const unsigned int height = 720;
+static const DkdShaderCreateInfo shaderInfos[]
     = {{DK_SHADER_STAGE_VERTEX, "shaders/passthrough.vert.spv", "main"},
        {DK_SHADER_STAGE_FRAGMENT, "shaders/passthrough.frag.spv", "main"}};
-const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
-const DkVertexBufferCreateInfo vertexBufferInfos[]
+static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+static const DkVertexBufferCreateInfo vertexBufferInfos[]
     = {{sizeof vertices, 0, vertices}};
-const DkVertexBindingDescriptionCreateInfo bindingDescriptionInfos[]
+static const DkVertexBindingDescriptionCreateInfo bindingDescriptionInfos[]
     = {{sizeof(Vertex), DK_VERTEX_INPUT_RATE_VERTEX}};
-const DkVertexAttributeDescriptionCreateInfo attributeDescriptionInfos[]
+static const DkVertexAttributeDescriptionCreateInfo attributeDescriptionInfos[]
     = {{0, 0, offsetof(Vertex, position), DK_FORMAT_R32G32_SFLOAT},
        {0, 1, offsetof(Vertex, color), DK_FORMAT_R32G32B32_SFLOAT}};
-const uint32_t vertexCount = sizeof vertices / sizeof *vertices;
-const uint32_t instanceCount = 1;
+static const uint32_t vertexCount = sizeof vertices / sizeof *vertices;
+static const uint32_t instanceCount = 1;
 
 int
 dkdSetup(DkdBootstrapHandles *pHandles)

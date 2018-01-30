@@ -11,18 +11,18 @@
 #include <stddef.h>
 #include <stdio.h>
 
-const char *pApplicationName = "customallocator";
-const unsigned int majorVersion = 1;
-const unsigned int minorVersion = 0;
-const unsigned int patchVersion = 0;
-const unsigned int width = 1280;
-const unsigned int height = 720;
-const DkdShaderCreateInfo shaderInfos[]
+static const char *pApplicationName = "customallocator";
+static const unsigned int majorVersion = 1;
+static const unsigned int minorVersion = 0;
+static const unsigned int patchVersion = 0;
+static const unsigned int width = 1280;
+static const unsigned int height = 720;
+static const DkdShaderCreateInfo shaderInfos[]
     = {{DK_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
        {DK_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
-const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
-const uint32_t vertexCount = 3;
-const uint32_t instanceCount = 1;
+static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+static const uint32_t vertexCount = 3;
+static const uint32_t instanceCount = 1;
 
 typedef struct DkdApplicationCallbacksData {
     DkdAllocationCallbacks *pAllocator;

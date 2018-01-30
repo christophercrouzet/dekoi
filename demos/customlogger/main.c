@@ -7,15 +7,15 @@
 #include <assert.h>
 #include <stddef.h>
 
-const char *pApplicationName = "customlogger";
-const unsigned int majorVersion = 1;
-const unsigned int minorVersion = 0;
-const unsigned int patchVersion = 0;
-const unsigned int width = 1280;
-const unsigned int height = 720;
-const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
-const uint32_t vertexCount = 0;
-const uint32_t instanceCount = 0;
+static const char *pApplicationName = "customlogger";
+static const unsigned int majorVersion = 1;
+static const unsigned int minorVersion = 0;
+static const unsigned int patchVersion = 0;
+static const unsigned int width = 1280;
+static const unsigned int height = 720;
+static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+static const uint32_t vertexCount = 0;
+static const uint32_t instanceCount = 0;
 
 int
 dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
