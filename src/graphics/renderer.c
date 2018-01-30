@@ -61,6 +61,10 @@ typedef enum DkpSwapChainSystemScope {
     DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL = 1
 } DkpSwapChainSystemScope;
 
+typedef enum DkpConstant {
+    DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED = DKP_QUEUE_TYPE_ENUM_COUNT
+} DkpConstant;
+
 typedef struct DkpBackEndAllocationCallbacksData {
     const DkLoggingCallbacks *pLogger;
     const DkAllocationCallbacks *pAllocator;
@@ -78,7 +82,7 @@ typedef struct DkpQueues {
 } DkpQueues;
 
 typedef struct DkpDevice {
-    uint32_t queueFamilyIndices[DKP_QUEUE_TYPE_ENUM_COUNT];
+    uint32_t queueFamilyIndices[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
     VkPhysicalDevice physicalHandle;
     VkDevice logicalHandle;
 } DkpDevice;
@@ -241,7 +245,7 @@ dkpFilterQueueFamilyIndices(const uint32_t *pQueueFamilyIndices,
     DKP_ASSERT(pFilteredQueueFamilyIndices != NULL);
 
     *pFilteredQueueFamilyCount = 0;
-    for (i = 0; i < DKP_QUEUE_TYPE_ENUM_COUNT; ++i) {
+    for (i = 0; i < DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED; ++i) {
         int found;
 
         if (pQueueFamilyIndices[i] == (uint32_t)-1) {
@@ -1100,7 +1104,7 @@ dkpPickDeviceQueueFamilies(VkPhysicalDevice physicalDeviceHandle,
 
     out = DK_SUCCESS;
 
-    for (i = 0; i < DKP_QUEUE_TYPE_ENUM_COUNT; ++i) {
+    for (i = 0; i < DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED; ++i) {
         pQueueFamilyIndices[i] = (uint32_t)-1;
     }
 
@@ -1733,7 +1737,7 @@ dkpMakeDevice(VkInstance instanceHandle,
     uint32_t queueCount;
     float *pQueuePriorities;
     uint32_t queueFamilyCount;
-    uint32_t queueFamilyIndices[DKP_QUEUE_TYPE_ENUM_COUNT];
+    uint32_t queueFamilyIndices[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
     VkDeviceQueueCreateInfo *pQueueInfos;
     VkDeviceCreateInfo createInfo;
 
@@ -1887,7 +1891,7 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
     pQueues->transferHandle = NULL;
     pQueues->presentHandle = NULL;
 
-    for (i = 0; i < DKP_QUEUE_TYPE_ENUM_COUNT; ++i) {
+    for (i = 0; i < DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED; ++i) {
         VkQueue *pQueue;
 
         if (pDevice->queueFamilyIndices[i] == (uint32_t)-1) {
