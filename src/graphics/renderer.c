@@ -119,6 +119,11 @@ typedef struct DkpSwapChain {
     VkImageView *pImageViewHandles;
 } DkpSwapChain;
 
+typedef struct DkpCommandPools {
+    VkCommandPool handles[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
+    VkCommandPool handleMap[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
+} DkpCommandPools;
+
 struct DkRenderer {
     const DkLoggingCallbacks *pLogger;
     const DkAllocationCallbacks *pAllocator;
@@ -148,7 +153,7 @@ struct DkRenderer {
     VkPipelineLayout pipelineLayoutHandle;
     VkPipeline graphicsPipelineHandle;
     VkFramebuffer *pFramebufferHandles;
-    VkCommandPool graphicsCommandPoolHandle;
+    DkpCommandPools commandPools;
     VkCommandBuffer *pGraphicsCommandBufferHandles;
     uint32_t vertexCount;
     uint32_t instanceCount;
@@ -3212,49 +3217,90 @@ dkpDestroyFramebuffers(const DkpDevice *pDevice,
 }
 
 static DkResult
-dkpCreateGraphicsCommandPool(const DkpDevice *pDevice,
-                             const VkAllocationCallbacks *pBackEndAllocator,
-                             const DkLoggingCallbacks *pLogger,
-                             VkCommandPool *pCommandPoolHandle)
+dkpMakeCommandPools(const DkpDevice *pDevice,
+                    DkpCommandPools *pCommandPools,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    const DkLoggingCallbacks *pLogger)
 {
+    DkResult out;
+    uint32_t i;
+    uint32_t j;
     VkCommandPoolCreateInfo createInfo;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pCommandPools != NULL);
     DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
-    DKP_ASSERT(pCommandPoolHandle != NULL);
+
+    out = DK_SUCCESS;
+
+    DKP_ASSERT(pDevice->filteredQueueFamilyCount
+               <= sizeof pCommandPools->handles
+                      / sizeof *pCommandPools->handles);
+
+    for (i = 0; i < pDevice->filteredQueueFamilyCount; ++i) {
+        pCommandPools->handles[i] = VK_NULL_HANDLE;
+    }
 
     createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
-    createInfo.queueFamilyIndex
-        = pDevice->queueFamilyIndices[DKP_QUEUE_TYPE_GRAPHICS];
 
-    if (vkCreateCommandPool(pDevice->logicalHandle,
-                            &createInfo,
-                            pBackEndAllocator,
-                            pCommandPoolHandle)
-        != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create the graphics command pool\n");
-        return DK_ERROR;
+    for (i = 0; i < pDevice->filteredQueueFamilyCount; ++i) {
+        createInfo.queueFamilyIndex = pDevice->filteredQueueFamilyIndices[i];
+
+        if (vkCreateCommandPool(pDevice->logicalHandle,
+                                &createInfo,
+                                pBackEndAllocator,
+                                &pCommandPools->handles[i])
+            != VK_SUCCESS) {
+            DKP_LOG_ERROR(pLogger, "failed to create a command pool\n");
+            out = DK_ERROR;
+            goto command_pools_undo;
+        }
+
+        for (j = 0; j < DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED; ++j) {
+            if (pDevice->queueFamilyIndices[j]
+                == pDevice->filteredQueueFamilyIndices[i]) {
+                pCommandPools->handleMap[j] = pCommandPools->handles[i];
+            }
+        }
     }
 
-    return DK_SUCCESS;
+    goto exit;
+
+command_pools_undo:
+    for (i = 0; i < pDevice->filteredQueueFamilyCount; ++i) {
+        if (pCommandPools->handles[i] != VK_NULL_HANDLE) {
+            vkDestroyCommandPool(pDevice->logicalHandle,
+                                 pCommandPools->handles[i],
+                                 pBackEndAllocator);
+        }
+    }
+
+exit:
+    return out;
 }
 
 static void
-dkpDestroyGraphicsCommandPool(const DkpDevice *pDevice,
-                              VkCommandPool commandPoolHandle,
-                              const VkAllocationCallbacks *pBackEndAllocator)
+dkpDiscardCommandPools(const DkpDevice *pDevice,
+                       DkpCommandPools *pCommandPools,
+                       const VkAllocationCallbacks *pBackEndAllocator)
 {
+    uint32_t i;
+
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
-    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pCommandPools != NULL);
     DKP_ASSERT(pBackEndAllocator != NULL);
 
-    vkDestroyCommandPool(
-        pDevice->logicalHandle, commandPoolHandle, pBackEndAllocator);
+    for (i = 0; i < pDevice->filteredQueueFamilyCount; ++i) {
+        DKP_ASSERT(pCommandPools->handles[i] != VK_NULL_HANDLE);
+        vkDestroyCommandPool(pDevice->logicalHandle,
+                             pCommandPools->handles[i],
+                             pBackEndAllocator);
+    }
 }
 
 static DkResult
@@ -3533,10 +3579,10 @@ dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
     }
 
     if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
-        if (dkpCreateGraphicsCommandPool(&pRenderer->device,
-                                         &pRenderer->backEndAllocator,
-                                         pRenderer->pLogger,
-                                         &pRenderer->graphicsCommandPoolHandle)
+        if (dkpMakeCommandPools(&pRenderer->device,
+                                &pRenderer->commandPools,
+                                &pRenderer->backEndAllocator,
+                                pRenderer->pLogger)
             != DK_SUCCESS) {
             out = DK_ERROR;
             goto framebuffers_undo;
@@ -3546,7 +3592,7 @@ dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
     if (dkpCreateGraphicsCommandBuffers(
             &pRenderer->device,
             &pRenderer->swapChain,
-            pRenderer->graphicsCommandPoolHandle,
+            pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
             pRenderer->pAllocator,
             pRenderer->pLogger,
             &pRenderer->pGraphicsCommandBufferHandles)
@@ -3579,16 +3625,17 @@ dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
 graphics_command_buffers_undo:
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
-    dkpDestroyGraphicsCommandBuffers(&pRenderer->device,
-                                     &pRenderer->swapChain,
-                                     pRenderer->graphicsCommandPoolHandle,
-                                     pRenderer->pGraphicsCommandBufferHandles,
-                                     pRenderer->pAllocator);
+    dkpDestroyGraphicsCommandBuffers(
+        &pRenderer->device,
+        &pRenderer->swapChain,
+        pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
+        pRenderer->pGraphicsCommandBufferHandles,
+        pRenderer->pAllocator);
 
 graphics_command_pool_undo:
-    dkpDestroyGraphicsCommandPool(&pRenderer->device,
-                                  pRenderer->graphicsCommandPoolHandle,
-                                  &pRenderer->backEndAllocator);
+    dkpDiscardCommandPools(&pRenderer->device,
+                           &pRenderer->commandPools,
+                           &pRenderer->backEndAllocator);
 
 framebuffers_undo:
     dkpDestroyFramebuffers(&pRenderer->device,
@@ -3628,7 +3675,8 @@ dkpDiscardRendererSwapChainSystem(DkRenderer *pRenderer,
 {
     DKP_ASSERT(pRenderer != NULL);
     DKP_ASSERT(pRenderer->pGraphicsCommandBufferHandles != NULL);
-    DKP_ASSERT(pRenderer->graphicsCommandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS]
+               != VK_NULL_HANDLE);
     DKP_ASSERT(pRenderer->pFramebufferHandles != NULL);
     DKP_ASSERT(pRenderer->graphicsPipelineHandle != VK_NULL_HANDLE);
     DKP_ASSERT(pRenderer->pipelineLayoutHandle != VK_NULL_HANDLE);
@@ -3637,16 +3685,17 @@ dkpDiscardRendererSwapChainSystem(DkRenderer *pRenderer,
 
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
-    dkpDestroyGraphicsCommandBuffers(&pRenderer->device,
-                                     &pRenderer->swapChain,
-                                     pRenderer->graphicsCommandPoolHandle,
-                                     pRenderer->pGraphicsCommandBufferHandles,
-                                     pRenderer->pAllocator);
+    dkpDestroyGraphicsCommandBuffers(
+        &pRenderer->device,
+        &pRenderer->swapChain,
+        pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
+        pRenderer->pGraphicsCommandBufferHandles,
+        pRenderer->pAllocator);
 
     if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
-        dkpDestroyGraphicsCommandPool(&pRenderer->device,
-                                      pRenderer->graphicsCommandPoolHandle,
-                                      &pRenderer->backEndAllocator);
+        dkpDiscardCommandPools(&pRenderer->device,
+                               &pRenderer->commandPools,
+                               &pRenderer->backEndAllocator);
     }
 
     dkpDestroyFramebuffers(&pRenderer->device,
