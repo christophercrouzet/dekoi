@@ -83,6 +83,8 @@ typedef struct DkpQueues {
 
 typedef struct DkpDevice {
     uint32_t queueFamilyIndices[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
+    uint32_t filteredQueueFamilyCount;
+    uint32_t filteredQueueFamilyIndices[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
     VkPhysicalDevice physicalHandle;
     VkDevice logicalHandle;
 } DkpDevice;
@@ -1736,8 +1738,6 @@ dkpMakeDevice(VkInstance instanceHandle,
     const char **ppExtensionNames;
     uint32_t queueCount;
     float *pQueuePriorities;
-    uint32_t queueFamilyCount;
-    uint32_t queueFamilyIndices[DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED];
     VkDeviceQueueCreateInfo *pQueueInfos;
     VkDeviceCreateInfo createInfo;
 
@@ -1790,22 +1790,24 @@ dkpMakeDevice(VkInstance instanceHandle,
         pQueuePriorities[i] = 1.0f;
     }
 
-    dkpFilterQueueFamilyIndices(
-        pDevice->queueFamilyIndices, &queueFamilyCount, queueFamilyIndices);
+    dkpFilterQueueFamilyIndices(pDevice->queueFamilyIndices,
+                                &pDevice->filteredQueueFamilyCount,
+                                pDevice->filteredQueueFamilyIndices);
 
     pQueueInfos = (VkDeviceQueueCreateInfo *)DKP_ALLOCATE(
-        pAllocator, sizeof *pQueueInfos * queueFamilyCount);
+        pAllocator, sizeof *pQueueInfos * pDevice->filteredQueueFamilyCount);
     if (pQueueInfos == NULL) {
         DKP_LOG_ERROR(pLogger, "failed to allocate the device queue infos\n");
         out = DK_ERROR_ALLOCATION;
         goto queue_priorities_cleanup;
     }
 
-    for (i = 0; i < queueFamilyCount; ++i) {
+    for (i = 0; i < pDevice->filteredQueueFamilyCount; ++i) {
         pQueueInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         pQueueInfos[i].pNext = NULL;
         pQueueInfos[i].flags = 0;
-        pQueueInfos[i].queueFamilyIndex = queueFamilyIndices[i];
+        pQueueInfos[i].queueFamilyIndex
+            = pDevice->filteredQueueFamilyIndices[i];
         pQueueInfos[i].queueCount = queueCount;
         pQueueInfos[i].pQueuePriorities = pQueuePriorities;
     }
@@ -1813,7 +1815,7 @@ dkpMakeDevice(VkInstance instanceHandle,
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
-    createInfo.queueCreateInfoCount = queueFamilyCount;
+    createInfo.queueCreateInfoCount = pDevice->filteredQueueFamilyCount;
     createInfo.pQueueCreateInfos = pQueueInfos;
     createInfo.enabledLayerCount = 0;
     createInfo.ppEnabledLayerNames = NULL;
