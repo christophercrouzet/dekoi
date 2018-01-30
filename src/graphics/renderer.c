@@ -301,6 +301,99 @@ dkpPickMemoryTypeIndex(const DkpDevice *pDevice,
 }
 
 static DkResult
+dkpCopyBuffer(const DkpDevice *pDevice,
+              const DkpBuffer *pSource,
+              const DkpBuffer *pDestination,
+              VkDeviceSize size,
+              VkCommandPool commandPoolHandle,
+              const DkpQueues *pQueues,
+              const DkLoggingCallbacks *pLogger)
+{
+    DkResult out;
+    VkCommandBufferAllocateInfo allocateInfo;
+    VkCommandBuffer commandBuffer;
+    VkCommandBufferBeginInfo beginInfo;
+    VkBufferCopy copyRegion;
+    VkSubmitInfo submitInfo;
+
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSource != NULL);
+    DKP_ASSERT(pDestination != NULL);
+    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pQueues != NULL);
+    DKP_ASSERT(pLogger != NULL);
+
+    out = DK_SUCCESS;
+
+    allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocateInfo.pNext = NULL;
+    allocateInfo.commandPool = commandPoolHandle;
+    allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocateInfo.commandBufferCount = 1;
+
+    if (vkAllocateCommandBuffers(
+            pDevice->logicalHandle, &allocateInfo, &commandBuffer)
+        != VK_SUCCESS) {
+        out = DK_ERROR;
+        DKP_LOG_ERROR(pLogger, "failed to allocate copy command buffers\n");
+        goto exit;
+    }
+
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.pNext = NULL;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    beginInfo.pInheritanceInfo = NULL;
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        out = DK_ERROR;
+        DKP_LOG_ERROR(pLogger,
+                      "could not begin the copy command buffer recording\n");
+        goto allocate_command_buffers_cleanup;
+    }
+
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = 0;
+    copyRegion.size = size;
+
+    vkCmdCopyBuffer(
+        commandBuffer, pSource->handle, pDestination->handle, 1, &copyRegion);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        out = DK_ERROR;
+        DKP_LOG_ERROR(pLogger,
+                      "could not end the copy command buffer recording\n");
+        goto allocate_command_buffers_cleanup;
+    }
+
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pNext = NULL;
+    submitInfo.waitSemaphoreCount = 0;
+    submitInfo.pWaitSemaphores = NULL;
+    submitInfo.pWaitDstStageMask = NULL;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+    submitInfo.signalSemaphoreCount = 0;
+    submitInfo.pSignalSemaphores = NULL;
+
+    if (vkQueueSubmit(pQueues->transferHandle, 1, &submitInfo, VK_NULL_HANDLE)
+        != VK_SUCCESS) {
+        DKP_LOG_ERROR(pLogger, "could not submit the copy command buffer\n");
+        out = DK_ERROR;
+        goto allocate_command_buffers_cleanup;
+    }
+
+    vkQueueWaitIdle(pQueues->transferHandle);
+
+allocate_command_buffers_cleanup:
+    vkFreeCommandBuffers(
+        pDevice->logicalHandle, commandPoolHandle, 1, &commandBuffer);
+
+exit:
+    return out;
+}
+
+static DkResult
 dkpMakeBuffer(const DkpDevice *pDevice,
               DkpBuffer *pBuffer,
               VkDeviceSize size,
@@ -2159,6 +2252,8 @@ static DkResult
 dkpCreateVertexBuffers(const DkpDevice *pDevice,
                        uint32_t vertexBufferCount,
                        const DkVertexBufferCreateInfo *pVertexBufferInfos,
+                       VkCommandPool commandPoolHandle,
+                       const DkpQueues *pQueues,
                        const VkAllocationCallbacks *pBackEndAllocator,
                        const DkAllocationCallbacks *pAllocator,
                        const DkLoggingCallbacks *pLogger,
@@ -2166,9 +2261,12 @@ dkpCreateVertexBuffers(const DkpDevice *pDevice,
 {
     DkResult out;
     uint32_t i;
+    DkpBuffer stagingBuffer;
 
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pQueues != NULL);
     DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
@@ -2198,11 +2296,44 @@ dkpCreateVertexBuffers(const DkpDevice *pDevice,
         void *pData;
 
         if (dkpMakeBuffer(pDevice,
-                          &(*ppVertexBuffers)[i],
+                          &stagingBuffer,
                           (VkDeviceSize)pVertexBufferInfos[i].size,
-                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
                               | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          pBackEndAllocator,
+                          pLogger)
+            != DK_SUCCESS) {
+            out = DK_ERROR;
+            stagingBuffer.handle = VK_NULL_HANDLE;
+            stagingBuffer.memoryHandle = VK_NULL_HANDLE;
+            goto vertex_buffers_undo;
+        }
+
+        if (vkMapMemory(pDevice->logicalHandle,
+                        stagingBuffer.memoryHandle,
+                        (VkDeviceSize)pVertexBufferInfos[i].offset,
+                        (VkDeviceSize)pVertexBufferInfos[i].size,
+                        0,
+                        &pData)
+            != VK_SUCCESS) {
+            DKP_LOG_ERROR(pLogger,
+                          "failed to map a vertex staging buffer memory\n");
+            out = DK_ERROR;
+            goto vertex_buffers_undo;
+        }
+
+        memcpy(pData,
+               pVertexBufferInfos[i].pData,
+               (size_t)pVertexBufferInfos[i].size);
+        vkUnmapMemory(pDevice->logicalHandle, stagingBuffer.memoryHandle);
+
+        if (dkpMakeBuffer(pDevice,
+                          &(*ppVertexBuffers)[i],
+                          (VkDeviceSize)pVertexBufferInfos[i].size,
+                          VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                              | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                           pBackEndAllocator,
                           pLogger)
             != DK_SUCCESS) {
@@ -2215,23 +2346,22 @@ dkpCreateVertexBuffers(const DkpDevice *pDevice,
         (*ppVertexBuffers)[i].offset
             = (VkDeviceSize)pVertexBufferInfos[i].offset;
 
-        if (vkMapMemory(pDevice->logicalHandle,
-                        (*ppVertexBuffers)[i].memoryHandle,
-                        (VkDeviceSize)pVertexBufferInfos[i].offset,
-                        (VkDeviceSize)pVertexBufferInfos[i].size,
-                        0,
-                        &pData)
-            != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger, "failed to map a vertex buffer memory\n");
-            out = DK_ERROR;
-            goto vertex_buffers_undo;
-        }
+        dkpCopyBuffer(pDevice,
+                      &stagingBuffer,
+                      &(*ppVertexBuffers)[i],
+                      (VkDeviceSize)pVertexBufferInfos[i].size,
+                      commandPoolHandle,
+                      pQueues,
+                      pLogger);
 
-        memcpy(pData,
-               pVertexBufferInfos[i].pData,
-               (size_t)pVertexBufferInfos[i].size);
-        vkUnmapMemory(pDevice->logicalHandle,
-                      (*ppVertexBuffers)[i].memoryHandle);
+        dkpDiscardBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
+        stagingBuffer.handle = VK_NULL_HANDLE;
+        stagingBuffer.memoryHandle = VK_NULL_HANDLE;
+    }
+
+    if (stagingBuffer.handle != VK_NULL_HANDLE
+        || stagingBuffer.memoryHandle != VK_NULL_HANDLE) {
+        dkpDiscardBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
     }
 
     goto exit;
@@ -4132,13 +4262,16 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     (*ppRenderer)->vertexBufferCount = (uint32_t)pCreateInfo->vertexBufferCount;
-    if (dkpCreateVertexBuffers(&(*ppRenderer)->device,
-                               (*ppRenderer)->vertexBufferCount,
-                               pCreateInfo->pVertexBufferInfos,
-                               &(*ppRenderer)->backEndAllocator,
-                               (*ppRenderer)->pAllocator,
-                               (*ppRenderer)->pLogger,
-                               &(*ppRenderer)->pVertexBuffers)
+    if (dkpCreateVertexBuffers(
+            &(*ppRenderer)->device,
+            (*ppRenderer)->vertexBufferCount,
+            pCreateInfo->pVertexBufferInfos,
+            (*ppRenderer)->commandPools.handleMap[DKP_QUEUE_TYPE_TRANSFER],
+            &(*ppRenderer)->queues,
+            &(*ppRenderer)->backEndAllocator,
+            (*ppRenderer)->pAllocator,
+            (*ppRenderer)->pLogger,
+            &(*ppRenderer)->pVertexBuffers)
         != DK_SUCCESS) {
         out = DK_ERROR;
         goto command_pools_undo;
