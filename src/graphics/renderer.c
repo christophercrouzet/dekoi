@@ -1720,12 +1720,12 @@ exit:
 }
 
 static DkResult
-dkpCreateDevice(VkInstance instanceHandle,
-                VkSurfaceKHR surfaceHandle,
-                const VkAllocationCallbacks *pBackEndAllocator,
-                const DkAllocationCallbacks *pAllocator,
-                const DkLoggingCallbacks *pLogger,
-                DkpDevice *pDevice)
+dkpMakeDevice(VkInstance instanceHandle,
+              DkpDevice *pDevice,
+              VkSurfaceKHR surfaceHandle,
+              const VkAllocationCallbacks *pBackEndAllocator,
+              const DkAllocationCallbacks *pAllocator,
+              const DkLoggingCallbacks *pLogger)
 {
     DkResult out;
     uint32_t i;
@@ -1740,10 +1740,10 @@ dkpCreateDevice(VkInstance instanceHandle,
     VkDeviceCreateInfo createInfo;
 
     DKP_ASSERT(instanceHandle != NULL);
+    DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
-    DKP_ASSERT(pDevice != NULL);
 
     out = DK_SUCCESS;
 
@@ -1865,7 +1865,7 @@ exit:
 }
 
 static void
-dkpDestroyDevice(DkpDevice *pDevice,
+dkpDiscardDevice(DkpDevice *pDevice,
                  const VkAllocationCallbacks *pBackEndAllocator)
 {
     DKP_ASSERT(pDevice != NULL);
@@ -1914,10 +1914,8 @@ dkpGetDeviceQueues(const DkpDevice *pDevice, DkpQueues *pQueues)
                 return DK_ERROR;
         }
 
-        vkGetDeviceQueue(pDevice->logicalHandle,
-                         pDevice->queueFamilyIndices[i],
-                         0,
-                         pQueue);
+        vkGetDeviceQueue(
+            pDevice->logicalHandle, pDevice->queueFamilyIndices[i], 0, pQueue);
     }
 
     return DK_SUCCESS;
@@ -2454,14 +2452,14 @@ dkpDestroySwapChainImageViews(const DkpDevice *pDevice,
 }
 
 static DkResult
-dkpCreateSwapChain(const DkpDevice *pDevice,
-                   VkSurfaceKHR surfaceHandle,
-                   const VkExtent2D *pDesiredImageExtent,
-                   VkSwapchainKHR oldSwapChainHandle,
-                   const VkAllocationCallbacks *pBackEndAllocator,
-                   const DkAllocationCallbacks *pAllocator,
-                   const DkLoggingCallbacks *pLogger,
-                   DkpSwapChain *pSwapChain)
+dkpMakeSwapChain(const DkpDevice *pDevice,
+                 DkpSwapChain *pSwapChain,
+                 VkSurfaceKHR surfaceHandle,
+                 const VkExtent2D *pDesiredImageExtent,
+                 VkSwapchainKHR oldSwapChainHandle,
+                 const VkAllocationCallbacks *pBackEndAllocator,
+                 const DkAllocationCallbacks *pAllocator,
+                 const DkLoggingCallbacks *pLogger)
 {
     DkResult out;
     DkpSwapChainProperties swapChainProperties;
@@ -2473,10 +2471,10 @@ dkpCreateSwapChain(const DkpDevice *pDevice,
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->physicalHandle != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pSwapChain != NULL);
     DKP_ASSERT(pBackEndAllocator != NULL);
     DKP_ASSERT(pAllocator != NULL);
     DKP_ASSERT(pLogger != NULL);
-    DKP_ASSERT(pSwapChain != NULL);
 
     out = DK_SUCCESS;
 
@@ -2609,7 +2607,7 @@ exit:
 }
 
 static void
-dkpDestroySwapChain(const DkpDevice *pDevice,
+dkpDiscardSwapChain(const DkpDevice *pDevice,
                     DkpSwapChain *pSwapChain,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const DkAllocationCallbacks *pAllocator)
@@ -3456,8 +3454,8 @@ exit:
 }
 
 static DkResult
-dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
-                                 const DkpSwapChainSystemScope scope)
+dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
+                               const DkpSwapChainSystemScope scope)
 {
     DkResult out;
 
@@ -3465,14 +3463,14 @@ dkpCreateRendererSwapChainSystem(DkRenderer *pRenderer,
 
     out = DK_SUCCESS;
 
-    if (dkpCreateSwapChain(&pRenderer->device,
-                           pRenderer->surfaceHandle,
-                           &pRenderer->surfaceExtent,
-                           VK_NULL_HANDLE,
-                           &pRenderer->backEndAllocator,
-                           pRenderer->pAllocator,
-                           pRenderer->pLogger,
-                           &pRenderer->swapChain)
+    if (dkpMakeSwapChain(&pRenderer->device,
+                         &pRenderer->swapChain,
+                         pRenderer->surfaceHandle,
+                         &pRenderer->surfaceExtent,
+                         VK_NULL_HANDLE,
+                         &pRenderer->backEndAllocator,
+                         pRenderer->pAllocator,
+                         pRenderer->pLogger)
         != DK_SUCCESS) {
         out = DK_ERROR;
         goto exit;
@@ -3611,7 +3609,7 @@ render_pass_undo:
                          &pRenderer->backEndAllocator);
 
 swap_chain_undo:
-    dkpDestroySwapChain(&pRenderer->device,
+    dkpDiscardSwapChain(&pRenderer->device,
                         &pRenderer->swapChain,
                         &pRenderer->backEndAllocator,
                         pRenderer->pAllocator);
@@ -3621,7 +3619,7 @@ exit:
 }
 
 static void
-dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
+dkpDiscardRendererSwapChainSystem(DkRenderer *pRenderer,
                                   DkpSwapChainSystemScope scope)
 {
     DKP_ASSERT(pRenderer != NULL);
@@ -3665,7 +3663,7 @@ dkpDestroyRendererSwapChainSystem(DkRenderer *pRenderer,
                          pRenderer->renderPassHandle,
                          &pRenderer->backEndAllocator);
 
-    dkpDestroySwapChain(&pRenderer->device,
+    dkpDiscardSwapChain(&pRenderer->device,
                         &pRenderer->swapChain,
                         &pRenderer->backEndAllocator,
                         pRenderer->pAllocator);
@@ -3676,10 +3674,10 @@ dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
 
-    dkpDestroyRendererSwapChainSystem(pRenderer,
+    dkpDiscardRendererSwapChainSystem(pRenderer,
                                       DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
-    return dkpCreateRendererSwapChainSystem(
-        pRenderer, DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
+    return dkpMakeRendererSwapChainSystem(pRenderer,
+                                          DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
 }
 
 static void
@@ -4062,12 +4060,12 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         (*ppRenderer)->surfaceHandle = VK_NULL_HANDLE;
     }
 
-    if (dkpCreateDevice((*ppRenderer)->instanceHandle,
-                        (*ppRenderer)->surfaceHandle,
-                        &(*ppRenderer)->backEndAllocator,
-                        (*ppRenderer)->pAllocator,
-                        (*ppRenderer)->pLogger,
-                        &(*ppRenderer)->device)
+    if (dkpMakeDevice((*ppRenderer)->instanceHandle,
+                      &(*ppRenderer)->device,
+                      (*ppRenderer)->surfaceHandle,
+                      &(*ppRenderer)->backEndAllocator,
+                      (*ppRenderer)->pAllocator,
+                      (*ppRenderer)->pLogger)
         != DK_SUCCESS) {
         out = DK_ERROR;
         goto surface_undo;
@@ -4116,8 +4114,8 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     }
 
     if (!headless) {
-        if (dkpCreateRendererSwapChainSystem(*ppRenderer,
-                                             DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL)
+        if (dkpMakeRendererSwapChainSystem(*ppRenderer,
+                                           DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL)
             != DK_SUCCESS) {
             out = DK_ERROR;
             goto vertex_buffers_undo;
@@ -4147,7 +4145,7 @@ semaphores_undo:
                          (*ppRenderer)->pAllocator);
 
 device_undo:
-    dkpDestroyDevice(&(*ppRenderer)->device, &(*ppRenderer)->backEndAllocator);
+    dkpDiscardDevice(&(*ppRenderer)->device, &(*ppRenderer)->backEndAllocator);
 
 surface_undo:
     if (!headless) {
@@ -4200,7 +4198,7 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
     if (!headless) {
-        dkpDestroyRendererSwapChainSystem(pRenderer,
+        dkpDiscardRendererSwapChainSystem(pRenderer,
                                           DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL);
     }
 
@@ -4218,7 +4216,7 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                          pRenderer->pSemaphoreHandles,
                          &pRenderer->backEndAllocator,
                          pRenderer->pAllocator);
-    dkpDestroyDevice(&pRenderer->device, &pRenderer->backEndAllocator);
+    dkpDiscardDevice(&pRenderer->device, &pRenderer->backEndAllocator);
 
     if (!headless) {
         dkpDestroySurface(pRenderer->instanceHandle,
