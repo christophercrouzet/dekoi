@@ -56,11 +56,6 @@ typedef enum DkpSemaphoreId {
     DKP_SEMAPHORE_ID_ENUM_COUNT = DKP_SEMAPHORE_ID_ENUM_LAST + 1
 } DkpSemaphoreId;
 
-typedef enum DkpSwapChainSystemScope {
-    DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL = 0,
-    DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL = 1
-} DkpSwapChainSystemScope;
-
 typedef enum DkpConstant {
     DKP_CONSTANT_MAX_QUEUE_FAMILIES_USED = DKP_QUEUE_TYPE_ENUM_COUNT
 } DkpConstant;
@@ -3504,8 +3499,7 @@ exit:
 }
 
 static DkResult
-dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
-                               const DkpSwapChainSystemScope scope)
+dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer)
 {
     DkResult out;
 
@@ -3578,17 +3572,6 @@ dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
         goto graphics_pipeline_undo;
     }
 
-    if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
-        if (dkpMakeCommandPools(&pRenderer->device,
-                                &pRenderer->commandPools,
-                                &pRenderer->backEndAllocator,
-                                pRenderer->pLogger)
-            != DK_SUCCESS) {
-            out = DK_ERROR;
-            goto framebuffers_undo;
-        }
-    }
-
     if (dkpCreateGraphicsCommandBuffers(
             &pRenderer->device,
             &pRenderer->swapChain,
@@ -3598,7 +3581,7 @@ dkpMakeRendererSwapChainSystem(DkRenderer *pRenderer,
             &pRenderer->pGraphicsCommandBufferHandles)
         != DK_SUCCESS) {
         out = DK_ERROR;
-        goto graphics_command_pool_undo;
+        goto framebuffers_undo;
     }
 
     if (dkpRecordGraphicsCommandBuffers(
@@ -3631,11 +3614,6 @@ graphics_command_buffers_undo:
         pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
         pRenderer->pGraphicsCommandBufferHandles,
         pRenderer->pAllocator);
-
-graphics_command_pool_undo:
-    dkpDiscardCommandPools(&pRenderer->device,
-                           &pRenderer->commandPools,
-                           &pRenderer->backEndAllocator);
 
 framebuffers_undo:
     dkpDestroyFramebuffers(&pRenderer->device,
@@ -3670,8 +3648,7 @@ exit:
 }
 
 static void
-dkpDiscardRendererSwapChainSystem(DkRenderer *pRenderer,
-                                  DkpSwapChainSystemScope scope)
+dkpDiscardRendererSwapChainSystem(DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
     DKP_ASSERT(pRenderer->pGraphicsCommandBufferHandles != NULL);
@@ -3691,12 +3668,6 @@ dkpDiscardRendererSwapChainSystem(DkRenderer *pRenderer,
         pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
         pRenderer->pGraphicsCommandBufferHandles,
         pRenderer->pAllocator);
-
-    if (scope == DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL) {
-        dkpDiscardCommandPools(&pRenderer->device,
-                               &pRenderer->commandPools,
-                               &pRenderer->backEndAllocator);
-    }
 
     dkpDestroyFramebuffers(&pRenderer->device,
                            &pRenderer->swapChain,
@@ -3727,10 +3698,8 @@ dkpRecreateRendererSwapChain(DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
 
-    dkpDiscardRendererSwapChainSystem(pRenderer,
-                                      DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
-    return dkpMakeRendererSwapChainSystem(pRenderer,
-                                          DKP_SWAP_CHAIN_SYSTEM_SCOPE_PARTIAL);
+    dkpDiscardRendererSwapChainSystem(pRenderer);
+    return dkpMakeRendererSwapChainSystem(pRenderer);
 }
 
 static void
@@ -4153,6 +4122,15 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
         goto semaphores_undo;
     }
 
+    if (dkpMakeCommandPools(&(*ppRenderer)->device,
+                            &(*ppRenderer)->commandPools,
+                            &(*ppRenderer)->backEndAllocator,
+                            (*ppRenderer)->pLogger)
+        != DK_SUCCESS) {
+        out = DK_ERROR;
+        goto shaders_undo;
+    }
+
     (*ppRenderer)->vertexBufferCount = (uint32_t)pCreateInfo->vertexBufferCount;
     if (dkpCreateVertexBuffers(&(*ppRenderer)->device,
                                (*ppRenderer)->vertexBufferCount,
@@ -4163,13 +4141,11 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
                                &(*ppRenderer)->pVertexBuffers)
         != DK_SUCCESS) {
         out = DK_ERROR;
-        goto shaders_undo;
+        goto command_pools_undo;
     }
 
     if (!headless) {
-        if (dkpMakeRendererSwapChainSystem(*ppRenderer,
-                                           DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL)
-            != DK_SUCCESS) {
+        if (dkpMakeRendererSwapChainSystem(*ppRenderer) != DK_SUCCESS) {
             out = DK_ERROR;
             goto vertex_buffers_undo;
         }
@@ -4183,6 +4159,11 @@ vertex_buffers_undo:
                             (*ppRenderer)->pVertexBuffers,
                             &(*ppRenderer)->backEndAllocator,
                             (*ppRenderer)->pAllocator);
+
+command_pools_undo:
+    dkpDiscardCommandPools(&(*ppRenderer)->device,
+                           &(*ppRenderer)->commandPools,
+                           &(*ppRenderer)->backEndAllocator);
 
 shaders_undo:
     dkpDestroyShaders(&(*ppRenderer)->device,
@@ -4251,8 +4232,7 @@ dkDestroyRenderer(DkRenderer *pRenderer)
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
     if (!headless) {
-        dkpDiscardRendererSwapChainSystem(pRenderer,
-                                          DKP_SWAP_CHAIN_SYSTEM_SCOPE_ALL);
+        dkpDiscardRendererSwapChainSystem(pRenderer);
     }
 
     dkpDestroyVertexBuffers(&pRenderer->device,
@@ -4260,6 +4240,9 @@ dkDestroyRenderer(DkRenderer *pRenderer)
                             pRenderer->pVertexBuffers,
                             &pRenderer->backEndAllocator,
                             pRenderer->pAllocator);
+    dkpDiscardCommandPools(&pRenderer->device,
+                           &pRenderer->commandPools,
+                           &pRenderer->backEndAllocator);
     dkpDestroyShaders(&pRenderer->device,
                       pRenderer->shaderCount,
                       pRenderer->pShaders,
