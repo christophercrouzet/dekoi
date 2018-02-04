@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 static const char *pApplicationName = "customallocator";
 static const unsigned int majorVersion = 1;
@@ -38,18 +39,18 @@ dkdSetup(const DkdAllocationCallbacks *pAllocator,
 
     assert(pHandles != NULL);
 
+    memset(&createInfos, 0, sizeof createInfos);
+
     createInfos.application.pName = pApplicationName;
     createInfos.application.majorVersion = majorVersion;
     createInfos.application.minorVersion = minorVersion;
     createInfos.application.patchVersion = patchVersion;
-    createInfos.application.pLogger = NULL;
     createInfos.application.pAllocator = pAllocator;
     createInfos.application.pCallbacks = pApplicationCallbacks;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
     createInfos.window.pTitle = pApplicationName;
-    createInfos.window.pLogger = NULL;
     createInfos.window.pAllocator = pAllocator;
 
     createInfos.renderer.pApplicationName = pApplicationName;
@@ -64,15 +65,8 @@ dkdSetup(const DkdAllocationCallbacks *pAllocator,
     createInfos.renderer.clearColor[1] = clearColor[1];
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
-    createInfos.renderer.vertexBufferCount = 0;
-    createInfos.renderer.pVertexBufferInfos = NULL;
-    createInfos.renderer.vertexBindingDescriptionCount = 0;
-    createInfos.renderer.pVertexBindingDescriptionInfos = NULL;
-    createInfos.renderer.vertexAttributeDescriptionCount = 0;
-    createInfos.renderer.pVertexAttributeDescriptionInfos = NULL;
     createInfos.renderer.vertexCount = vertexCount;
     createInfos.renderer.instanceCount = instanceCount;
-    createInfos.renderer.pLogger = NULL;
     createInfos.renderer.pAllocator = pAllocator;
 
     return dkdSetupBootstrap(&createInfos, pHandles);

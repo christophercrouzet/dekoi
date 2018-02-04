@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <string.h>
 
 static const char *pApplicationName = "customlogger";
 static const unsigned int majorVersion = 1;
@@ -24,19 +25,18 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
 
     assert(pHandles != NULL);
 
+    memset(&createInfos, 0, sizeof createInfos);
+
     createInfos.application.pName = pApplicationName;
     createInfos.application.majorVersion = majorVersion;
     createInfos.application.minorVersion = minorVersion;
     createInfos.application.patchVersion = patchVersion;
     createInfos.application.pLogger = pLogger;
-    createInfos.application.pAllocator = NULL;
-    createInfos.application.pCallbacks = NULL;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
     createInfos.window.pTitle = pApplicationName;
     createInfos.window.pLogger = pLogger;
-    createInfos.window.pAllocator = NULL;
 
     createInfos.renderer.pApplicationName = pApplicationName;
     createInfos.renderer.applicationMajorVersion = majorVersion;
@@ -44,22 +44,13 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
     createInfos.renderer.applicationPatchVersion = patchVersion;
     createInfos.renderer.surfaceWidth = width;
     createInfos.renderer.surfaceHeight = height;
-    createInfos.renderer.shaderCount = 0;
-    createInfos.renderer.pShaderInfos = NULL;
     createInfos.renderer.clearColor[0] = clearColor[0];
     createInfos.renderer.clearColor[1] = clearColor[1];
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
-    createInfos.renderer.vertexBufferCount = 0;
-    createInfos.renderer.pVertexBufferInfos = NULL;
-    createInfos.renderer.vertexBindingDescriptionCount = 0;
-    createInfos.renderer.pVertexBindingDescriptionInfos = NULL;
-    createInfos.renderer.vertexAttributeDescriptionCount = 0;
-    createInfos.renderer.pVertexAttributeDescriptionInfos = NULL;
     createInfos.renderer.vertexCount = vertexCount;
     createInfos.renderer.instanceCount = instanceCount;
     createInfos.renderer.pLogger = pLogger;
-    createInfos.renderer.pAllocator = NULL;
 
     return dkdSetupBootstrap(&createInfos, pHandles);
 }

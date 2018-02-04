@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <string.h>
 
 typedef struct Vector2 {
     float x;
@@ -54,19 +55,16 @@ dkdSetup(DkdBootstrapHandles *pHandles)
 
     assert(pHandles != NULL);
 
+    memset(&createInfos, 0, sizeof createInfos);
+
     createInfos.application.pName = pApplicationName;
     createInfos.application.majorVersion = majorVersion;
     createInfos.application.minorVersion = minorVersion;
     createInfos.application.patchVersion = patchVersion;
-    createInfos.application.pLogger = NULL;
-    createInfos.application.pAllocator = NULL;
-    createInfos.application.pCallbacks = NULL;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
     createInfos.window.pTitle = pApplicationName;
-    createInfos.window.pLogger = NULL;
-    createInfos.window.pAllocator = NULL;
 
     createInfos.renderer.pApplicationName = pApplicationName;
     createInfos.renderer.applicationMajorVersion = majorVersion;
@@ -93,8 +91,6 @@ dkdSetup(DkdBootstrapHandles *pHandles)
         = attributeDescriptionInfos;
     createInfos.renderer.vertexCount = vertexCount;
     createInfos.renderer.instanceCount = instanceCount;
-    createInfos.renderer.pLogger = NULL;
-    createInfos.renderer.pAllocator = NULL;
 
     return dkdSetupBootstrap(&createInfos, pHandles);
 }
