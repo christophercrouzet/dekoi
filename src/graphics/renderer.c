@@ -3281,7 +3281,7 @@ dkpCreateFramebuffers(const DkpDevice *pDevice,
         framebufferInfo.flags = 0;
         framebufferInfo.renderPass = renderPassHandle;
         framebufferInfo.attachmentCount
-            = (uint32_t)sizeof attachments / sizeof *attachments;
+            = (uint32_t)DKP_GET_ARRAY_SIZE(attachments);
         framebufferInfo.pAttachments = attachments;
         framebufferInfo.width = pImageExtent->width;
         framebufferInfo.height = pImageExtent->height;
@@ -3361,8 +3361,7 @@ dkpMakeCommandPools(const DkpDevice *pDevice,
     out = DK_SUCCESS;
 
     DKP_ASSERT(pDevice->filteredQueueFamilyCount
-               <= sizeof pCommandPools->handles
-                      / sizeof *pCommandPools->handles);
+               <= sizeof DKP_GET_ARRAY_SIZE(pCommandPools->handles));
 
     for (i = 0; i < pDevice->filteredQueueFamilyCount; ++i) {
         pCommandPools->handles[i] = VK_NULL_HANDLE;
@@ -4546,8 +4545,7 @@ dkDrawRendererImage(DkRenderer *pRenderer)
     presentInfo.pNext = NULL;
     presentInfo.waitSemaphoreCount = signalSemaphoreCount;
     presentInfo.pWaitSemaphores = pSignalSemaphores;
-    presentInfo.swapchainCount
-        = sizeof swapChainHandles / sizeof *swapChainHandles;
+    presentInfo.swapchainCount = DKP_GET_ARRAY_SIZE(swapChainHandles);
     presentInfo.pSwapchains = swapChainHandles;
     presentInfo.pImageIndices = imageIndices;
     presentInfo.pResults = NULL;

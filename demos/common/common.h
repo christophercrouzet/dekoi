@@ -5,6 +5,8 @@
 
 #define DKD_UNUSED(x) (void)(x)
 
+#define DKD_GET_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 typedef struct DkdAllocationCallbacks DkdAllocationCallbacks;
 typedef struct DkdApplication DkdApplication;
 typedef struct DkdApplicationCallbacks DkdApplicationCallbacks;

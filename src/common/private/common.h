@@ -10,6 +10,8 @@
 
 #define DKP_UNUSED(x) (void)(x)
 
+#define DKP_GET_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
 #define DKP_FALSE ((int)0)
 #define DKP_TRUE ((int)1)
 

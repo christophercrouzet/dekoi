@@ -59,7 +59,7 @@ dkdSetup(const DkdAllocationCallbacks *pAllocator,
     createInfos.renderer.applicationPatchVersion = patchVersion;
     createInfos.renderer.surfaceWidth = width;
     createInfos.renderer.surfaceHeight = height;
-    createInfos.renderer.shaderCount = sizeof shaderInfos / sizeof *shaderInfos;
+    createInfos.renderer.shaderCount = DKD_GET_ARRAY_SIZE(shaderInfos);
     createInfos.renderer.pShaderInfos = shaderInfos;
     createInfos.renderer.clearColor[0] = clearColor[0];
     createInfos.renderer.clearColor[1] = clearColor[1];

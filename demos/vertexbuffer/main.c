@@ -45,7 +45,7 @@ static const DkVertexBindingDescriptionCreateInfo bindingDescriptionInfos[]
 static const DkVertexAttributeDescriptionCreateInfo attributeDescriptionInfos[]
     = {{0, 0, offsetof(Vertex, position), DK_FORMAT_R32G32_SFLOAT},
        {0, 1, offsetof(Vertex, color), DK_FORMAT_R32G32B32_SFLOAT}};
-static const uint32_t vertexCount = sizeof vertices / sizeof *vertices;
+static const uint32_t vertexCount = DKD_GET_ARRAY_SIZE(vertices);
 static const uint32_t instanceCount = 1;
 
 int
@@ -72,21 +72,21 @@ dkdSetup(DkdBootstrapHandles *pHandles)
     createInfos.renderer.applicationPatchVersion = patchVersion;
     createInfos.renderer.surfaceWidth = width;
     createInfos.renderer.surfaceHeight = height;
-    createInfos.renderer.shaderCount = sizeof shaderInfos / sizeof *shaderInfos;
+    createInfos.renderer.shaderCount = DKD_GET_ARRAY_SIZE(shaderInfos);
     createInfos.renderer.pShaderInfos = shaderInfos;
     createInfos.renderer.clearColor[0] = clearColor[0];
     createInfos.renderer.clearColor[1] = clearColor[1];
     createInfos.renderer.clearColor[2] = clearColor[2];
     createInfos.renderer.clearColor[3] = clearColor[3];
     createInfos.renderer.vertexBufferCount
-        = sizeof vertexBufferInfos / sizeof *vertexBufferInfos;
+        = DKD_GET_ARRAY_SIZE(vertexBufferInfos);
     createInfos.renderer.pVertexBufferInfos = vertexBufferInfos;
     createInfos.renderer.vertexBindingDescriptionCount
-        = sizeof bindingDescriptionInfos / sizeof *bindingDescriptionInfos;
+        = DKD_GET_ARRAY_SIZE(bindingDescriptionInfos);
     createInfos.renderer.pVertexBindingDescriptionInfos
         = bindingDescriptionInfos;
     createInfos.renderer.vertexAttributeDescriptionCount
-        = sizeof attributeDescriptionInfos / sizeof *attributeDescriptionInfos;
+        = DKD_GET_ARRAY_SIZE(attributeDescriptionInfos);
     createInfos.renderer.pVertexAttributeDescriptionInfos
         = attributeDescriptionInfos;
     createInfos.renderer.vertexCount = vertexCount;
