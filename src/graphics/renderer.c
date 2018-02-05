@@ -3895,7 +3895,7 @@ dkpCreateVertexBindingDescriptions(
     }
 
     for (i = 0; i < vertexBindingDescriptionCount; ++i) {
-        (*ppVertexBindingDescriptions)[i].binding = (uint32_t)i;
+        (*ppVertexBindingDescriptions)[i].binding = i;
         (*ppVertexBindingDescriptions)[i].stride
             = (uint32_t)pCreateInfos[i].stride;
         (*ppVertexBindingDescriptions)[i].inputRate
