@@ -220,7 +220,7 @@ PROJECT_MODULES :=
 # $(4): prefix for variable names.
 # $(5): name for code common to all demos.
 define CREATE_MODULE_RULES =
-$(4)_$(1)_LOCALDEPS = $(4)_$(5)
+$(4)_$(1)_LOCALDEPS := $(4)_$(5)
 $(4)_$(1)_LDLIBS := $$(LDLIBS)
 
 $$(eval $$(call \
@@ -259,7 +259,7 @@ DEMOS_PHONYTARGETS :=
 # $(3): prefix for variable names.
 # $(4): name for code common to all demos.
 define CREATE_DEMO_RULES =
-$(3)_$(1)_LOCALDEPS = $$(PROJECT_MODULES) $(3)_$(4)
+$(3)_$(1)_LOCALDEPS := $$(PROJECT_MODULES) $(3)_$(4)
 $(3)_$(1)_LDLIBS := $$(LDLIBS) -lglfw -lrt -lm -ldl
 
 $$(eval $$(call \
