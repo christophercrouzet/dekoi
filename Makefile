@@ -54,7 +54,7 @@ BINARYDIR := $(OUTDIR)/bin
 
 CFLAGS := -std=c99
 CXXFLAGS := -std=c++11
-CPPFLAGS := -Iinclude -Ideps/zero/include -fPIC -D_POSIX_C_SOURCE=1 \
+CPPFLAGS := -Iinclude -fPIC \
             -Wpedantic -Wall -Wextra -Waggregate-return -Wcast-align \
             -Wcast-qual -Wconversion -Wfloat-equal -Wpointer-arith -Wshadow \
             -Wstrict-overflow=5 -Wswitch -Wswitch-default -Wundef \
@@ -119,11 +119,14 @@ $(5)_$(4)_$(3)_OBJECTS := \
 $(5)_$(4)_$(3)_PREREQS := $$($(5)_$(4)_$(3)_OBJECTS:.o=.d)
 
 $$($(5)_$(4)_$(3)_OBJECTS): CFLAGS += \
-    $$($(4)_CFLAGS) $$($(5)_CFLAGS) $$($(5)_$(4)_CFLAGS)
+    $$($(3)_CFLAGS) $$($(4)_CFLAGS) $$($(5)_CFLAGS) \
+    $$($(5)_$(4)_CFLAGS)
 $$($(5)_$(4)_$(3)_OBJECTS): CXXFLAGS += \
-    $$($(4)_CXXFLAGS) $$($(5)_CXXFLAGS) $$($(5)_$(4)_CXXFLAGS)
+    $$($(3)_CXXFLAGS) $$($(4)_CXXFLAGS) $$($(5)_CXXFLAGS) \
+    $$($(5)_$(4)_CXXFLAGS)
 $$($(5)_$(4)_$(3)_OBJECTS): CPPFLAGS += \
-    $$($(4)_CPPFLAGS) $$($(5)_CPPFLAGS) $$($(5)_$(4)_CPPFLAGS)
+    $$($(3)_CPPFLAGS) $$($(4)_CPPFLAGS) $$($(5)_CPPFLAGS) \
+    $$($(5)_$(4)_CPPFLAGS)
 
 $$($(5)_$(4)_$(3)_OBJECTS): TARGET_ARCH := -march=$(5) -m$$(ENV)
 
@@ -213,6 +216,8 @@ endef
 
 PROJECT_MODULES :=
 
+PROJECT_MODULES_CPPFLAGS := -Ideps/zero/include -D_POSIX_C_SOURCE=1
+
 # Create the rules to build a module.
 # $(1): target name.
 # $(2): source path.
@@ -220,6 +225,7 @@ PROJECT_MODULES :=
 # $(4): prefix for variable names.
 # $(5): name for code common to all demos.
 define CREATE_MODULE_RULES =
+$(3)_$(4)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
 $(4)_$(1)_LOCALDEPS := $(4)_$(5)
 $(4)_$(1)_LDLIBS := $$(LDLIBS)
 
@@ -235,6 +241,7 @@ endef
 # $(3): prefix for variable names.
 # $(4): name for code common to all modules.
 define CREATE_MODULES_RULES =
+$(3)_$(4)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
 $$(eval $$(call \
     CREATE_RULES,OBJECT,$(1)/$(4),$(2)/$(4),$(3)_$(4)))
 
@@ -253,12 +260,15 @@ $(eval $(call \
 DEMOS_TARGETS :=
 DEMOS_PHONYTARGETS :=
 
+DEMOS_CPPFLAGS := -Ideps/zero/include
+
 # Create the rules to build a demo target.
 # $(1): target name.
 # $(2): path.
 # $(3): prefix for variable names.
 # $(4): name for code common to all demos.
 define CREATE_DEMO_RULES =
+$(3)_$(1)_CPPFLAGS := $$(DEMOS_CPPFLAGS)
 $(3)_$(1)_LOCALDEPS := $$(PROJECT_MODULES) $(3)_$(4)
 $(3)_$(1)_LDLIBS := $$(LDLIBS) -lglfw -lrt -lm -ldl
 
@@ -278,6 +288,7 @@ endef
 # $(2): prefix for variable names.
 # $(3): name for code common to all demos.
 define CREATE_DEMOS_RULES =
+$(2)_$(3)_CPPFLAGS := $$(DEMOS_CPPFLAGS)
 $$(eval $$(call \
     CREATE_RULES,OBJECT,$(1)/$(3),$(1)/$(3),$(2)_$(3)))
 
