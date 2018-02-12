@@ -83,9 +83,6 @@ debug_LDFLAGS :=
 
 # ------------------------------------------------------------------------------
 
-ALL_SOURCES :=
-ALL_HEADERS :=
-
 # Expand a single local object dependency.
 # $(1): variable to save the output to.
 # $(2): dependency.
@@ -106,111 +103,123 @@ $$(foreach _i,$(2),$$(eval $$(call \
 endef
 
 # Create build rules for object targets.
-# $(1): source path, e.g.: src, demos/test.
-# $(2): target path, e.g.: dekoi, demos/test.
-# $(3): prefix for variable names.
-# $(4): configuration, e.g.: debug, release.
-# $(5): architecture, e.g. x86-64, i386.
+# $(1): source files.
+# $(2): source path, e.g.: src, demos/test.
+# $(3): target name.
+# $(4): target path, e.g.: dekoi, demos/test.
+# $(5): prefix for variable names.
+# $(6): configuration, e.g.: debug, release.
+# $(7): architecture, e.g. x86-64, i386.
 define CREATE_OBJECT_RULES =
-$(5)_$(4)_$(3)_SOURCES := $$(wildcard $(1)/*.c) $$(wildcard $(1)/private/*.c)
-$(5)_$(4)_$(3)_HEADERS := $$(wildcard $(1)/*.h) $$(wildcard $(1)/private/*.h)
-$(5)_$(4)_$(3)_OBJECTS := \
-    $$($(5)_$(4)_$(3)_SOURCES:$(1)/%.c=$$(OBJECTDIR)/$(5)/$(4)/$(2)/%.o)
-$(5)_$(4)_$(3)_PREREQS := $$($(5)_$(4)_$(3)_OBJECTS:.o=.d)
+$(7)_$(6)_$(5)_OBJECTS := \
+    $$($(1):$(2)/%.c=$$(OBJECTDIR)/$(7)/$(6)/$(4)/$(3)/%.o)
+$(7)_$(6)_$(5)_PREREQS := $$($(7)_$(6)_$(5)_OBJECTS:.o=.d)
 
-$$($(5)_$(4)_$(3)_OBJECTS): CFLAGS += \
-    $$($(3)_CFLAGS) $$($(4)_CFLAGS) $$($(5)_CFLAGS) \
-    $$($(5)_$(4)_CFLAGS)
-$$($(5)_$(4)_$(3)_OBJECTS): CXXFLAGS += \
-    $$($(3)_CXXFLAGS) $$($(4)_CXXFLAGS) $$($(5)_CXXFLAGS) \
-    $$($(5)_$(4)_CXXFLAGS)
-$$($(5)_$(4)_$(3)_OBJECTS): CPPFLAGS += \
-    $$($(3)_CPPFLAGS) $$($(4)_CPPFLAGS) $$($(5)_CPPFLAGS) \
-    $$($(5)_$(4)_CPPFLAGS)
+$$($(7)_$(6)_$(5)_OBJECTS): CFLAGS += \
+    $$($(5)_CFLAGS) $$($(6)_CFLAGS) $$($(7)_CFLAGS) \
+    $$($(7)_$(6)_CFLAGS)
+$$($(7)_$(6)_$(5)_OBJECTS): CXXFLAGS += \
+    $$($(5)_CXXFLAGS) $$($(6)_CXXFLAGS) $$($(7)_CXXFLAGS) \
+    $$($(7)_$(6)_CXXFLAGS)
+$$($(7)_$(6)_$(5)_OBJECTS): CPPFLAGS += \
+    $$($(5)_CPPFLAGS) $$($(6)_CPPFLAGS) $$($(7)_CPPFLAGS) \
+    $$($(7)_$(6)_CPPFLAGS)
 
-$$($(5)_$(4)_$(3)_OBJECTS): TARGET_ARCH := -march=$(5) -m$$(ENV)
+$$($(7)_$(6)_$(5)_OBJECTS): TARGET_ARCH := -march=$(7) -m$$(ENV)
 
-$$($(5)_$(4)_$(3)_OBJECTS): $$(OBJECTDIR)/$(5)/$(4)/$(2)/%.o: $(1)/%.c
+$$($(7)_$(6)_$(5)_OBJECTS): $$(OBJECTDIR)/$(7)/$(6)/$(4)/$(3)/%.o: $(2)/%.c
 	@ mkdir -p $$(@D)
 	@ $$(COMPILE) -o $$@ $$<
 
--include $$($(5)_$(4)_$(3)_PREREQS)
+-include $$($(7)_$(6)_$(5)_PREREQS)
 
-ALL_SOURCES += $$($(5)_$(4)_$(3)_SOURCES)
-ALL_HEADERS += $$($(5)_$(4)_$(3)_HEADERS)
+ALL_SOURCES += $$($(7)_$(6)_$(5)_SOURCES)
+ALL_HEADERS += $$($(7)_$(6)_$(5)_HEADERS)
 endef
 
 # Create build rules for binary targets.
-# $(1): source path, e.g.: src, demos/test.
-# $(2): target path, e.g.: dekoi, demos/test.
-# $(3): prefix for variable names.
-# $(4): configuration, e.g.: debug, release.
-# $(5): architecture, e.g. x86-64, i386.
+# $(1): source files.
+# $(2): source path, e.g.: src, demos/test.
+# $(3): target name.
+# $(4): target path, e.g.: dekoi, demos.
+# $(5): prefix for variable names.
+# $(6): configuration, e.g.: debug, release.
+# $(7): architecture, e.g. x86-64, i386.
 define CREATE_BINARY_RULES =
-$(5)_$(4)_$(3)_SOURCES := $$(wildcard $(1)/*.c) $$(wildcard $(1)/private/*.c)
-$(5)_$(4)_$(3)_OBJECTS := \
-    $$($(5)_$(4)_$(3)_SOURCES:$(1)/%.c=$$(OBJECTDIR)/$(5)/$(4)/$(2)/%.o)
-$(5)_$(4)_$(3)_TARGET := $$(BINARYDIR)/$(5)/$(4)/$(2)
-$(5)_$(4)_$(3)_DEPS :=
-$(5)_$(4)_$(3)_LDLIBS := \
-    $$($(3)_LDLIBS) $$($(4)_$(3)_LDLIBS) $$($(5)_$(3)_LDLIBS)
+$(7)_$(6)_$(5)_OBJECTS := \
+    $$($(1):$(2)/%.c=$$(OBJECTDIR)/$(7)/$(6)/$(4)/$(3)/%.o)
+$(7)_$(6)_$(5)_TARGET := $$(BINARYDIR)/$(7)/$(6)/$(4)/$(3)
+$(7)_$(6)_$(5)_DEPS :=
+$(7)_$(6)_$(5)_LDLIBS := \
+    $$($(5)_LDLIBS) $$($(6)_$(5)_LDLIBS) $$($(7)_$(5)_LDLIBS)
 
 $$(eval $$(call \
-    EXPAND_LOCALDEPS,$(5)_$(4)_$(3)_DEPS,$$($(3)_LOCALDEPS),$(4),$(5)))
+    EXPAND_LOCALDEPS,$(7)_$(6)_$(5)_DEPS,$$($(5)_LOCALDEPS),$(6),$(7)))
 
 $$(eval $$(call \
-    CREATE_OBJECT_RULES,$(1),$(2),$(3),$(4),$(5)))
+    CREATE_OBJECT_RULES,$(1),$(2),$(3),$(4),$(5),$(6),$(7)))
 
-$$($(5)_$(4)_$(3)_TARGET): LDFLAGS += \
-    $$($(4)_LDFLAGS) $$($(5)_LDFLAGS) $$($(5)_$(4)_LDFLAGS)
+$$($(7)_$(6)_$(5)_TARGET): LDFLAGS += \
+    $$($(6)_LDFLAGS) $$($(7)_LDFLAGS) $$($(7)_$(6)_LDFLAGS)
 
-$$($(5)_$(4)_$(3)_TARGET): TARGET_ARCH := -march=$(5) -m$$(ENV)
+$$($(7)_$(6)_$(5)_TARGET): TARGET_ARCH := -march=$(7) -m$$(ENV)
 
-$$($(5)_$(4)_$(3)_TARGET): $$($(5)_$(4)_$(3)_DEPS) $$($(5)_$(4)_$(3)_OBJECTS)
+$$($(7)_$(6)_$(5)_TARGET): $$($(7)_$(6)_$(5)_DEPS) $$($(7)_$(6)_$(5)_OBJECTS)
 	@ mkdir -p $$(@D)
-	@ $$(LINK.o) $$^ $$($(5)_$(4)_$(3)_LDLIBS) -o $$@
+	@ $$(LINK.o) $$^ $$($(7)_$(6)_$(5)_LDLIBS) -o $$@
 endef
 
 # Create architecture specific build rules.
 # $(1): build target, e.g.: BINARY.
-# $(2): source path, e.g.: src, demos/test.
-# $(3): target path, e.g.: dekoi, demos/test.
-# $(4): prefix for variable names.
-# $(5): configuration, e.g.: debug, release.
-# $(6): architecture, e.g. x86-64, i386.
+# $(2): source files.
+# $(3): source path, e.g.: src, demos/test.
+# $(4): target name.
+# $(5): target path, e.g.: dekoi, demos.
+# $(6): prefix for variable names.
+# $(7): configuration, e.g.: debug, release.
+# $(8): architecture, e.g. x86-64, i386.
 define CREATE_ARCH_RULES =
 $$(eval $$(call \
-    CREATE_$(1)_RULES,$(2),$(3),$(4),$(5),$(6)))
+    CREATE_$(1)_RULES,$(2),$(3),$(4),$(5),$(6),$(7),$(8)))
 
 ifeq "$$(strip $(1))" "BINARY"
-$(5)_$(4)_TARGETS += $$($(6)_$(5)_$(4)_TARGET)
+$(7)_$(6)_TARGETS += $$($(8)_$(7)_$(6)_TARGET)
 endif
 endef
 
 # Create configuration specific build rules.
 # $(1): build target, e.g.: BINARY.
-# $(2): source path, e.g.: src, demos/test.
-# $(3): target path, e.g.: dekoi, demos/test.
-# $(4): prefix for variable names.
-# $(5): configuration, e.g.: debug, release.
+# $(2): source files.
+# $(3): source path, e.g.: src, demos/test.
+# $(4): target name.
+# $(5): target path, e.g.: dekoi, demos.
+# $(6): prefix for variable names.
+# $(7): configuration, e.g.: debug, release.
 define CREATE_CONFIG_RULES =
 $$(foreach _i,$$(ARCH),$$(eval $$(call \
-    CREATE_ARCH_RULES,$(1),$(2),$(3),$(4),$(5),$$(_i))))
+    CREATE_ARCH_RULES,$(1),$(2),$(3),$(4),$(5),$(6),$(7),$$(_i))))
 
 ifeq "$$(strip $(1))" "BINARY"
-$(4)_TARGETS += $$($(5)_$(4)_TARGETS)
+$(6)_TARGETS += $$($(7)_$(6)_TARGETS)
 endif
 endef
 
 # Create all rule variations for a build.
 # $(1): build target, e.g.: BINARY.
-# $(2): source path, e.g.: src, demos/test.
-# $(3): target path, e.g.: dekoi, demos/test.
-# $(4): prefix for variable names.
+# $(2): source files.
+# $(3): source path, e.g.: src, demos/test.
+# $(4): target name.
+# $(5): target path, e.g.: dekoi, demos.
+# $(6): prefix for variable names.
 define CREATE_RULES =
 $$(foreach _i,$$(CONFIG),$$(eval $$(call \
-    CREATE_CONFIG_RULES,$(1),$(2),$(3),$(4),$$(_i))))
+    CREATE_CONFIG_RULES,$(1),$(2),$(3),$(4),$(5),$(6),$$(_i))))
 endef
+
+# ------------------------------------------------------------------------------
+
+ALL_SOURCES :=
+ALL_HEADERS :=
 
 # ------------------------------------------------------------------------------
 
@@ -225,14 +234,18 @@ PROJECT_MODULES_CPPFLAGS := -Ideps/zero/include -D_POSIX_C_SOURCE=1
 # $(4): prefix for variable names.
 # $(5): name for code common to all demos.
 define CREATE_MODULE_RULES =
+$(4)_$(1)_SOURCES := $$(wildcard $(2)/*.c) $$(wildcard $(2)/private/*.c)
+$(4)_$(1)_HEADERS := $$(wildcard $(2)/*.h) $$(wildcard $(2)/private/*.h)
 $(4)_$(1)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
 $(4)_$(1)_LOCALDEPS := $(4)_$(5)
 $(4)_$(1)_LDLIBS := $$(LDLIBS)
 
 $$(eval $$(call \
-    CREATE_RULES,OBJECT,$(2),$(3),$(4)_$(1)))
+    CREATE_RULES,OBJECT,$(4)_$(1)_SOURCES,$(2),$(1),$(3),$(4)_$(1)))
 
 PROJECT_MODULES += $(4)_$(1)
+ALL_SOURCES += $$($(4)_$(1)_SOURCES)
+ALL_HEADERS += $$($(4)_$(1)_HEADERS)
 endef
 
 # Create the rules for all the modules.
@@ -241,15 +254,21 @@ endef
 # $(3): prefix for variable names.
 # $(4): name for code common to all modules.
 define CREATE_MODULES_RULES =
+$(3)_$(4)_SOURCES := \
+    $$(wildcard $(1)/$(4)/*.c) $$(wildcard $(1)/$(4)/private/*.c)
+$(3)_$(4)_HEADERS := \
+    $$(wildcard $(1)/$(4)/*.h) $$(wildcard $(1)/$(4)/private/*.h)
 $(3)_$(4)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
 $$(eval $$(call \
-    CREATE_RULES,OBJECT,$(1)/$(4),$(2)/$(4),$(3)_$(4)))
+    CREATE_RULES,OBJECT,$(3)_$(4)_SOURCES,$(1)/$(4),$(4),$(2),$(3)_$(4)))
 
 MODULES := $$(notdir $$(wildcard $(1)/*))
 $$(foreach _i,$$(filter-out $(4),$$(MODULES)),$$(eval $$(call \
-    CREATE_MODULE_RULES,$$(_i),$(1)/$$(_i),$(2)/$$(_i),$(3),$(4))))
+    CREATE_MODULE_RULES,$$(_i),$(1)/$$(_i),$(2),$(3),$(4))))
 
 PROJECT_MODULES += $(3)_$(4)
+ALL_SOURCES += $$($(3)_$(4)_SOURCES)
+ALL_HEADERS += $$($(3)_$(4)_HEADERS)
 endef
 
 $(eval $(call \
@@ -268,12 +287,16 @@ DEMOS_CPPFLAGS := -Ideps/zero/include
 # $(3): prefix for variable names.
 # $(4): name for code common to all demos.
 define CREATE_DEMO_RULES =
+$(3)_$(1)_SOURCES := \
+    $$(wildcard $(2)/$(1)/*.c) $$(wildcard $(2)/$(1)/private/*.c)
+$(3)_$(1)_HEADERS := \
+    $$(wildcard $(2)/$(1)/*.h) $$(wildcard $(2)/$(1)/private/*.h)
 $(3)_$(1)_CPPFLAGS := $$(DEMOS_CPPFLAGS)
 $(3)_$(1)_LOCALDEPS := $$(PROJECT_MODULES) $(3)_$(4)
 $(3)_$(1)_LDLIBS := $$(LDLIBS) -lglfw -lrt -lm -ldl
 
 $$(eval $$(call \
-    CREATE_RULES,BINARY,$(2),$(2),$(3)_$(1)))
+    CREATE_RULES,BINARY,$(3)_$(1)_SOURCES,$(2)/$(1),$(1),$(2),$(3)_$(1)))
 
 $(3)-$(1): $$($(3)_$(1)_TARGETS)
 
@@ -281,6 +304,8 @@ $(3)-$(1): $$($(3)_$(1)_TARGETS)
 
 DEMOS_TARGETS += $$($(3)_$(1)_TARGETS)
 DEMOS_PHONYTARGETS += $(3)-$(1)
+ALL_SOURCES += $$($(3)_$(1)_SOURCES)
+ALL_HEADERS += $$($(3)_$(1)_HEADERS)
 endef
 
 # Create the rules for all the demo targets.
@@ -288,17 +313,24 @@ endef
 # $(2): prefix for variable names.
 # $(3): name for code common to all demos.
 define CREATE_DEMOS_RULES =
+$(2)_$(3)_SOURCES := \
+    $$(wildcard $(1)/$(3)/*.c) $$(wildcard $(1)/$(3)/private/*.c)
+$(2)_$(3)_HEADERS := \
+    $$(wildcard $(1)/$(3)/*.h) $$(wildcard $(1)/$(3)/private/*.h)
 $(2)_$(3)_CPPFLAGS := $$(DEMOS_CPPFLAGS)
 $$(eval $$(call \
-    CREATE_RULES,OBJECT,$(1)/$(3),$(1)/$(3),$(2)_$(3)))
+    CREATE_RULES,OBJECT,$(2)_$(3)_SOURCES,$(1)/$(3),$(3),$(1),$(2)_$(3)))
 
 DEMOS := $$(notdir $$(wildcard $(1)/*))
 $$(foreach _i,$$(filter-out $(3),$$(DEMOS)),$$(eval $$(call \
-    CREATE_DEMO_RULES,$$(_i),$(1)/$$(_i),$(2),$(3))))
+    CREATE_DEMO_RULES,$$(_i),$(1),$(2),$(3))))
 
 demos: $$(DEMOS_PHONYTARGETS)
 
 .PHONY: demos
+
+ALL_SOURCES += $$($(2)_$(3)_SOURCES)
+ALL_HEADERS += $$($(2)_$(3)_HEADERS)
 endef
 
 $(eval $(call \
