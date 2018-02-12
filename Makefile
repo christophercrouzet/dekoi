@@ -225,7 +225,7 @@ PROJECT_MODULES_CPPFLAGS := -Ideps/zero/include -D_POSIX_C_SOURCE=1
 # $(4): prefix for variable names.
 # $(5): name for code common to all demos.
 define CREATE_MODULE_RULES =
-$(3)_$(4)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
+$(4)_$(1)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
 $(4)_$(1)_LOCALDEPS := $(4)_$(5)
 $(4)_$(1)_LDLIBS := $$(LDLIBS)
 
