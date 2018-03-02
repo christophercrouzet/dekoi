@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define ZR_STATIC
 #define ZR_ASSERT assert
-#define ZR_LOGGER_STATIC
 #define ZR_IMPLEMENTATION
 #include <zero/logger.h>
 

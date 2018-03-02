@@ -8,8 +8,8 @@
 
 #include <stdarg.h>
 
+#define ZR_STATIC
 #define ZR_ASSERT DKP_ASSERT
-#define ZR_LOGGER_STATIC
 #define ZR_IMPLEMENTATION
 #include <zero/logger.h>
 

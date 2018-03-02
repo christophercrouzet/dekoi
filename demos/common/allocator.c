@@ -6,9 +6,9 @@
 #include <assert.h>
 #include <stddef.h>
 
+#define ZR_STATIC
 #define ZR_ASSERT assert
 #define ZR_SIZE_TYPE size_t
-#define ZR_ALLOCATOR_STATIC
 #define ZR_IMPLEMENTATION
 #include <zero/allocator.h>
 

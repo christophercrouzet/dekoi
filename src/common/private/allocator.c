@@ -14,9 +14,9 @@
 #define ZR_ALLOCATOR_DEBUGGING 0
 #endif /* DK_ALLOCATOR_DEBUGGING */
 
+#define ZR_STATIC
 #define ZR_ASSERT DKP_ASSERT
 #define ZR_SIZE_TYPE DkSize
-#define ZR_ALLOCATOR_STATIC
 #define ZR_IMPLEMENTATION
 #include <zero/allocator.h>
 
