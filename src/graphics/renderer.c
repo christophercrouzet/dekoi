@@ -4077,13 +4077,13 @@ dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
     int valid;
     int headless;
 
+    out = DK_SUCCESS;
+
     if (pCreateInfo == NULL || pCreateInfo->pLogger == NULL) {
         dkpGetDefaultLogger(&pLogger);
     } else {
         pLogger = pCreateInfo->pLogger;
     }
-
-    out = DK_SUCCESS;
 
     if (pCreateInfo == NULL) {
         DKP_LOG_ERROR(pLogger, "invalid argument 'pCreateInfo' (NULL)\n");
