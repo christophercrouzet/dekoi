@@ -3,7 +3,7 @@
 
 #include "graphics.h"
 
-#include "../common/common.h"
+#include <dekoi/common/common.h>
 
 typedef enum DkShaderStage {
     DK_SHADER_STAGE_VERTEX = 0,
