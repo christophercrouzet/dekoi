@@ -6,6 +6,8 @@
 #include "../allocator.h"
 #include "../common.h"
 
+#include <stddef.h>
+
 #define ZR_STATIC
 #define ZR_ASSERT DKP_ASSERT
 #define ZR_SIZE_TYPE DkSize

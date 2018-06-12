@@ -7,6 +7,7 @@
 #include "../logger.h"
 
 #include <stdarg.h>
+#include <stddef.h>
 
 #define ZR_STATIC
 #define ZR_ASSERT DKP_ASSERT
