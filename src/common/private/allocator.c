@@ -6,6 +6,12 @@
 #include "../allocator.h"
 #include "../common.h"
 
+#define ZR_STATIC
+#define ZR_ASSERT DKP_ASSERT
+#define ZR_SIZE_TYPE DkSize
+#define ZR_IMPLEMENTATION
+#include <zero/allocator.h>
+
 #ifndef DK_ALLOCATOR_DEBUGGING
 #define ZR_ALLOCATOR_DEBUGGING DKP_DEBUGGING
 #elif DK_ALLOCATOR_DEBUGGING
@@ -13,12 +19,6 @@
 #else
 #define ZR_ALLOCATOR_DEBUGGING 0
 #endif /* DK_ALLOCATOR_DEBUGGING */
-
-#define ZR_STATIC
-#define ZR_ASSERT DKP_ASSERT
-#define ZR_SIZE_TYPE DkSize
-#define ZR_IMPLEMENTATION
-#include <zero/allocator.h>
 
 #ifndef NDEBUG
 static int
