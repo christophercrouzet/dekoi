@@ -1,41 +1,43 @@
 #ifndef DEKOI_DEMOS_COMMON_WINDOW_H
 #define DEKOI_DEMOS_COMMON_WINDOW_H
 
-#include "common.h"
-
+struct DkdApplication;
+struct DkdRenderer;
+struct DkdWindow;
 struct DkWindowSystemIntegrationCallbacks;
 
 struct DkdWindowCreateInfo {
     unsigned int width;
     unsigned int height;
     const char *pTitle;
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
 };
 
 int
-dkdCreateWindow(DkdApplication *pApplication,
-                const DkdWindowCreateInfo *pCreateInfo,
-                DkdWindow **ppWindow);
+dkdCreateWindow(struct DkdApplication *pApplication,
+                const struct DkdWindowCreateInfo *pCreateInfo,
+                struct DkdWindow **ppWindow);
 
 void
-dkdDestroyWindow(DkdApplication *pApplication, DkdWindow *pWindow);
+dkdDestroyWindow(struct DkdApplication *pApplication,
+                 struct DkdWindow *pWindow);
 
 void
 dkdGetDekoiWindowSystemIntegrator(
-    DkdWindow *pWindow,
+    struct DkdWindow *pWindow,
     const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator);
 
 int
-dkdBindWindowRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer);
+dkdBindWindowRenderer(struct DkdWindow *pWindow, struct DkdRenderer *pRenderer);
 
 void
-dkdGetWindowCloseFlag(const DkdWindow *pWindow, int *pCloseFlag);
+dkdGetWindowCloseFlag(const struct DkdWindow *pWindow, int *pCloseFlag);
 
 int
-dkdPollWindowEvents(const DkdWindow *pWindow);
+dkdPollWindowEvents(const struct DkdWindow *pWindow);
 
 int
-dkdRenderWindowImage(const DkdWindow *pWindow);
+dkdRenderWindowImage(const struct DkdWindow *pWindow);
 
 #endif /* DEKOI_DEMOS_COMMON_WINDOW_H */

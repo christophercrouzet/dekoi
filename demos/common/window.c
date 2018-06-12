@@ -10,42 +10,42 @@
 
 #include <GLFW/glfw3.h>
 #include <dekoi/common/common.h>
-#include <dekoi/graphics/graphics.h>
 #include <dekoi/graphics/renderer.h>
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct DkdWindowSystemIntegrationCallbacksData {
+struct DkdWindowSystemIntegrationCallbacksData {
     GLFWwindow *pWindowHandle;
-} DkdWindowSystemIntegrationCallbacksData;
+};
 
 struct DkdWindow {
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
     GLFWwindow *pHandle;
-    DkWindowSystemIntegrationCallbacks windowSystemIntegrator;
-    DkdRenderer *pRenderer;
+    struct DkWindowSystemIntegrationCallbacks windowSystemIntegrator;
+    struct DkdRenderer *pRenderer;
 };
 
 static void
 dkdOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
 {
-    DkdWindow *pWindow;
+    struct DkdWindow *pWindow;
 
     assert(pWindowHandle != NULL);
 
-    pWindow = (DkdWindow *)glfwGetWindowUserPointer(pWindowHandle);
+    pWindow = (struct DkdWindow *)glfwGetWindowUserPointer(pWindowHandle);
     dkdResizeRendererSurface(
         pWindow->pRenderer, (unsigned int)width, (unsigned int)height);
 }
 
-static DkResult
-dkdCreateVulkanInstanceExtensionNames(void *pData,
-                                      const DkLoggingCallbacks *pDekoiLogger,
-                                      DkUint32 *pExtensionCount,
-                                      const char ***pppExtensionNames)
+static enum DkResult
+dkdCreateVulkanInstanceExtensionNames(
+    void *pData,
+    const struct DkLoggingCallbacks *pDekoiLogger,
+    DkUint32 *pExtensionCount,
+    const char ***pppExtensionNames)
 {
     DKD_UNUSED(pData);
 
@@ -57,7 +57,8 @@ dkdCreateVulkanInstanceExtensionNames(void *pData,
         = glfwGetRequiredInstanceExtensions((uint32_t *)pExtensionCount);
     if (*pppExtensionNames == NULL) {
         DKD_LOG_ERROR(
-            ((DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
+            ((struct DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)
+                ->pLogger,
             "could not retrieve the Vulkan instance extension names\n");
         return DK_ERROR;
     }
@@ -66,9 +67,10 @@ dkdCreateVulkanInstanceExtensionNames(void *pData,
 }
 
 static void
-dkdDestroyVulkanInstanceExtensionNames(void *pData,
-                                       const DkLoggingCallbacks *pDekoiLogger,
-                                       const char **ppExtensionNames)
+dkdDestroyVulkanInstanceExtensionNames(
+    void *pData,
+    const struct DkLoggingCallbacks *pDekoiLogger,
+    const char **ppExtensionNames)
 {
     DKD_UNUSED(pData);
     DKD_UNUSED(pDekoiLogger);
@@ -78,11 +80,11 @@ dkdDestroyVulkanInstanceExtensionNames(void *pData,
     assert(ppExtensionNames != NULL);
 }
 
-static DkResult
+static enum DkResult
 dkdCreateVulkanSurface(void *pData,
                        VkInstance instanceHandle,
                        const VkAllocationCallbacks *pBackEndAllocator,
-                       const DkLoggingCallbacks *pDekoiLogger,
+                       const struct DkLoggingCallbacks *pDekoiLogger,
                        VkSurfaceKHR *pSurfaceHandle)
 {
     assert(pData != NULL);
@@ -92,12 +94,14 @@ dkdCreateVulkanSurface(void *pData,
 
     if (glfwCreateWindowSurface(
             instanceHandle,
-            ((DkdWindowSystemIntegrationCallbacksData *)pData)->pWindowHandle,
+            ((struct DkdWindowSystemIntegrationCallbacksData *)pData)
+                ->pWindowHandle,
             pBackEndAllocator,
             pSurfaceHandle)
         != VK_SUCCESS) {
         DKD_LOG_ERROR(
-            ((DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)->pLogger,
+            ((struct DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)
+                ->pLogger,
             "failed to create the Vulkan surface\n");
         return DK_ERROR;
     }
@@ -106,14 +110,14 @@ dkdCreateVulkanSurface(void *pData,
 }
 
 int
-dkdCreateWindow(DkdApplication *pApplication,
-                const DkdWindowCreateInfo *pCreateInfo,
-                DkdWindow **ppWindow)
+dkdCreateWindow(struct DkdApplication *pApplication,
+                const struct DkdWindowCreateInfo *pCreateInfo,
+                struct DkdWindow **ppWindow)
 {
     int out;
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
-    DkdWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
+    struct DkdWindowSystemIntegrationCallbacksData *pWindowSystemIntegratorData;
 
     assert(pApplication != NULL);
     assert(pCreateInfo != NULL);
@@ -133,7 +137,7 @@ dkdCreateWindow(DkdApplication *pApplication,
 
     out = 0;
 
-    *ppWindow = (DkdWindow *)DKD_ALLOCATE(pAllocator, sizeof **ppWindow);
+    *ppWindow = (struct DkdWindow *)DKD_ALLOCATE(pAllocator, sizeof **ppWindow);
     if (*ppWindow == NULL) {
         DKD_LOG_ERROR(pLogger, "failed to allocate the window\n");
         out = 1;
@@ -162,7 +166,7 @@ dkdCreateWindow(DkdApplication *pApplication,
     }
 
     pWindowSystemIntegratorData
-        = (DkdWindowSystemIntegrationCallbacksData *)DKD_ALLOCATE(
+        = (struct DkdWindowSystemIntegrationCallbacksData *)DKD_ALLOCATE(
             (*ppWindow)->pAllocator, sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
         DKD_LOG_ERROR(
@@ -214,7 +218,7 @@ exit:
 }
 
 void
-dkdDestroyWindow(DkdApplication *pApplication, DkdWindow *pWindow)
+dkdDestroyWindow(struct DkdApplication *pApplication, struct DkdWindow *pWindow)
 {
     assert(pApplication != NULL);
 
@@ -234,8 +238,8 @@ dkdDestroyWindow(DkdApplication *pApplication, DkdWindow *pWindow)
 
 void
 dkdGetDekoiWindowSystemIntegrator(
-    DkdWindow *pWindow,
-    const DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator)
+    struct DkdWindow *pWindow,
+    const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator)
 {
     assert(pWindow != NULL);
     assert(ppWindowSystemIntegrator != NULL);
@@ -244,7 +248,7 @@ dkdGetDekoiWindowSystemIntegrator(
 }
 
 int
-dkdBindWindowRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer)
+dkdBindWindowRenderer(struct DkdWindow *pWindow, struct DkdRenderer *pRenderer)
 {
     assert(pWindow != NULL);
 
@@ -253,7 +257,7 @@ dkdBindWindowRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer)
 }
 
 void
-dkdGetWindowCloseFlag(const DkdWindow *pWindow, int *pCloseFlag)
+dkdGetWindowCloseFlag(const struct DkdWindow *pWindow, int *pCloseFlag)
 {
     assert(pWindow != NULL);
     assert(pWindow->pHandle != NULL);
@@ -263,7 +267,7 @@ dkdGetWindowCloseFlag(const DkdWindow *pWindow, int *pCloseFlag)
 }
 
 int
-dkdPollWindowEvents(const DkdWindow *pWindow)
+dkdPollWindowEvents(const struct DkdWindow *pWindow)
 {
     DKD_UNUSED(pWindow);
 
@@ -274,7 +278,7 @@ dkdPollWindowEvents(const DkdWindow *pWindow)
 }
 
 int
-dkdRenderWindowImage(const DkdWindow *pWindow)
+dkdRenderWindowImage(const struct DkdWindow *pWindow)
 {
     assert(pWindow != NULL);
 

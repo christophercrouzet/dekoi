@@ -98,16 +98,17 @@ dkpFreeAligned(void *pData, void *pMemory)
     zrFreeAligned(pMemory);
 }
 
-static const DkAllocationCallbacks dkpDefaultAllocator = {NULL,
-                                                          dkpAllocate,
-                                                          dkpReallocate,
-                                                          dkpFree,
-                                                          dkpAllocateAligned,
-                                                          dkpReallocateAligned,
-                                                          dkpFreeAligned};
+static const struct DkAllocationCallbacks dkpDefaultAllocator
+    = {NULL,
+       dkpAllocate,
+       dkpReallocate,
+       dkpFree,
+       dkpAllocateAligned,
+       dkpReallocateAligned,
+       dkpFreeAligned};
 
 void
-dkpGetDefaultAllocator(const DkAllocationCallbacks **ppAllocator)
+dkpGetDefaultAllocator(const struct DkAllocationCallbacks **ppAllocator)
 {
     DKP_ASSERT(ppAllocator != NULL);
 

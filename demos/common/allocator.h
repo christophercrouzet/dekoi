@@ -1,8 +1,6 @@
 #ifndef DEKOI_DEMOS_COMMON_ALLOCATOR_H
 #define DEKOI_DEMOS_COMMON_ALLOCATOR_H
 
-#include "common.h"
-
 #include <dekoi/common/allocator.h>
 
 #include <stddef.h>
@@ -21,6 +19,8 @@
              (pAllocator)->pData, pOriginal, size, alignment))
 #define DKD_FREE_ALIGNED(pAllocator, pMemory)                                  \
     ((pAllocator)->pfnFreeAligned((pAllocator)->pData, pMemory))
+
+struct DkdLoggingCallbacks;
 
 typedef void *(*DkdPfnAllocateCallback)(void *pData, size_t size);
 typedef void *(*DkdPfnReallocateCallback)(void *pData,
@@ -47,20 +47,22 @@ struct DkdAllocationCallbacks {
 };
 
 struct DkdDekoiAllocationCallbacksData {
-    const DkdAllocationCallbacks *pAllocator;
+    const struct DkdAllocationCallbacks *pAllocator;
 };
 
 void
-dkdGetDefaultAllocator(const DkdAllocationCallbacks **ppAllocator);
+dkdGetDefaultAllocator(const struct DkdAllocationCallbacks **ppAllocator);
 
 int
-dkdCreateDekoiAllocationCallbacks(DkdDekoiAllocationCallbacksData *pData,
-                                  const DkdAllocationCallbacks *pAllocator,
-                                  const DkdLoggingCallbacks *pLogger,
-                                  DkAllocationCallbacks **ppDekoiAllocator);
+dkdCreateDekoiAllocationCallbacks(
+    struct DkdDekoiAllocationCallbacksData *pData,
+    const struct DkdAllocationCallbacks *pAllocator,
+    const struct DkdLoggingCallbacks *pLogger,
+    struct DkAllocationCallbacks **ppDekoiAllocator);
 
 void
-dkdDestroyDekoiAllocationCallbacks(DkAllocationCallbacks *pDekoiAllocator,
-                                   const DkdAllocationCallbacks *pAllocator);
+dkdDestroyDekoiAllocationCallbacks(
+    struct DkAllocationCallbacks *pDekoiAllocator,
+    const struct DkdAllocationCallbacks *pAllocator);
 
 #endif /* DEKOI_DEMOS_COMMON_ALLOCATOR_H */

@@ -2,7 +2,6 @@
 
 #include "../common/application.h"
 #include "../common/bootstrap.h"
-#include "../common/common.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -19,9 +18,10 @@ static const uint32_t vertexCount = 0;
 static const uint32_t instanceCount = 0;
 
 int
-dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
+dkdSetup(const struct DkdLoggingCallbacks *pLogger,
+         struct DkdBootstrapHandles *pHandles)
 {
-    DkdBootstrapCreateInfos createInfos;
+    struct DkdBootstrapCreateInfos createInfos;
 
     assert(pHandles != NULL);
 
@@ -56,7 +56,7 @@ dkdSetup(const DkdLoggingCallbacks *pLogger, DkdBootstrapHandles *pHandles)
 }
 
 void
-dkdCleanup(DkdBootstrapHandles *pHandles)
+dkdCleanup(struct DkdBootstrapHandles *pHandles)
 {
     assert(pHandles != NULL);
 
@@ -67,8 +67,8 @@ int
 main(void)
 {
     int out;
-    const DkdLoggingCallbacks *pLogger;
-    DkdBootstrapHandles handles;
+    const struct DkdLoggingCallbacks *pLogger;
+    struct DkdBootstrapHandles handles;
 
     out = 0;
 

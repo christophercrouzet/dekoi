@@ -1,9 +1,11 @@
 #ifndef DEKOI_DEMOS_COMMON_APPLICATION_H
 #define DEKOI_DEMOS_COMMON_APPLICATION_H
 
-#include "common.h"
+struct DkdApplication;
+struct DkdWindow;
 
-typedef void (*DkdPfnRunCallback)(DkdApplication *pApplication, void *pData);
+typedef void (*DkdPfnRunCallback)(struct DkdApplication *pApplication,
+                                  void *pData);
 
 struct DkdApplicationCallbacks {
     void *pData;
@@ -15,22 +17,23 @@ struct DkdApplicationCreateInfo {
     unsigned int majorVersion;
     unsigned int minorVersion;
     unsigned int patchVersion;
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
-    const DkdApplicationCallbacks *pCallbacks;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
+    const struct DkdApplicationCallbacks *pCallbacks;
 };
 
 int
-dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
-                     DkdApplication **ppApplication);
+dkdCreateApplication(const struct DkdApplicationCreateInfo *pCreateInfo,
+                     struct DkdApplication **ppApplication);
 
 void
-dkdDestroyApplication(DkdApplication *pApplication);
+dkdDestroyApplication(struct DkdApplication *pApplication);
 
 int
-dkdBindApplicationWindow(DkdApplication *pApplication, DkdWindow *pWindow);
+dkdBindApplicationWindow(struct DkdApplication *pApplication,
+                         struct DkdWindow *pWindow);
 
 int
-dkdRunApplication(DkdApplication *pApplication);
+dkdRunApplication(struct DkdApplication *pApplication);
 
 #endif /* DEKOI_DEMOS_COMMON_APPLICATION_H */

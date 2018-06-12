@@ -18,24 +18,24 @@ static const unsigned int minorVersion = 0;
 static const unsigned int patchVersion = 0;
 static const unsigned int width = 1280;
 static const unsigned int height = 720;
-static const DkdShaderCreateInfo shaderInfos[]
+static const struct DkdShaderCreateInfo shaderInfos[]
     = {{DK_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
        {DK_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
 static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 static const uint32_t vertexCount = 3;
 static const uint32_t instanceCount = 1;
 
-typedef struct DkdApplicationCallbacksData {
-    DkdAllocationCallbacks *pAllocator;
+struct DkdApplicationCallbacksData {
+    struct DkdAllocationCallbacks *pAllocator;
     size_t used;
-} DkdApplicationCallbacksData;
+};
 
 int
-dkdSetup(const DkdAllocationCallbacks *pAllocator,
-         const DkdApplicationCallbacks *pApplicationCallbacks,
-         DkdBootstrapHandles *pHandles)
+dkdSetup(const struct DkdAllocationCallbacks *pAllocator,
+         const struct DkdApplicationCallbacks *pApplicationCallbacks,
+         struct DkdBootstrapHandles *pHandles)
 {
-    DkdBootstrapCreateInfos createInfos;
+    struct DkdBootstrapCreateInfos createInfos;
 
     assert(pHandles != NULL);
 
@@ -73,7 +73,7 @@ dkdSetup(const DkdAllocationCallbacks *pAllocator,
 }
 
 void
-dkdCleanup(DkdBootstrapHandles *pHandles)
+dkdCleanup(struct DkdBootstrapHandles *pHandles)
 {
     assert(pHandles != NULL);
 
@@ -81,9 +81,9 @@ dkdCleanup(DkdBootstrapHandles *pHandles)
 }
 
 void
-dkdApplicationRunCallback(DkdApplication *pApplication, void *pData)
+dkdApplicationRunCallback(struct DkdApplication *pApplication, void *pData)
 {
-    DkdAllocationCallbacks *pAllocator;
+    struct DkdAllocationCallbacks *pAllocator;
     size_t used;
 
     DKD_UNUSED(pApplication);
@@ -91,11 +91,11 @@ dkdApplicationRunCallback(DkdApplication *pApplication, void *pData)
     assert(pApplication != NULL);
     assert(pData != NULL);
 
-    pAllocator = ((DkdApplicationCallbacksData *)pData)->pAllocator;
-    used = ((DkdAllocationCallbacksData *)pAllocator->pData)->used;
-    if (used != ((DkdApplicationCallbacksData *)pData)->used) {
+    pAllocator = ((struct DkdApplicationCallbacksData *)pData)->pAllocator;
+    used = ((struct DkdAllocationCallbacksData *)pAllocator->pData)->used;
+    if (used != ((struct DkdApplicationCallbacksData *)pData)->used) {
         printf("memory in use: %zu bytes\n", used);
-        ((DkdApplicationCallbacksData *)pData)->used = used;
+        ((struct DkdApplicationCallbacksData *)pData)->used = used;
     }
 }
 
@@ -103,10 +103,10 @@ int
 main(void)
 {
     int out;
-    DkdAllocationCallbacks *pAllocator;
-    DkdApplicationCallbacksData applicationCallbacksData;
-    DkdApplicationCallbacks applicationCallbacks;
-    DkdBootstrapHandles handles;
+    struct DkdAllocationCallbacks *pAllocator;
+    struct DkdApplicationCallbacksData applicationCallbacksData;
+    struct DkdApplicationCallbacks applicationCallbacks;
+    struct DkdBootstrapHandles handles;
 
     out = 0;
 

@@ -1,7 +1,7 @@
 #include "logger.h"
 
 const char *
-dkGetLogLevelString(DkLogLevel level)
+dkGetLogLevelString(enum DkLogLevel level)
 {
     switch (level) {
         case DK_LOG_LEVEL_DEBUG:

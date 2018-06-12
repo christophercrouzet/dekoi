@@ -2,27 +2,26 @@
 #define DEKOI_DEMOS_COMMON_BOOTSTRAP_H
 
 #include "application.h"
-#include "common.h"
 #include "renderer.h"
 #include "window.h"
 
 struct DkdBootstrapCreateInfos {
-    DkdApplicationCreateInfo application;
-    DkdWindowCreateInfo window;
-    DkdRendererCreateInfo renderer;
+    struct DkdApplicationCreateInfo application;
+    struct DkdWindowCreateInfo window;
+    struct DkdRendererCreateInfo renderer;
 };
 
 struct DkdBootstrapHandles {
-    DkdApplication *pApplication;
-    DkdWindow *pWindow;
-    DkdRenderer *pRenderer;
+    struct DkdApplication *pApplication;
+    struct DkdWindow *pWindow;
+    struct DkdRenderer *pRenderer;
 };
 
 int
-dkdSetupBootstrap(const DkdBootstrapCreateInfos *pCreateInfos,
-                  DkdBootstrapHandles *pHandles);
+dkdSetupBootstrap(const struct DkdBootstrapCreateInfos *pCreateInfos,
+                  struct DkdBootstrapHandles *pHandles);
 
 void
-dkdCleanupBootstrap(DkdBootstrapHandles *pHandles);
+dkdCleanupBootstrap(struct DkdBootstrapHandles *pHandles);
 
 #endif /* DEKOI_DEMOS_COMMON_BOOTSTRAP_H */

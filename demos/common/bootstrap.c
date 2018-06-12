@@ -1,7 +1,6 @@
 #include "bootstrap.h"
 
 #include "application.h"
-#include "common.h"
 #include "logger.h"
 #include "renderer.h"
 #include "window.h"
@@ -10,8 +9,8 @@
 #include <stddef.h>
 
 int
-dkdSetupBootstrap(const DkdBootstrapCreateInfos *pCreateInfos,
-                  DkdBootstrapHandles *pHandles)
+dkdSetupBootstrap(const struct DkdBootstrapCreateInfos *pCreateInfos,
+                  struct DkdBootstrapHandles *pHandles)
 {
     int out;
 
@@ -52,7 +51,7 @@ exit:
 }
 
 void
-dkdCleanupBootstrap(DkdBootstrapHandles *pHandles)
+dkdCleanupBootstrap(struct DkdBootstrapHandles *pHandles)
 {
     assert(pHandles != NULL);
 

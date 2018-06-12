@@ -1,7 +1,7 @@
 #include "common.h"
 
 const char *
-dkGetResultString(DkResult result)
+dkGetResultString(enum DkResult result)
 {
     switch (result) {
         case DK_SUCCESS:

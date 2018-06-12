@@ -1,8 +1,6 @@
 #ifndef DEKOI_DEMOS_COMMON_LOGGER_H
 #define DEKOI_DEMOS_COMMON_LOGGER_H
 
-#include "common.h"
-
 #include <dekoi/common/logger.h>
 
 #include <stdarg.h>
@@ -41,21 +39,23 @@
 #define DKD_LOG_ERROR(pLogger, ...)                                            \
     DKD_LOG(pLogger, DKD_LOG_LEVEL_ERROR, __VA_ARGS__)
 
-typedef enum DkdLogLevel {
+enum DkdLogLevel {
     DKD_LOG_LEVEL_DEBUG = 0,
     DKD_LOG_LEVEL_INFO = 1,
     DKD_LOG_LEVEL_WARNING = 2,
     DKD_LOG_LEVEL_ERROR = 3
-} DkdLogLevel;
+};
+
+struct DkdAllocationCallbacks;
 
 typedef void (*DkdPfnLogCallback)(void *pData,
-                                  DkdLogLevel level,
+                                  enum DkdLogLevel level,
                                   const char *pFile,
                                   int line,
                                   const char *pFormat,
                                   ...);
 typedef void (*DkdPfnLogVaListCallback)(void *pData,
-                                        DkdLogLevel level,
+                                        enum DkdLogLevel level,
                                         const char *pFile,
                                         int line,
                                         const char *pFormat,
@@ -68,20 +68,21 @@ struct DkdLoggingCallbacks {
 };
 
 struct DkdDekoiLoggingCallbacksData {
-    const DkdLoggingCallbacks *pLogger;
+    const struct DkdLoggingCallbacks *pLogger;
 };
 
 void
-dkdGetDefaultLogger(const DkdLoggingCallbacks **ppLogger);
+dkdGetDefaultLogger(const struct DkdLoggingCallbacks **ppLogger);
 
 int
-dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
-                               const DkdAllocationCallbacks *pAllocator,
-                               const DkdLoggingCallbacks *pLogger,
-                               DkLoggingCallbacks **ppDekoiLogger);
+dkdCreateDekoiLoggingCallbacks(struct DkdDekoiLoggingCallbacksData *pData,
+                               const struct DkdAllocationCallbacks *pAllocator,
+                               const struct DkdLoggingCallbacks *pLogger,
+                               struct DkLoggingCallbacks **ppDekoiLogger);
 
 void
-dkdDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger,
-                                const DkdAllocationCallbacks *pAllocator);
+dkdDestroyDekoiLoggingCallbacks(
+    struct DkLoggingCallbacks *pDekoiLogger,
+    const struct DkdAllocationCallbacks *pAllocator);
 
 #endif /* DEKOI_DEMOS_COMMON_LOGGER_H */

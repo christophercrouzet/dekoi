@@ -5,7 +5,7 @@
 
 #include <stdarg.h>
 
-typedef enum DkLogLevel {
+enum DkLogLevel {
     DK_LOG_LEVEL_DEBUG = 0,
     DK_LOG_LEVEL_INFO = 1,
     DK_LOG_LEVEL_WARNING = 2,
@@ -13,13 +13,13 @@ typedef enum DkLogLevel {
 } DkLogLevel;
 
 typedef void (*DkPfnLogCallback)(void *pData,
-                                 DkLogLevel level,
+                                 enum DkLogLevel level,
                                  const char *pFile,
                                  int line,
                                  const char *pFormat,
                                  ...);
 typedef void (*DkPfnLogVaListCallback)(void *pData,
-                                       DkLogLevel level,
+                                       enum DkLogLevel level,
                                        const char *pFile,
                                        int line,
                                        const char *pFormat,
@@ -32,6 +32,6 @@ struct DkLoggingCallbacks {
 };
 
 const char *
-dkGetLogLevelString(DkLogLevel level);
+dkGetLogLevelString(enum DkLogLevel level);
 
 #endif /* DEKOI_COMMON_LOGGER_H */

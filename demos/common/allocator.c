@@ -88,22 +88,24 @@ dkdFreeAligned(void *pData, void *pMemory)
     zrFreeAligned(pMemory);
 }
 
-static const DkdAllocationCallbacks dkdDefaultAllocator = {NULL,
-                                                           dkdAllocate,
-                                                           dkdReallocate,
-                                                           dkdFree,
-                                                           dkdAllocateAligned,
-                                                           dkdReallocateAligned,
-                                                           dkdFreeAligned};
+static const struct DkdAllocationCallbacks dkdDefaultAllocator
+    = {NULL,
+       dkdAllocate,
+       dkdReallocate,
+       dkdFree,
+       dkdAllocateAligned,
+       dkdReallocateAligned,
+       dkdFreeAligned};
 
 static void *
 dkdHandleDekoiAllocation(void *pData, DkSize size)
 {
     assert(pData != NULL);
 
-    return ((DkdDekoiAllocationCallbacksData *)pData)
+    return ((struct DkdDekoiAllocationCallbacksData *)pData)
         ->pAllocator->pfnAllocate(
-            ((DkdDekoiAllocationCallbacksData *)pData)->pAllocator->pData,
+            ((struct DkdDekoiAllocationCallbacksData *)pData)
+                ->pAllocator->pData,
             (size_t)size);
 }
 
@@ -112,9 +114,10 @@ dkdHandleDekoiReallocation(void *pData, void *pOriginal, DkSize size)
 {
     assert(pData != NULL);
 
-    return ((DkdDekoiAllocationCallbacksData *)pData)
+    return ((struct DkdDekoiAllocationCallbacksData *)pData)
         ->pAllocator->pfnReallocate(
-            ((DkdDekoiAllocationCallbacksData *)pData)->pAllocator->pData,
+            ((struct DkdDekoiAllocationCallbacksData *)pData)
+                ->pAllocator->pData,
             pOriginal,
             (size_t)size);
 }
@@ -124,10 +127,10 @@ dkdHandleDekoiFreeing(void *pData, void *pMemory)
 {
     assert(pData != NULL);
 
-    ((DkdDekoiAllocationCallbacksData *)pData)
-        ->pAllocator->pfnFree(
-            ((DkdDekoiAllocationCallbacksData *)pData)->pAllocator->pData,
-            pMemory);
+    ((struct DkdDekoiAllocationCallbacksData *)pData)
+        ->pAllocator->pfnFree(((struct DkdDekoiAllocationCallbacksData *)pData)
+                                  ->pAllocator->pData,
+                              pMemory);
 }
 
 static void *
@@ -135,9 +138,10 @@ dkdHandleDekoiAlignedAllocation(void *pData, DkSize size, DkSize alignment)
 {
     assert(pData != NULL);
 
-    return ((DkdDekoiAllocationCallbacksData *)pData)
+    return ((struct DkdDekoiAllocationCallbacksData *)pData)
         ->pAllocator->pfnAllocateAligned(
-            ((DkdDekoiAllocationCallbacksData *)pData)->pAllocator->pData,
+            ((struct DkdDekoiAllocationCallbacksData *)pData)
+                ->pAllocator->pData,
             (size_t)size,
             (size_t)alignment);
 }
@@ -150,9 +154,10 @@ dkdHandleDekoiAlignedReallocation(void *pData,
 {
     assert(pData != NULL);
 
-    return ((DkdDekoiAllocationCallbacksData *)pData)
+    return ((struct DkdDekoiAllocationCallbacksData *)pData)
         ->pAllocator->pfnReallocateAligned(
-            ((DkdDekoiAllocationCallbacksData *)pData)->pAllocator->pData,
+            ((struct DkdDekoiAllocationCallbacksData *)pData)
+                ->pAllocator->pData,
             pOriginal,
             (size_t)size,
             (size_t)alignment);
@@ -163,14 +168,15 @@ dkdHandleDekoiAlignedFreeing(void *pData, void *pMemory)
 {
     assert(pData != NULL);
 
-    ((DkdDekoiAllocationCallbacksData *)pData)
+    ((struct DkdDekoiAllocationCallbacksData *)pData)
         ->pAllocator->pfnFreeAligned(
-            ((DkdDekoiAllocationCallbacksData *)pData)->pAllocator->pData,
+            ((struct DkdDekoiAllocationCallbacksData *)pData)
+                ->pAllocator->pData,
             pMemory);
 }
 
 void
-dkdGetDefaultAllocator(const DkdAllocationCallbacks **ppAllocator)
+dkdGetDefaultAllocator(const struct DkdAllocationCallbacks **ppAllocator)
 {
     assert(ppAllocator != NULL);
 
@@ -178,17 +184,18 @@ dkdGetDefaultAllocator(const DkdAllocationCallbacks **ppAllocator)
 }
 
 int
-dkdCreateDekoiAllocationCallbacks(DkdDekoiAllocationCallbacksData *pData,
-                                  const DkdAllocationCallbacks *pAllocator,
-                                  const DkdLoggingCallbacks *pLogger,
-                                  DkAllocationCallbacks **ppDekoiAllocator)
+dkdCreateDekoiAllocationCallbacks(
+    struct DkdDekoiAllocationCallbacksData *pData,
+    const struct DkdAllocationCallbacks *pAllocator,
+    const struct DkdLoggingCallbacks *pLogger,
+    struct DkAllocationCallbacks **ppDekoiAllocator)
 {
     assert(pData != NULL);
     assert(pAllocator != NULL);
     assert(pLogger != NULL);
     assert(ppDekoiAllocator != NULL);
 
-    *ppDekoiAllocator = (DkAllocationCallbacks *)DKD_ALLOCATE(
+    *ppDekoiAllocator = (struct DkAllocationCallbacks *)DKD_ALLOCATE(
         pAllocator, sizeof **ppDekoiAllocator);
     if (*ppDekoiAllocator == NULL) {
         DKD_LOG_ERROR(pLogger,
@@ -208,8 +215,9 @@ dkdCreateDekoiAllocationCallbacks(DkdDekoiAllocationCallbacksData *pData,
 }
 
 void
-dkdDestroyDekoiAllocationCallbacks(DkAllocationCallbacks *pDekoiAllocator,
-                                   const DkdAllocationCallbacks *pAllocator)
+dkdDestroyDekoiAllocationCallbacks(
+    struct DkAllocationCallbacks *pDekoiAllocator,
+    const struct DkdAllocationCallbacks *pAllocator)
 {
     DKD_FREE(pAllocator, pDekoiAllocator);
 }

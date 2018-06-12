@@ -1,37 +1,35 @@
 #include "renderer.h"
 
 #include "allocator.h"
-#include "common.h"
 #include "io.h"
 #include "logger.h"
 #include "window.h"
 
 #include <dekoi/common/common.h>
-#include <dekoi/graphics/graphics.h>
 #include <dekoi/graphics/renderer.h>
 
 #include <assert.h>
 #include <stddef.h>
 
 struct DkdRenderer {
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
-    DkdDekoiLoggingCallbacksData dekoiLoggerData;
-    DkLoggingCallbacks *pDekoiLogger;
-    DkdDekoiAllocationCallbacksData dekoiAllocatorData;
-    DkAllocationCallbacks *pDekoiAllocator;
-    DkRenderer *pHandle;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
+    struct DkdDekoiLoggingCallbacksData dekoiLoggerData;
+    struct DkLoggingCallbacks *pDekoiLogger;
+    struct DkdDekoiAllocationCallbacksData dekoiAllocatorData;
+    struct DkAllocationCallbacks *pDekoiAllocator;
+    struct DkRenderer *pHandle;
 };
 
 static int
 dkdCreateShaderCode(const char *pFilePath,
-                    const DkdAllocationCallbacks *pAllocator,
-                    const DkdLoggingCallbacks *pLogger,
+                    const struct DkdAllocationCallbacks *pAllocator,
+                    const struct DkdLoggingCallbacks *pLogger,
                     DkSize *pShaderCodeSize,
                     DkUint32 **ppShaderCode)
 {
     int out;
-    DkdFile file;
+    struct DkdFile file;
 
     assert(pFilePath != NULL);
     assert(pAllocator != NULL);
@@ -85,7 +83,7 @@ exit:
 
 static void
 dkdDestroyShaderCode(DkUint32 *pShaderCode,
-                     const DkdAllocationCallbacks *pAllocator)
+                     const struct DkdAllocationCallbacks *pAllocator)
 {
     assert(pAllocator != NULL);
 
@@ -93,17 +91,17 @@ dkdDestroyShaderCode(DkUint32 *pShaderCode,
 }
 
 int
-dkdCreateRenderer(DkdWindow *pWindow,
-                  const DkdRendererCreateInfo *pCreateInfo,
-                  DkdRenderer **ppRenderer)
+dkdCreateRenderer(struct DkdWindow *pWindow,
+                  const struct DkdRendererCreateInfo *pCreateInfo,
+                  struct DkdRenderer **ppRenderer)
 {
     int out;
     unsigned int i;
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
-    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
-    DkShaderCreateInfo *pShaderInfos;
-    DkRendererCreateInfo backEndInfo;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
+    const struct DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
+    struct DkShaderCreateInfo *pShaderInfos;
+    struct DkRendererCreateInfo backEndInfo;
 
     assert(pWindow != NULL);
     assert(pCreateInfo != NULL);
@@ -126,7 +124,7 @@ dkdCreateRenderer(DkdWindow *pWindow,
     dkdGetDekoiWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
 
     if (pCreateInfo->shaderCount > 0) {
-        pShaderInfos = (DkShaderCreateInfo *)DKD_ALLOCATE(
+        pShaderInfos = (struct DkShaderCreateInfo *)DKD_ALLOCATE(
             pAllocator, sizeof *pShaderInfos * pCreateInfo->shaderCount);
         if (pShaderInfos == NULL) {
             DKD_LOG_ERROR(pLogger, "failed to allocate the shader infos\n");
@@ -161,7 +159,8 @@ dkdCreateRenderer(DkdWindow *pWindow,
         pShaderInfos = NULL;
     }
 
-    *ppRenderer = (DkdRenderer *)DKD_ALLOCATE(pAllocator, sizeof **ppRenderer);
+    *ppRenderer
+        = (struct DkdRenderer *)DKD_ALLOCATE(pAllocator, sizeof **ppRenderer);
     if (*ppRenderer == NULL) {
         DKD_LOG_ERROR(pLogger, "failed to allocate the renderer\n");
         out = 1;
@@ -267,7 +266,7 @@ exit:
 }
 
 void
-dkdDestroyRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer)
+dkdDestroyRenderer(struct DkdWindow *pWindow, struct DkdRenderer *pRenderer)
 {
     assert(pWindow != NULL);
 
@@ -289,7 +288,7 @@ dkdDestroyRenderer(DkdWindow *pWindow, DkdRenderer *pRenderer)
 }
 
 int
-dkdResizeRendererSurface(DkdRenderer *pRenderer,
+dkdResizeRendererSurface(struct DkdRenderer *pRenderer,
                          unsigned int width,
                          unsigned int height)
 {
@@ -305,7 +304,7 @@ dkdResizeRendererSurface(DkdRenderer *pRenderer,
 }
 
 int
-dkdDrawRendererImage(DkdRenderer *pRenderer)
+dkdDrawRendererImage(struct DkdRenderer *pRenderer)
 {
     assert(pRenderer != NULL);
 

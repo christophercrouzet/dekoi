@@ -36,23 +36,24 @@ struct DkdAlignmentOfHelper {
      || (x) == 67108864 || (x) == 134217728 || (x) == 268435456                \
      || (x) == 1073741824 || (x) == 2147483648 || (x) == 4294967296)
 
-typedef struct DkdBlockHeader {
+struct DkdBlockHeader {
     size_t size;
-} DkdBlockHeader;
+};
 
-typedef struct DkdAlignedBlockHeader {
+struct DkdAlignedBlockHeader {
     ptrdiff_t offset;
     size_t size;
-} DkdAlignedBlockHeader;
+};
 
-DKD_STATIC_ASSERT(DKD_IS_POWER_OF_TWO(DKD_ALIGNMENT_OF(DkdAlignedBlockHeader)),
-                  invalid_block_header_alignment);
+DKD_STATIC_ASSERT(
+    DKD_IS_POWER_OF_TWO(DKD_ALIGNMENT_OF(struct DkdAlignedBlockHeader)),
+    invalid_block_header_alignment);
 DKD_STATIC_ASSERT(DKD_IS_POWER_OF_TWO(sizeof(void *)),
                   invalid_void_pointer_alignment);
 
 static const size_t dkdMinAlignment
-    = DKD_ALIGNMENT_OF(DkdAlignedBlockHeader) > sizeof(void *)
-          ? DKD_ALIGNMENT_OF(DkdAlignedBlockHeader)
+    = DKD_ALIGNMENT_OF(struct DkdAlignedBlockHeader) > sizeof(void *)
+          ? DKD_ALIGNMENT_OF(struct DkdAlignedBlockHeader)
           : sizeof(void *);
 
 #ifndef NDEBUG
@@ -69,43 +70,43 @@ dkdAllocate(void *pData, size_t size)
 {
     void *pOut;
     void *pBlock;
-    DkdBlockHeader *pHeader;
+    struct DkdBlockHeader *pHeader;
 
     assert(size != 0);
 
-    pBlock = malloc(size + sizeof(DkdBlockHeader));
+    pBlock = malloc(size + sizeof(struct DkdBlockHeader));
     if (pBlock == NULL) {
         return NULL;
     }
 
-    pOut = (void *)((unsigned char *)pBlock + sizeof(DkdBlockHeader));
+    pOut = (void *)((unsigned char *)pBlock + sizeof(struct DkdBlockHeader));
 
-    pHeader = &((DkdBlockHeader *)pOut)[-1];
+    pHeader = &((struct DkdBlockHeader *)pOut)[-1];
     pHeader->size = size;
 
-    ((DkdAllocationCallbacksData *)pData)->used += size;
+    ((struct DkdAllocationCallbacksData *)pData)->used += size;
     return pOut;
 }
 
 static void
 dkdFree(void *pData, void *pMemory)
 {
-    DkdBlockHeader *pHeader;
+    struct DkdBlockHeader *pHeader;
 
     assert(pMemory != NULL);
 
-    pHeader = &((DkdBlockHeader *)pMemory)[-1];
-    ((DkdAllocationCallbacksData *)pData)->used -= pHeader->size;
-    free((void *)((unsigned char *)pMemory - sizeof(DkdBlockHeader)));
+    pHeader = &((struct DkdBlockHeader *)pMemory)[-1];
+    ((struct DkdAllocationCallbacksData *)pData)->used -= pHeader->size;
+    free((void *)((unsigned char *)pMemory - sizeof(struct DkdBlockHeader)));
 }
 
 static void *
 dkdReallocate(void *pData, void *pOriginal, size_t size)
 {
     void *pOut;
-    DkdBlockHeader *pHeader;
+    struct DkdBlockHeader *pHeader;
 
-    pHeader = &((DkdBlockHeader *)pOriginal)[-1];
+    pHeader = &((struct DkdBlockHeader *)pOriginal)[-1];
     if (size <= pHeader->size) {
         pOut = pOriginal;
         goto exit;
@@ -133,7 +134,7 @@ dkdAllocateAligned(void *pData, size_t size, size_t alignment)
 {
     void *pOut;
     void *pBlock;
-    DkdAlignedBlockHeader *pHeader;
+    struct DkdAlignedBlockHeader *pHeader;
 
     DKD_UNUSED(pData);
 
@@ -144,34 +145,35 @@ dkdAllocateAligned(void *pData, size_t size, size_t alignment)
         alignment = dkdMinAlignment;
     }
 
-    pBlock = malloc(size + alignment - 1 + sizeof(DkdAlignedBlockHeader));
+    pBlock
+        = malloc(size + alignment - 1 + sizeof(struct DkdAlignedBlockHeader));
     if (pBlock == NULL) {
         return NULL;
     }
 
     pOut = (void *)((uintptr_t)((unsigned char *)pBlock + alignment - 1
-                                + sizeof(DkdAlignedBlockHeader))
+                                + sizeof(struct DkdAlignedBlockHeader))
                     & ~(uintptr_t)(alignment - 1));
 
-    pHeader = &((DkdAlignedBlockHeader *)pOut)[-1];
+    pHeader = &((struct DkdAlignedBlockHeader *)pOut)[-1];
     pHeader->offset = (unsigned char *)pOut - (unsigned char *)pBlock;
     pHeader->size = size;
 
-    ((DkdAllocationCallbacksData *)pData)->used += size;
+    ((struct DkdAllocationCallbacksData *)pData)->used += size;
     return pOut;
 }
 
 static void
 dkdFreeAligned(void *pData, void *pMemory)
 {
-    DkdAlignedBlockHeader *pHeader;
+    struct DkdAlignedBlockHeader *pHeader;
 
     DKD_UNUSED(pData);
 
     assert(pMemory != NULL);
 
-    pHeader = &((DkdAlignedBlockHeader *)pMemory)[-1];
-    ((DkdAllocationCallbacksData *)pData)->used -= pHeader->size;
+    pHeader = &((struct DkdAlignedBlockHeader *)pMemory)[-1];
+    ((struct DkdAllocationCallbacksData *)pData)->used -= pHeader->size;
     free((void *)((unsigned char *)pMemory - pHeader->offset));
 }
 
@@ -182,7 +184,7 @@ dkdReallocateAligned(void *pData,
                      size_t alignment)
 {
     void *pOut;
-    DkdAlignedBlockHeader *pHeader;
+    struct DkdAlignedBlockHeader *pHeader;
 
     assert(pOriginal != NULL);
     assert(size != 0);
@@ -190,7 +192,7 @@ dkdReallocateAligned(void *pData,
 
     DKD_UNUSED(pData);
 
-    pHeader = &((DkdAlignedBlockHeader *)pOriginal)[-1];
+    pHeader = &((struct DkdAlignedBlockHeader *)pOriginal)[-1];
     if (size <= pHeader->size) {
         pOut = pOriginal;
         goto exit;
@@ -214,17 +216,18 @@ exit:
 }
 
 int
-dkdCreateCustomAllocator(DkdAllocationCallbacks **ppAllocator)
+dkdCreateCustomAllocator(struct DkdAllocationCallbacks **ppAllocator)
 {
     assert(ppAllocator != NULL);
 
-    *ppAllocator = (DkdAllocationCallbacks *)malloc(sizeof **ppAllocator);
+    *ppAllocator
+        = (struct DkdAllocationCallbacks *)malloc(sizeof **ppAllocator);
     if (*ppAllocator == NULL) {
         return 1;
     }
 
-    (*ppAllocator)->pData = (DkdAllocationCallbacksData *)malloc(
-        sizeof(DkdAllocationCallbacksData));
+    (*ppAllocator)->pData = (struct DkdAllocationCallbacksData *)malloc(
+        sizeof(struct DkdAllocationCallbacksData));
     if ((*ppAllocator)->pData == NULL) {
         return 1;
     }
@@ -239,7 +242,7 @@ dkdCreateCustomAllocator(DkdAllocationCallbacks **ppAllocator)
 }
 
 void
-dkdDestroyCustomAllocator(DkdAllocationCallbacks *pAllocator)
+dkdDestroyCustomAllocator(struct DkdAllocationCallbacks *pAllocator)
 {
     assert(pAllocator != NULL);
 

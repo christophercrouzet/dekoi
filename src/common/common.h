@@ -106,18 +106,15 @@ DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 #define DK_FALSE ((DkBool32)0)
 #define DK_TRUE ((DkBool32)1)
 
-typedef struct DkAllocationCallbacks DkAllocationCallbacks;
-typedef struct DkLoggingCallbacks DkLoggingCallbacks;
-
-typedef enum DkResult {
+enum DkResult {
     DK_SUCCESS = 0,
     DK_ERROR = -1,
     DK_ERROR_INVALID_VALUE = -2,
     DK_ERROR_ALLOCATION = -3,
     DK_ERROR_NOT_AVAILABLE = -4
-} DkResult;
+};
 
 const char *
-dkGetResultString(DkResult result);
+dkGetResultString(enum DkResult result);
 
 #endif /* DEKOI_COMMON_COMMON_H */

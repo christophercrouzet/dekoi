@@ -10,7 +10,7 @@
 
 static void
 dkdLogVaList(void *pData,
-             DkdLogLevel level,
+             enum DkdLogLevel level,
              const char *pFile,
              int line,
              const char *pFormat,
@@ -30,7 +30,7 @@ dkdLogVaList(void *pData,
 
 static void
 dkdLog(void *pData,
-       DkdLogLevel level,
+       enum DkdLogLevel level,
        const char *pFile,
        int line,
        const char *pFormat,
@@ -46,10 +46,11 @@ dkdLog(void *pData,
     va_end(args);
 }
 
-static const DkdLoggingCallbacks dkdCustomLogger = {NULL, dkdLog, dkdLogVaList};
+static const struct DkdLoggingCallbacks dkdCustomLogger
+    = {NULL, dkdLog, dkdLogVaList};
 
 void
-dkdGetCustomLogger(const DkdLoggingCallbacks **ppLogger)
+dkdGetCustomLogger(const struct DkdLoggingCallbacks **ppLogger)
 {
     assert(ppLogger != NULL);
 

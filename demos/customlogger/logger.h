@@ -1,9 +1,9 @@
 #ifndef DEKOI_DEMOS_CUSTOMLOGGER_LOGGER_H
 #define DEKOI_DEMOS_CUSTOMLOGGER_LOGGER_H
 
-#include "../common/common.h"
+struct DkdLoggingCallbacks;
 
 void
-dkdGetCustomLogger(const DkdLoggingCallbacks **ppLogger);
+dkdGetCustomLogger(const struct DkdLoggingCallbacks **ppLogger);
 
 #endif /* DEKOI_DEMOS_CUSTOMLOGGER_LOGGER_H */

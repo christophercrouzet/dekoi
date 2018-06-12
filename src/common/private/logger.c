@@ -15,7 +15,7 @@
 #include <zero/logger.h>
 
 static enum ZrLogLevel
-dkpTranslateLogLevelToZero(DkLogLevel level)
+dkpTranslateLogLevelToZero(enum DkLogLevel level)
 {
     switch (level) {
         case DK_LOG_LEVEL_DEBUG:
@@ -34,7 +34,7 @@ dkpTranslateLogLevelToZero(DkLogLevel level)
 
 static void
 dkpLogVaList(void *pData,
-             DkLogLevel level,
+             enum DkLogLevel level,
              const char *pFile,
              int line,
              const char *pFormat,
@@ -50,7 +50,7 @@ dkpLogVaList(void *pData,
 
 static void
 dkpLog(void *pData,
-       DkLogLevel level,
+       enum DkLogLevel level,
        const char *pFile,
        int line,
        const char *pFormat,
@@ -66,10 +66,11 @@ dkpLog(void *pData,
     va_end(args);
 }
 
-static const DkLoggingCallbacks dkpDefaultLogger = {NULL, dkpLog, dkpLogVaList};
+static const struct DkLoggingCallbacks dkpDefaultLogger
+    = {NULL, dkpLog, dkpLogVaList};
 
 void
-dkpGetDefaultLogger(const DkLoggingCallbacks **ppLogger)
+dkpGetDefaultLogger(const struct DkLoggingCallbacks **ppLogger)
 {
     DKP_ASSERT(ppLogger != NULL);
 

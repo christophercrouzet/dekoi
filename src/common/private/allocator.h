@@ -20,6 +20,6 @@
     ((pAllocator)->pfnFreeAligned((pAllocator)->pData, pMemory))
 
 void
-dkpGetDefaultAllocator(const DkAllocationCallbacks **ppAllocator);
+dkpGetDefaultAllocator(const struct DkAllocationCallbacks **ppAllocator);
 
 #endif /* DEKOI_COMMON_PRIVATE_ALLOCATOR_H */

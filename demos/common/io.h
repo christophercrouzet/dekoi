@@ -1,34 +1,34 @@
 #ifndef DEKOI_DEMOS_COMMON_IO_H
 #define DEKOI_DEMOS_COMMON_IO_H
 
-#include "common.h"
-
 #include <stddef.h>
 #include <stdio.h>
 
-typedef struct DkdFile {
+struct DkdLoggingCallbacks;
+
+struct DkdFile {
     FILE *pHandle;
     const char *pPath;
-} DkdFile;
+};
 
 int
-dkdOpenFile(DkdFile *pFile,
+dkdOpenFile(struct DkdFile *pFile,
             const char *pPath,
             const char *pMode,
-            const DkdLoggingCallbacks *pLogger);
+            const struct DkdLoggingCallbacks *pLogger);
 
 int
-dkdGetFileSize(DkdFile *pFile,
-               const DkdLoggingCallbacks *pLogger,
+dkdGetFileSize(struct DkdFile *pFile,
+               const struct DkdLoggingCallbacks *pLogger,
                size_t *pSize);
 
 int
-dkdReadFile(DkdFile *pFile,
+dkdReadFile(struct DkdFile *pFile,
             size_t size,
-            const DkdLoggingCallbacks *pLogger,
+            const struct DkdLoggingCallbacks *pLogger,
             void *pBuffer);
 
 int
-dkdCloseFile(DkdFile *pFile, const DkdLoggingCallbacks *pLogger);
+dkdCloseFile(struct DkdFile *pFile, const struct DkdLoggingCallbacks *pLogger);
 
 #endif /* DEKOI_DEMOS_COMMON_IO_H */

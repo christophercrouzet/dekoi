@@ -41,6 +41,6 @@
     DKP_LOG(pLogger, DK_LOG_LEVEL_ERROR, __VA_ARGS__)
 
 void
-dkpGetDefaultLogger(const DkLoggingCallbacks **ppLogger);
+dkpGetDefaultLogger(const struct DkLoggingCallbacks **ppLogger);
 
 #endif /* DEKOI_COMMON_PRIVATE_LOGGER_H */

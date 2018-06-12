@@ -16,7 +16,7 @@
 #include <zero/logger.h>
 
 static enum ZrLogLevel
-dkdTranslateLogLevelToZero(DkdLogLevel level)
+dkdTranslateLogLevelToZero(enum DkdLogLevel level)
 {
     switch (level) {
         case DKD_LOG_LEVEL_DEBUG:
@@ -35,7 +35,7 @@ dkdTranslateLogLevelToZero(DkdLogLevel level)
 
 static void
 dkdLogVaList(void *pData,
-             DkdLogLevel level,
+             enum DkdLogLevel level,
              const char *pFile,
              int line,
              const char *pFormat,
@@ -51,7 +51,7 @@ dkdLogVaList(void *pData,
 
 static void
 dkdLog(void *pData,
-       DkdLogLevel level,
+       enum DkdLogLevel level,
        const char *pFile,
        int line,
        const char *pFormat,
@@ -67,11 +67,11 @@ dkdLog(void *pData,
     va_end(args);
 }
 
-static const DkdLoggingCallbacks dkdDefaultLogger
+static const struct DkdLoggingCallbacks dkdDefaultLogger
     = {NULL, dkdLog, dkdLogVaList};
 
-static DkdLogLevel
-dkdTranslateLogLevelFromDekoi(DkLogLevel level)
+static enum DkdLogLevel
+dkdTranslateLogLevelFromDekoi(enum DkLogLevel level)
 {
     switch (level) {
         case DK_LOG_LEVEL_DEBUG:
@@ -90,7 +90,7 @@ dkdTranslateLogLevelFromDekoi(DkLogLevel level)
 
 static void
 dkdHandleDekoiLoggingVaList(void *pData,
-                            DkLogLevel level,
+                            enum DkLogLevel level,
                             const char *pFile,
                             int line,
                             const char *pFormat,
@@ -100,9 +100,9 @@ dkdHandleDekoiLoggingVaList(void *pData,
     assert(pFile != NULL);
     assert(pFormat != NULL);
 
-    ((DkdDekoiLoggingCallbacksData *)pData)
+    ((struct DkdDekoiLoggingCallbacksData *)pData)
         ->pLogger->pfnLogVaList(
-            ((DkdDekoiLoggingCallbacksData *)pData)->pLogger->pData,
+            ((struct DkdDekoiLoggingCallbacksData *)pData)->pLogger->pData,
             dkdTranslateLogLevelFromDekoi(level),
             pFile,
             line,
@@ -112,7 +112,7 @@ dkdHandleDekoiLoggingVaList(void *pData,
 
 static void
 dkdHandleDekoiLogging(void *pData,
-                      DkLogLevel level,
+                      enum DkLogLevel level,
                       const char *pFile,
                       int line,
                       const char *pFormat,
@@ -130,7 +130,7 @@ dkdHandleDekoiLogging(void *pData,
 }
 
 void
-dkdGetDefaultLogger(const DkdLoggingCallbacks **ppLogger)
+dkdGetDefaultLogger(const struct DkdLoggingCallbacks **ppLogger)
 {
     assert(ppLogger != NULL);
 
@@ -138,18 +138,18 @@ dkdGetDefaultLogger(const DkdLoggingCallbacks **ppLogger)
 }
 
 int
-dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
-                               const DkdAllocationCallbacks *pAllocator,
-                               const DkdLoggingCallbacks *pLogger,
-                               DkLoggingCallbacks **ppDekoiLogger)
+dkdCreateDekoiLoggingCallbacks(struct DkdDekoiLoggingCallbacksData *pData,
+                               const struct DkdAllocationCallbacks *pAllocator,
+                               const struct DkdLoggingCallbacks *pLogger,
+                               struct DkLoggingCallbacks **ppDekoiLogger)
 {
     assert(pData != NULL);
     assert(pAllocator != NULL);
     assert(pLogger != NULL);
     assert(ppDekoiLogger != NULL);
 
-    *ppDekoiLogger = (DkLoggingCallbacks *)DKD_ALLOCATE(pAllocator,
-                                                        sizeof **ppDekoiLogger);
+    *ppDekoiLogger = (struct DkLoggingCallbacks *)DKD_ALLOCATE(
+        pAllocator, sizeof **ppDekoiLogger);
     if (*ppDekoiLogger == NULL) {
         DKD_LOG_ERROR(pLogger,
                       "failed to allocate Dekoi's logging callbacks\n");
@@ -163,8 +163,8 @@ dkdCreateDekoiLoggingCallbacks(DkdDekoiLoggingCallbacksData *pData,
 }
 
 void
-dkdDestroyDekoiLoggingCallbacks(DkLoggingCallbacks *pDekoiLogger,
-                                const DkdAllocationCallbacks *pAllocator)
+dkdDestroyDekoiLoggingCallbacks(struct DkLoggingCallbacks *pDekoiLogger,
+                                const struct DkdAllocationCallbacks *pAllocator)
 {
     assert(pAllocator != NULL);
 

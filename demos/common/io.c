@@ -1,6 +1,5 @@
 #include "io.h"
 
-#include "common.h"
 #include "logger.h"
 
 #include <assert.h>
@@ -9,10 +8,10 @@
 #include <stdio.h>
 
 int
-dkdOpenFile(DkdFile *pFile,
+dkdOpenFile(struct DkdFile *pFile,
             const char *pPath,
             const char *pMode,
-            const DkdLoggingCallbacks *pLogger)
+            const struct DkdLoggingCallbacks *pLogger)
 {
     assert(pFile != NULL);
     assert(pPath != NULL);
@@ -32,8 +31,8 @@ dkdOpenFile(DkdFile *pFile,
 }
 
 int
-dkdGetFileSize(DkdFile *pFile,
-               const DkdLoggingCallbacks *pLogger,
+dkdGetFileSize(struct DkdFile *pFile,
+               const struct DkdLoggingCallbacks *pLogger,
                size_t *pSize)
 {
     int out;
@@ -92,9 +91,9 @@ exit:
 }
 
 int
-dkdReadFile(DkdFile *pFile,
+dkdReadFile(struct DkdFile *pFile,
             size_t size,
-            const DkdLoggingCallbacks *pLogger,
+            const struct DkdLoggingCallbacks *pLogger,
             void *pBuffer)
 {
     assert(pFile != NULL);
@@ -111,7 +110,7 @@ dkdReadFile(DkdFile *pFile,
 }
 
 int
-dkdCloseFile(DkdFile *pFile, const DkdLoggingCallbacks *pLogger)
+dkdCloseFile(struct DkdFile *pFile, const struct DkdLoggingCallbacks *pLogger)
 {
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);

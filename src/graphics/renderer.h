@@ -1,28 +1,23 @@
 #ifndef DEKOI_GRAPHICS_RENDERING_H
 #define DEKOI_GRAPHICS_RENDERING_H
 
-#include "graphics.h"
-
 #include <dekoi/common/common.h>
 
-typedef enum DkShaderStage {
+enum DkShaderStage {
     DK_SHADER_STAGE_VERTEX = 0,
     DK_SHADER_STAGE_TESSELLATION_CONTROL = 1,
     DK_SHADER_STAGE_TESSELLATION_EVALUATION = 2,
     DK_SHADER_STAGE_GEOMETRY = 3,
     DK_SHADER_STAGE_FRAGMENT = 4,
     DK_SHADER_STAGE_COMPUTE = 5
-} DkShaderStage;
+};
 
-typedef enum DkVertexInputRate {
+enum DkVertexInputRate {
     DK_VERTEX_INPUT_RATE_VERTEX = 0,
     DK_VERTEX_INPUT_RATE_INSTANCE = 1
-} DkVertexInputRate;
+};
 
-typedef enum DkFormat {
-    DK_FORMAT_R32G32_SFLOAT = 0,
-    DK_FORMAT_R32G32B32_SFLOAT = 1
-} DkFormat;
+enum DkFormat { DK_FORMAT_R32G32_SFLOAT = 0, DK_FORMAT_R32G32B32_SFLOAT = 1 };
 
 #define DKP_DEFINE_VULKAN_HANDLE(object) typedef struct object##_T *object
 
@@ -38,20 +33,23 @@ typedef struct VkAllocationCallbacks VkAllocationCallbacks;
 DKP_DEFINE_VULKAN_HANDLE(VkInstance);
 DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(VkSurfaceKHR);
 
-typedef DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
+struct DkLoggingCallbacks;
+struct DkRenderer;
+
+typedef enum DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
     void *pData,
-    const DkLoggingCallbacks *pLogger,
+    const struct DkLoggingCallbacks *pLogger,
     DkUint32 *pExtensionCount,
     const char ***pppExtensionNames);
 typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(
     void *pData,
-    const DkLoggingCallbacks *pLogger,
+    const struct DkLoggingCallbacks *pLogger,
     const char **ppExtensionNames);
-typedef DkResult (*DkPfnCreateSurfaceCallback)(
+typedef enum DkResult (*DkPfnCreateSurfaceCallback)(
     void *pData,
     VkInstance instanceHandle,
     const VkAllocationCallbacks *pBackEndAllocator,
-    const DkLoggingCallbacks *pLogger,
+    const struct DkLoggingCallbacks *pLogger,
     VkSurfaceKHR *pSurfaceHandle);
 
 struct DkWindowSystemIntegrationCallbacks {
@@ -62,7 +60,7 @@ struct DkWindowSystemIntegrationCallbacks {
 };
 
 struct DkShaderCreateInfo {
-    DkShaderStage stage;
+    enum DkShaderStage stage;
     DkSize codeSize;
     DkUint32 *pCode;
     const char *pEntryPointName;
@@ -76,14 +74,14 @@ struct DkVertexBufferCreateInfo {
 
 struct DkVertexBindingDescriptionCreateInfo {
     DkUint32 stride;
-    DkVertexInputRate inputRate;
+    enum DkVertexInputRate inputRate;
 };
 
 struct DkVertexAttributeDescriptionCreateInfo {
     DkUint32 binding;
     DkUint32 location;
     DkUint32 offset;
-    DkFormat format;
+    enum DkFormat format;
 };
 
 struct DkRendererCreateInfo {
@@ -93,34 +91,37 @@ struct DkRendererCreateInfo {
     DkUint32 applicationPatchVersion;
     DkUint32 surfaceWidth;
     DkUint32 surfaceHeight;
-    const DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
+    const struct DkWindowSystemIntegrationCallbacks *pWindowSystemIntegrator;
     DkUint32 shaderCount;
-    const DkShaderCreateInfo *pShaderInfos;
+    const struct DkShaderCreateInfo *pShaderInfos;
     DkFloat32 clearColor[4];
     DkUint32 vertexBufferCount;
-    const DkVertexBufferCreateInfo *pVertexBufferInfos;
+    const struct DkVertexBufferCreateInfo *pVertexBufferInfos;
     DkUint32 vertexBindingDescriptionCount;
-    const DkVertexBindingDescriptionCreateInfo *pVertexBindingDescriptionInfos;
+    const struct DkVertexBindingDescriptionCreateInfo
+        *pVertexBindingDescriptionInfos;
     DkUint32 vertexAttributeDescriptionCount;
-    const DkVertexAttributeDescriptionCreateInfo
+    const struct DkVertexAttributeDescriptionCreateInfo
         *pVertexAttributeDescriptionInfos;
     DkUint32 vertexCount;
     DkUint32 instanceCount;
-    const DkLoggingCallbacks *pLogger;
-    const DkAllocationCallbacks *pAllocator;
+    const struct DkLoggingCallbacks *pLogger;
+    const struct DkAllocationCallbacks *pAllocator;
 };
 
-DkResult
-dkCreateRenderer(const DkRendererCreateInfo *pCreateInfo,
-                 DkRenderer **ppRenderer);
+enum DkResult
+dkCreateRenderer(const struct DkRendererCreateInfo *pCreateInfo,
+                 struct DkRenderer **ppRenderer);
 
 void
-dkDestroyRenderer(DkRenderer *pRenderer);
+dkDestroyRenderer(struct DkRenderer *pRenderer);
 
-DkResult
-dkResizeRendererSurface(DkRenderer *pRenderer, DkUint32 width, DkUint32 height);
+enum DkResult
+dkResizeRendererSurface(struct DkRenderer *pRenderer,
+                        DkUint32 width,
+                        DkUint32 height);
 
-DkResult
-dkDrawRendererImage(DkRenderer *pRenderer);
+enum DkResult
+dkDrawRendererImage(struct DkRenderer *pRenderer);
 
 #endif /* DEKOI_GRAPHICS_RENDERING_H */

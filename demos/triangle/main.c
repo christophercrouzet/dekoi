@@ -14,7 +14,7 @@ static const unsigned int minorVersion = 0;
 static const unsigned int patchVersion = 0;
 static const unsigned int width = 1280;
 static const unsigned int height = 720;
-static const DkdShaderCreateInfo shaderInfos[]
+static const struct DkdShaderCreateInfo shaderInfos[]
     = {{DK_SHADER_STAGE_VERTEX, "shaders/triangle.vert.spv", "main"},
        {DK_SHADER_STAGE_FRAGMENT, "shaders/triangle.frag.spv", "main"}};
 static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
@@ -22,9 +22,9 @@ static const uint32_t vertexCount = 3;
 static const uint32_t instanceCount = 1;
 
 int
-dkdSetup(DkdBootstrapHandles *pHandles)
+dkdSetup(struct DkdBootstrapHandles *pHandles)
 {
-    DkdBootstrapCreateInfos createInfos;
+    struct DkdBootstrapCreateInfos createInfos;
 
     assert(pHandles != NULL);
 
@@ -58,7 +58,7 @@ dkdSetup(DkdBootstrapHandles *pHandles)
 }
 
 void
-dkdCleanup(DkdBootstrapHandles *pHandles)
+dkdCleanup(struct DkdBootstrapHandles *pHandles)
 {
     assert(pHandles != NULL);
 
@@ -69,7 +69,7 @@ int
 main(void)
 {
     int out;
-    DkdBootstrapHandles handles;
+    struct DkdBootstrapHandles handles;
 
     out = 0;
 

@@ -1,7 +1,6 @@
 #include "application.h"
 
 #include "allocator.h"
-#include "common.h"
 #include "logger.h"
 #include "window.h"
 
@@ -9,23 +8,23 @@
 #include <stddef.h>
 
 struct DkdApplication {
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
-    const DkdApplicationCallbacks *pCallbacks;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
+    const struct DkdApplicationCallbacks *pCallbacks;
     const char *pName;
     unsigned int majorVersion;
     unsigned int minorVersion;
     unsigned int patchVersion;
-    DkdWindow *pWindow;
+    struct DkdWindow *pWindow;
     int stopFlag;
 };
 
 int
-dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
-                     DkdApplication **ppApplication)
+dkdCreateApplication(const struct DkdApplicationCreateInfo *pCreateInfo,
+                     struct DkdApplication **ppApplication)
 {
-    const DkdLoggingCallbacks *pLogger;
-    const DkdAllocationCallbacks *pAllocator;
+    const struct DkdLoggingCallbacks *pLogger;
+    const struct DkdAllocationCallbacks *pAllocator;
 
     assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
@@ -42,8 +41,8 @@ dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
         pAllocator = pCreateInfo->pAllocator;
     }
 
-    *ppApplication
-        = (DkdApplication *)DKD_ALLOCATE(pAllocator, sizeof **ppApplication);
+    *ppApplication = (struct DkdApplication *)DKD_ALLOCATE(
+        pAllocator, sizeof **ppApplication);
     if (*ppApplication == NULL) {
         DKD_LOG_ERROR(pLogger, "failed to allocate the application\n");
         return 1;
@@ -61,13 +60,14 @@ dkdCreateApplication(const DkdApplicationCreateInfo *pCreateInfo,
 }
 
 void
-dkdDestroyApplication(DkdApplication *pApplication)
+dkdDestroyApplication(struct DkdApplication *pApplication)
 {
     DKD_FREE(pApplication->pAllocator, pApplication);
 }
 
 int
-dkdBindApplicationWindow(DkdApplication *pApplication, DkdWindow *pWindow)
+dkdBindApplicationWindow(struct DkdApplication *pApplication,
+                         struct DkdWindow *pWindow)
 {
     assert(pApplication != NULL);
 
@@ -76,7 +76,7 @@ dkdBindApplicationWindow(DkdApplication *pApplication, DkdWindow *pWindow)
 }
 
 int
-dkdRunApplication(DkdApplication *pApplication)
+dkdRunApplication(struct DkdApplication *pApplication)
 {
     assert(pApplication != NULL);
     assert(pApplication->pWindow != NULL);

@@ -121,7 +121,6 @@ target_link_libraries(common
 
 dk_add_module(graphics
     FILES
-        src/graphics/graphics.h
         src/graphics/renderer.c
         src/graphics/renderer.h)
 target_link_libraries(graphics

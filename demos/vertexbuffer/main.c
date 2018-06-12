@@ -8,25 +8,25 @@
 #include <stddef.h>
 #include <string.h>
 
-typedef struct Vector2 {
+struct Vector2 {
     float x;
     float y;
-} Vector2;
+};
 
-typedef struct Vector3 {
+struct Vector3 {
     float x;
     float y;
     float z;
-} Vector3;
+};
 
-typedef struct Vertex {
-    Vector2 position;
-    Vector3 color;
-} Vertex;
+struct Vertex {
+    struct Vector2 position;
+    struct Vector3 color;
+};
 
-static const Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                  {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                                  {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+static const struct Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                         {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
 static const char *pApplicationName = "vertexbuffer";
 static const unsigned int majorVersion = 1;
@@ -34,24 +34,26 @@ static const unsigned int minorVersion = 0;
 static const unsigned int patchVersion = 0;
 static const unsigned int width = 1280;
 static const unsigned int height = 720;
-static const DkdShaderCreateInfo shaderInfos[]
+static const struct DkdShaderCreateInfo shaderInfos[]
     = {{DK_SHADER_STAGE_VERTEX, "shaders/passthrough.vert.spv", "main"},
        {DK_SHADER_STAGE_FRAGMENT, "shaders/passthrough.frag.spv", "main"}};
 static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
-static const DkVertexBufferCreateInfo vertexBufferInfos[]
+static const struct DkVertexBufferCreateInfo vertexBufferInfos[]
     = {{sizeof vertices, 0, vertices}};
-static const DkVertexBindingDescriptionCreateInfo bindingDescriptionInfos[]
-    = {{sizeof(Vertex), DK_VERTEX_INPUT_RATE_VERTEX}};
-static const DkVertexAttributeDescriptionCreateInfo attributeDescriptionInfos[]
-    = {{0, 0, offsetof(Vertex, position), DK_FORMAT_R32G32_SFLOAT},
-       {0, 1, offsetof(Vertex, color), DK_FORMAT_R32G32B32_SFLOAT}};
+static const struct DkVertexBindingDescriptionCreateInfo
+    bindingDescriptionInfos[]
+    = {{sizeof(struct Vertex), DK_VERTEX_INPUT_RATE_VERTEX}};
+static const struct DkVertexAttributeDescriptionCreateInfo
+    attributeDescriptionInfos[]
+    = {{0, 0, offsetof(struct Vertex, position), DK_FORMAT_R32G32_SFLOAT},
+       {0, 1, offsetof(struct Vertex, color), DK_FORMAT_R32G32B32_SFLOAT}};
 static const uint32_t vertexCount = DKD_GET_ARRAY_SIZE(vertices);
 static const uint32_t instanceCount = 1;
 
 int
-dkdSetup(DkdBootstrapHandles *pHandles)
+dkdSetup(struct DkdBootstrapHandles *pHandles)
 {
-    DkdBootstrapCreateInfos createInfos;
+    struct DkdBootstrapCreateInfos createInfos;
 
     assert(pHandles != NULL);
 
@@ -96,7 +98,7 @@ dkdSetup(DkdBootstrapHandles *pHandles)
 }
 
 void
-dkdCleanup(DkdBootstrapHandles *pHandles)
+dkdCleanup(struct DkdBootstrapHandles *pHandles)
 {
     assert(pHandles != NULL);
 
@@ -107,7 +109,7 @@ int
 main(void)
 {
     int out;
-    DkdBootstrapHandles handles;
+    struct DkdBootstrapHandles handles;
 
     out = 0;
 

@@ -7,19 +7,4 @@
 
 #define DKD_GET_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-typedef struct DkdAllocationCallbacks DkdAllocationCallbacks;
-typedef struct DkdApplication DkdApplication;
-typedef struct DkdApplicationCallbacks DkdApplicationCallbacks;
-typedef struct DkdApplicationCreateInfo DkdApplicationCreateInfo;
-typedef struct DkdBootstrapCreateInfos DkdBootstrapCreateInfos;
-typedef struct DkdBootstrapHandles DkdBootstrapHandles;
-typedef struct DkdDekoiAllocationCallbacksData DkdDekoiAllocationCallbacksData;
-typedef struct DkdDekoiLoggingCallbacksData DkdDekoiLoggingCallbacksData;
-typedef struct DkdLoggingCallbacks DkdLoggingCallbacks;
-typedef struct DkdRenderer DkdRenderer;
-typedef struct DkdRendererCreateInfo DkdRendererCreateInfo;
-typedef struct DkdShaderCreateInfo DkdShaderCreateInfo;
-typedef struct DkdWindow DkdWindow;
-typedef struct DkdWindowCreateInfo DkdWindowCreateInfo;
-
 #endif /* DEKOI_DEMOS_COMMON_COMMON_H */
