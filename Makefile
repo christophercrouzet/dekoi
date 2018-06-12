@@ -66,17 +66,33 @@ $(foreach _config,$(CONFIG),$(eval $(call \
 
 # ------------------------------------------------------------------------------
 
+MODULES := $(notdir $(wildcard src/*))
+
+MODULES_FILES :=
+MODULES_FILES += $(foreach _x,$(MODULES),$(wildcard src/$(_x)/*.[ch]))
+MODULES_FILES += $(foreach _x,$(MODULES),$(wildcard src/$(_x)/private/*.[ch]))
+
 modules: $(MAKE_FILES)
 	@ $(call dk_forward_rule,modules)
 
 .PHONY: modules
 
+FORMAT_FILES += $(MODULES_FILES)
+TIDY_FILES += $(MODULES_FILES)
+
 # ------------------------------------------------------------------------------
+
+DEMOS := $(notdir $(wildcard demos/*))
+
+DEMOS_FILES := $(foreach _x,$(DEMOS),$(wildcard demos/$(_x)/*.[ch]))
 
 demos: $(MAKE_FILES)
 	@ $(call dk_forward_rule,demos)
 
 .PHONY: demos
+
+FORMAT_FILES += $(DEMOS_FILES)
+TIDY_FILES += $(DEMOS_FILES)
 
 # ------------------------------------------------------------------------------
 
