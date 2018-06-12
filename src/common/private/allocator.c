@@ -8,10 +8,10 @@
 
 #include <stddef.h>
 
-#define ZR_STATIC
+#define ZR_SPECIFY_INTERNAL_LINKAGE
+#define ZR_DEFINE_IMPLEMENTATION
 #define ZR_ASSERT DKP_ASSERT
 #define ZR_SIZE_TYPE DkSize
-#define ZR_IMPLEMENTATION
 #include <zero/allocator.h>
 
 #ifndef DK_ALLOCATOR_DEBUGGING

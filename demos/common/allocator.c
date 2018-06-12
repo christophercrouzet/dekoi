@@ -6,10 +6,10 @@
 #include <assert.h>
 #include <stddef.h>
 
-#define ZR_STATIC
+#define ZR_SPECIFY_INTERNAL_LINKAGE
+#define ZR_DEFINE_IMPLEMENTATION
 #define ZR_ASSERT assert
 #define ZR_SIZE_TYPE size_t
-#define ZR_IMPLEMENTATION
 #include <zero/allocator.h>
 
 #ifndef NDEBUG

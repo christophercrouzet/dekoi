@@ -10,12 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ZR_STATIC
+#define ZR_SPECIFY_INTERNAL_LINKAGE
+#define ZR_DEFINE_IMPLEMENTATION
 #define ZR_ASSERT assert
-#define ZR_IMPLEMENTATION
 #include <zero/logger.h>
 
-static ZrLogLevel
+static enum ZrLogLevel
 dkdTranslateLogLevelToZero(DkdLogLevel level)
 {
     switch (level) {
