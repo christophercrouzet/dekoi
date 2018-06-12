@@ -2,7 +2,7 @@
 #include "../common/bootstrap.h"
 #include "../common/common.h"
 
-#include <dekoi/graphics/renderer>
+#include <dekoi/graphics/renderer.h>
 
 #include <assert.h>
 #include <stddef.h>

@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#include <dekoi/graphics/renderer>
+#include <dekoi/graphics/renderer.h>
 
 #include <stdint.h>
 

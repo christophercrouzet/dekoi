@@ -3,7 +3,7 @@
 #include "allocator.h"
 #include "common.h"
 
-#include <dekoi/common/logger>
+#include <dekoi/common/logger.h>
 
 #include <assert.h>
 #include <stdarg.h>

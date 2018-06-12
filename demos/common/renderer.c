@@ -6,9 +6,9 @@
 #include "logger.h"
 #include "window.h"
 
-#include <dekoi/common/common>
-#include <dekoi/graphics/graphics>
-#include <dekoi/graphics/renderer>
+#include <dekoi/common/common.h>
+#include <dekoi/graphics/graphics.h>
+#include <dekoi/graphics/renderer.h>
 
 #include <assert.h>
 #include <stddef.h>

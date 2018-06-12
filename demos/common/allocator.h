@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#include <dekoi/common/allocator>
+#include <dekoi/common/allocator.h>
 
 #include <stddef.h>
 
