@@ -1,45 +1,18 @@
-space :=
-space +=
-\t := $(space)$(space)
+PROJECT_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 # ------------------------------------------------------------------------------
 
 ifndef outdir
-OUTDIR := build
+OUT_DIR := build
 else
-OUTDIR := $(outdir)
-endif
-
-ifndef compiler
-COMPILER := c
-else ifneq "$(filter-out c cc,$(compiler))" ""
-$(error the 'compiler' option is not valid)
-else
-COMPILER := $(compiler)
-endif
-
-ifndef env
-ENV := 64
-else ifneq (1,$(words [$(strip $(env))]))
-$(error the 'env' option should contain a single value)
-else ifneq "$(filter-out 16 32 x32 64,$(env))" ""
-$(error the 'env' option is not valid)
-else
-ENV := $(env)
-endif
-
-DEFAULT_ARCH := $(subst _,-,$(shell arch))
-ifndef arch
-ARCH := $(DEFAULT_ARCH)
-else
-ARCH := $(strip $(arch))
+OUT_DIR := $(outdir)
 endif
 
 ifndef config
 CONFIG := release
 else ifneq "$(filter-out debug release all,$(config))" ""
 $(error the 'config' option is not valid)
-else ifeq "$(filter all,$(config))" "all"
+else ifneq "$(filter all,$(config))" ""
 CONFIG := debug release
 else
 CONFIG := $(config)
@@ -49,390 +22,99 @@ endif
 
 PROJECT := dekoi
 
-OBJECTDIR := $(OUTDIR)/obj
-BINARYDIR := $(OUTDIR)/bin
+# ------------------------------------------------------------------------------
 
-CFLAGS := -std=c99
-CXXFLAGS := -std=c++11
-CPPFLAGS := -Iinclude -fPIC \
-            -Wpedantic -Wall -Wextra -Waggregate-return -Wcast-align \
-            -Wcast-qual -Wconversion -Wfloat-equal -Wpointer-arith -Wshadow \
-            -Wstrict-overflow=5 -Wswitch -Wswitch-default -Wundef \
-            -Wunreachable-code -Wwrite-strings
-PREREQFLAGS := -MMD -MP
-LDFLAGS :=
-LDLIBS := -lvulkan
-
-COMPILE.c = $(CC) $(PREREQFLAGS) $(CPPFLAGS) $(CFLAGS) $(TARGET_ARCH) -c
-COMPILE.cc = $(CXX) $(PREREQFLAGS) $(CPPFLAGS) $(CXXFLAGS) $(TARGET_ARCH) -c
-LINK.o = $(CC) $(LDFLAGS) $(TARGET_ARCH)
-
-COMPILE = $(COMPILE.$(COMPILER))
+BUILD_DIRS :=
+MAKE_FILES :=
+FORMAT_FILES :=
+TIDY_FILES :=
 
 # ------------------------------------------------------------------------------
 
-release_CFLAGS :=
-release_CXXFLAGS :=
-release_CPPFLAGS := -DNDEBUG -O3
-release_LDFLAGS :=
-
-debug_CFLAGS :=
-debug_CXXFLAGS :=
-debug_CPPFLAGS := -DDEBUG -O0 -g
-debug_LDFLAGS :=
-
-# ------------------------------------------------------------------------------
-
-# Expand a single local object dependency.
-# $(1): variable to save the output to.
-# $(2): dependency.
-# $(3): configuration, e.g.: debug, release.
-# $(4): architecture, e.g. x86-64, i386.
-define EXPAND_LOCALDEP =
-$(1) := $$($1) $$($(4)_$(3)_$(2)_OBJECTS)
+# $(1): build directory.
+# $(2): rule.
+define dk_forward_rule_impl =
+$(MAKE) -C $(1) -s $(2)
 endef
 
-# Expand a bunch of local object dependencies.
-# $(1): variable to save the output to.
-# $(2): dependencies.
-# $(3): configuration, e.g.: debug, release.
-# $(4): architecture, e.g. x86-64, i386.
-define EXPAND_LOCALDEPS =
-$$(foreach _i,$(2),$$(eval $$(call \
-    EXPAND_LOCALDEP,$(1),$$(_i),$(3),$(4))))
-endef
-
-# Create build rules for object targets.
-# $(1): source files.
-# $(2): source path, e.g.: src, demos/test.
-# $(3): target name.
-# $(4): target path, e.g.: dekoi, demos/test.
-# $(5): prefix for variable names.
-# $(6): configuration, e.g.: debug, release.
-# $(7): architecture, e.g. x86-64, i386.
-define CREATE_OBJECT_RULES =
-$(7)_$(6)_$(5)_OBJECTS := \
-    $$($(1):$(2)/%.c=$$(OBJECTDIR)/$(7)/$(6)/$(4)/$(3)/%.o)
-$(7)_$(6)_$(5)_PREREQS := $$($(7)_$(6)_$(5)_OBJECTS:.o=.d)
-
-$$($(7)_$(6)_$(5)_OBJECTS): CFLAGS += \
-    $$($(5)_CFLAGS) $$($(6)_CFLAGS) $$($(7)_CFLAGS) \
-    $$($(7)_$(6)_CFLAGS)
-$$($(7)_$(6)_$(5)_OBJECTS): CXXFLAGS += \
-    $$($(5)_CXXFLAGS) $$($(6)_CXXFLAGS) $$($(7)_CXXFLAGS) \
-    $$($(7)_$(6)_CXXFLAGS)
-$$($(7)_$(6)_$(5)_OBJECTS): CPPFLAGS += \
-    $$($(5)_CPPFLAGS) $$($(6)_CPPFLAGS) $$($(7)_CPPFLAGS) \
-    $$($(7)_$(6)_CPPFLAGS)
-
-$$($(7)_$(6)_$(5)_OBJECTS): TARGET_ARCH := -march=$(7) -m$$(ENV)
-
-$$($(7)_$(6)_$(5)_OBJECTS): $$(OBJECTDIR)/$(7)/$(6)/$(4)/$(3)/%.o: $(2)/%.c
-	@ mkdir -p $$(@D)
-	@ $$(COMPILE) -o $$@ $$<
-
--include $$($(7)_$(6)_$(5)_PREREQS)
-
-ALL_SOURCES += $$($(7)_$(6)_$(5)_SOURCES)
-ALL_HEADERS += $$($(7)_$(6)_$(5)_HEADERS)
-endef
-
-# Create build rules for binary targets.
-# $(1): source files.
-# $(2): source path, e.g.: src, demos/test.
-# $(3): target name.
-# $(4): target path, e.g.: dekoi, demos.
-# $(5): prefix for variable names.
-# $(6): configuration, e.g.: debug, release.
-# $(7): architecture, e.g. x86-64, i386.
-define CREATE_BINARY_RULES =
-$(7)_$(6)_$(5)_OBJECTS := \
-    $$($(1):$(2)/%.c=$$(OBJECTDIR)/$(7)/$(6)/$(4)/$(3)/%.o)
-$(7)_$(6)_$(5)_TARGET := $$(BINARYDIR)/$(7)/$(6)/$(4)/$(3)
-$(7)_$(6)_$(5)_DEPS :=
-$(7)_$(6)_$(5)_LDLIBS := \
-    $$($(5)_LDLIBS) $$($(6)_$(5)_LDLIBS) $$($(7)_$(5)_LDLIBS)
-
-$$(eval $$(call \
-    EXPAND_LOCALDEPS,$(7)_$(6)_$(5)_DEPS,$$($(5)_LOCALDEPS),$(6),$(7)))
-
-$$(eval $$(call \
-    CREATE_OBJECT_RULES,$(1),$(2),$(3),$(4),$(5),$(6),$(7)))
-
-$$($(7)_$(6)_$(5)_TARGET): LDFLAGS += \
-    $$($(6)_LDFLAGS) $$($(7)_LDFLAGS) $$($(7)_$(6)_LDFLAGS)
-
-$$($(7)_$(6)_$(5)_TARGET): TARGET_ARCH := -march=$(7) -m$$(ENV)
-
-$$($(7)_$(6)_$(5)_TARGET): $$($(7)_$(6)_$(5)_DEPS) $$($(7)_$(6)_$(5)_OBJECTS)
-	@ mkdir -p $$(@D)
-	@ $$(LINK.o) $$^ $$($(7)_$(6)_$(5)_LDLIBS) -o $$@
-endef
-
-# Create architecture specific build rules.
-# $(1): build target, e.g.: BINARY.
-# $(2): source files.
-# $(3): source path, e.g.: src, demos/test.
-# $(4): target name.
-# $(5): target path, e.g.: dekoi, demos.
-# $(6): prefix for variable names.
-# $(7): configuration, e.g.: debug, release.
-# $(8): architecture, e.g. x86-64, i386.
-define CREATE_ARCH_RULES =
-$$(eval $$(call \
-    CREATE_$(1)_RULES,$(2),$(3),$(4),$(5),$(6),$(7),$(8)))
-
-ifeq "$$(strip $(1))" "BINARY"
-$(7)_$(6)_TARGETS += $$($(8)_$(7)_$(6)_TARGET)
-endif
-endef
-
-# Create configuration specific build rules.
-# $(1): build target, e.g.: BINARY.
-# $(2): source files.
-# $(3): source path, e.g.: src, demos/test.
-# $(4): target name.
-# $(5): target path, e.g.: dekoi, demos.
-# $(6): prefix for variable names.
-# $(7): configuration, e.g.: debug, release.
-define CREATE_CONFIG_RULES =
-$$(foreach _i,$$(ARCH),$$(eval $$(call \
-    CREATE_ARCH_RULES,$(1),$(2),$(3),$(4),$(5),$(6),$(7),$$(_i))))
-
-ifeq "$$(strip $(1))" "BINARY"
-$(6)_TARGETS += $$($(7)_$(6)_TARGETS)
-endif
-endef
-
-# Create all rule variations for a build.
-# $(1): build target, e.g.: BINARY.
-# $(2): source files.
-# $(3): source path, e.g.: src, demos/test.
-# $(4): target name.
-# $(5): target path, e.g.: dekoi, demos.
-# $(6): prefix for variable names.
-define CREATE_RULES =
-$$(foreach _i,$$(CONFIG),$$(eval $$(call \
-    CREATE_CONFIG_RULES,$(1),$(2),$(3),$(4),$(5),$(6),$$(_i))))
+# Forward a rule to the generated Makefiles.
+# $(1): rule.
+define dk_forward_rule =
+$(foreach _x,$(BUILD_DIRS), $(call \
+	dk_forward_rule_impl,$(_x),$(1)))
 endef
 
 # ------------------------------------------------------------------------------
 
-ALL_SOURCES :=
-ALL_HEADERS :=
+# Create a Makefile rule.
+# # $(1): configuration.
+define dk_create_makefile =
+$$(OUT_DIR)/$(1)/Makefile:
+	@ mkdir -p $$(OUT_DIR)/$(1)
+	@ cd $$(OUT_DIR)/$(1) && cmake \
+		-DCMAKE_BUILD_TYPE=$(1) \
+		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+		-DCMAKE_INSTALL_PREFIX=$(PROJECT_DIR)/_install \
+		$(PROJECT_DIR)
+
+BUILD_DIRS += $$(OUT_DIR)/$(1)
+MAKE_FILES += $$(OUT_DIR)/$(1)/Makefile
+endef
+
+$(foreach _config,$(CONFIG),$(eval $(call \
+	dk_create_makefile,$(_config))))
 
 # ------------------------------------------------------------------------------
 
-PROJECT_MODULES :=
+modules: $(MAKE_FILES)
+	@ $(call dk_forward_rule,modules)
 
-PROJECT_MODULES_CPPFLAGS := -Ideps/zero/include -D_POSIX_C_SOURCE=1
-
-# Create the rules to build a module.
-# $(1): target name.
-# $(2): source path.
-# $(3): target path.
-# $(4): prefix for variable names.
-# $(5): name for code common to all demos.
-define CREATE_MODULE_RULES =
-$(4)_$(1)_SOURCES := $$(wildcard $(2)/*.c) $$(wildcard $(2)/private/*.c)
-$(4)_$(1)_HEADERS := $$(wildcard $(2)/*.h) $$(wildcard $(2)/private/*.h)
-$(4)_$(1)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
-$(4)_$(1)_LOCALDEPS := $(4)_$(5)
-$(4)_$(1)_LDLIBS := $$(LDLIBS)
-
-$$(eval $$(call \
-    CREATE_RULES,OBJECT,$(4)_$(1)_SOURCES,$(2),$(1),$(3),$(4)_$(1)))
-
-PROJECT_MODULES += $(4)_$(1)
-ALL_SOURCES += $$($(4)_$(1)_SOURCES)
-ALL_HEADERS += $$($(4)_$(1)_HEADERS)
-endef
-
-# Create the rules for all the modules.
-# $(1): source path.
-# $(2): target path.
-# $(3): prefix for variable names.
-# $(4): name for code common to all modules.
-define CREATE_MODULES_RULES =
-$(3)_$(4)_SOURCES := \
-    $$(wildcard $(1)/$(4)/*.c) $$(wildcard $(1)/$(4)/private/*.c)
-$(3)_$(4)_HEADERS := \
-    $$(wildcard $(1)/$(4)/*.h) $$(wildcard $(1)/$(4)/private/*.h)
-$(3)_$(4)_CPPFLAGS := $$(PROJECT_MODULES_CPPFLAGS)
-$$(eval $$(call \
-    CREATE_RULES,OBJECT,$(3)_$(4)_SOURCES,$(1)/$(4),$(4),$(2),$(3)_$(4)))
-
-MODULES := $$(notdir $$(wildcard $(1)/*))
-$$(foreach _i,$$(filter-out $(4),$$(MODULES)),$$(eval $$(call \
-    CREATE_MODULE_RULES,$$(_i),$(1)/$$(_i),$(2),$(3),$(4))))
-
-PROJECT_MODULES += $(3)_$(4)
-ALL_SOURCES += $$($(3)_$(4)_SOURCES)
-ALL_HEADERS += $$($(3)_$(4)_HEADERS)
-endef
-
-$(eval $(call \
-    CREATE_MODULES_RULES,src,$(PROJECT),$(PROJECT),common))
+.PHONY: modules
 
 # ------------------------------------------------------------------------------
 
-DEMOS_TARGETS :=
-DEMOS_PHONYTARGETS :=
-
-DEMOS_CPPFLAGS := -Ideps/zero/include
-
-# Create the rules to build a demo target.
-# $(1): target name.
-# $(2): path.
-# $(3): prefix for variable names.
-# $(4): name for code common to all demos.
-define CREATE_DEMO_RULES =
-$(3)_$(1)_SOURCES := \
-    $$(wildcard $(2)/$(1)/*.c) $$(wildcard $(2)/$(1)/private/*.c)
-$(3)_$(1)_HEADERS := \
-    $$(wildcard $(2)/$(1)/*.h) $$(wildcard $(2)/$(1)/private/*.h)
-$(3)_$(1)_CPPFLAGS := $$(DEMOS_CPPFLAGS)
-$(3)_$(1)_LOCALDEPS := $$(PROJECT_MODULES) $(3)_$(4)
-$(3)_$(1)_LDLIBS := $$(LDLIBS) -lglfw -lrt -lm -ldl
-
-$$(eval $$(call \
-    CREATE_RULES,BINARY,$(3)_$(1)_SOURCES,$(2)/$(1),$(1),$(2),$(3)_$(1)))
-
-$(3)-$(1): $$($(3)_$(1)_TARGETS)
-
-.PHONY: $(3)-$(1)
-
-DEMOS_TARGETS += $$($(3)_$(1)_TARGETS)
-DEMOS_PHONYTARGETS += $(3)-$(1)
-ALL_SOURCES += $$($(3)_$(1)_SOURCES)
-ALL_HEADERS += $$($(3)_$(1)_HEADERS)
-endef
-
-# Create the rules for all the demo targets.
-# $(1): path.
-# $(2): prefix for variable names.
-# $(3): name for code common to all demos.
-define CREATE_DEMOS_RULES =
-$(2)_$(3)_SOURCES := \
-    $$(wildcard $(1)/$(3)/*.c) $$(wildcard $(1)/$(3)/private/*.c)
-$(2)_$(3)_HEADERS := \
-    $$(wildcard $(1)/$(3)/*.h) $$(wildcard $(1)/$(3)/private/*.h)
-$(2)_$(3)_CPPFLAGS := $$(DEMOS_CPPFLAGS)
-$$(eval $$(call \
-    CREATE_RULES,OBJECT,$(2)_$(3)_SOURCES,$(1)/$(3),$(3),$(1),$(2)_$(3)))
-
-DEMOS := $$(notdir $$(wildcard $(1)/*))
-$$(foreach _i,$$(filter-out $(3),$$(DEMOS)),$$(eval $$(call \
-    CREATE_DEMO_RULES,$$(_i),$(1),$(2),$(3))))
-
-demos: $$(DEMOS_PHONYTARGETS)
+demos: $(MAKE_FILES)
+	@ $(call dk_forward_rule,demos)
 
 .PHONY: demos
 
-ALL_SOURCES += $$($(2)_$(3)_SOURCES)
-ALL_HEADERS += $$($(2)_$(3)_HEADERS)
-endef
-
-$(eval $(call \
-    CREATE_DEMOS_RULES,demos,demo,common))
-
 # ------------------------------------------------------------------------------
 
-SHADER_DIR := shaders
-SHADER_SOURCES := $(wildcard $(SHADER_DIR)/*.vert) \
-                  $(wildcard $(SHADER_DIR)/*.tesc) \
-                  $(wildcard $(SHADER_DIR)/*.tese) \
-                  $(wildcard $(SHADER_DIR)/*.geom) \
-                  $(wildcard $(SHADER_DIR)/*.frag) \
-                  $(wildcard $(SHADER_DIR)/*.comp) \
-
-SHADER_OBJECTS := $(SHADER_SOURCES:%=%.spv)
-
-$(SHADER_OBJECTS): %.spv: %
-	@ glslangValidator -H -o $@ -s $< > $@.txt
-
-shaders: $(SHADER_OBJECTS)
-
-.PHONY: shaders
-
-# ------------------------------------------------------------------------------
-
-CLANGVERSION := $(shell clang --version \
-                        | grep version \
-                        | sed 's/^.*version \([0-9]*\.[0-9]*\.[0-9]*\).*$$/\1/')
-CLANGDIR := $(shell dirname $(shell which clang))
-CLANGINCLUDE := $(CLANGDIR)/../lib/clang/$(CLANGVERSION)/include
+CLANG_VERSION := $(shell \
+	clang --version \
+	| grep version \
+	| sed 's/^.*version \([0-9]*\.[0-9]*\.[0-9]*\).*$$/\1/')
+CLANG_DIR := $(shell dirname $(shell which clang))
+CLANG_INCLUDE_DIR := $(CLANG_DIR)/../lib/clang/$(CLANG_VERSION)/include
 
 format:
-	@ clang-format -i -style=file $(ALL_SOURCES) $(ALL_HEADERS)
+	@ clang-format -i -style=file $(FORMAT_FILES)
 
-tidy:
-	clang-tidy -fix \
-        $(ALL_SOURCES) $(ALL_HEADERS) \
-        -- $(CPPFLAGS) $(CFLAGS) -I$(CLANGINCLUDE)
+tidy: $(firstword $(MAKE_FILES))
+	@ clang-tidy $(TIDY_FILES) \
+		-p $(firstword $(BUILD_DIRS))/compile_commands.json \
+		-- -I$(CLANG_INCLUDE_DIR)
 
 .PHONY: format tidy
 
 # ------------------------------------------------------------------------------
 
+install: $(MAKE_FILES)
+	@ $(call dk_forward_rule,install)
+
+.PHONY: install
+
+# ------------------------------------------------------------------------------
+
 clean:
-	@- rm -rf $(OUTDIR)
-	@- rm -f $(SHADER_OBJECTS:%=%.txt)
+	@- rm -rf $(OUT_DIR)
 
 .PHONY: clean
 
 # ------------------------------------------------------------------------------
 
-all: demos shaders
+all: $(MAKE_FILES)
 
 .PHONY: all
 
 .DEFAULT_GOAL := all
-
-# ------------------------------------------------------------------------------
-
-HELP := "Usage:\n \
-$(\t)make [options] [target] ...\n \
-\n \
-Options:\n \
-\n \
-$(\t)outdir=<path>\n \
-$(\t)$(\t)Output directory for the target and intermediary files.\n \
-$(\t)$(\t)[default: build]\n \
-\n \
-$(\t)compiler=<type>\n \
-$(\t)$(\t)Compiler to use, either 'c' or 'cc'.\n \
-$(\t)$(\t)[default: c]\n \
-\n \
-$(\t)env=<size>\n \
-$(\t)$(\t)For x86-64 processors, this option forces generating code to \n \
-$(\t)$(\t)a given target size. Either '16', '32', 'x32', or '64'.\n \
-$(\t)$(\t)[default: 64]\n \
-\n \
-$(\t)arch=<type>\n \
-$(\t)$(\t)Target CPU architecture, e.g.: 'x86-64', 'i386'.\n \
-$(\t)$(\t)[default: $(DEFAULT_ARCH)]\n \
-\n \
-$(\t)config=<type>\n \
-$(\t)$(\t)Build configuration, either 'debug', 'release', or 'all'.\n \
-$(\t)$(\t)[default: release]\n \
-\n \
-$(\t)help\n \
-$(\t)$(\t)Show this screen.\n \
-\n \
-$(\t)Other options are provided by make, see 'make --help.'\n \
-\n \
-Targets:\n \
-\n \
-$(\t)all (default)\n \
-$(\t)clean\n \
-$(\t)demos\n \
-$(\t)$(subst $(space),\n$(\t),$(sort $(strip $(DEMOS_PHONYTARGETS))))\n \
-$(\t)format\n \
-$(\t)shaders\n \
-$(\t)tidy"
-
-help:
-	@ echo $(subst \n$(space),\n,$(HELP))
-
-.PHONY: help
