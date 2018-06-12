@@ -15,9 +15,9 @@ struct DkdWindowCreateInfo {
 };
 
 int
-dkdCreateWindow(struct DkdApplication *pApplication,
-                const struct DkdWindowCreateInfo *pCreateInfo,
-                struct DkdWindow **ppWindow);
+dkdCreateWindow(struct DkdWindow **ppWindow,
+                struct DkdApplication *pApplication,
+                const struct DkdWindowCreateInfo *pCreateInfo);
 
 void
 dkdDestroyWindow(struct DkdApplication *pApplication,
@@ -25,14 +25,14 @@ dkdDestroyWindow(struct DkdApplication *pApplication,
 
 void
 dkdGetDekoiWindowSystemIntegrator(
-    struct DkdWindow *pWindow,
-    const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator);
+    const struct DkWindowSystemIntegrationCallbacks **ppWindowSystemIntegrator,
+    struct DkdWindow *pWindow);
 
 int
 dkdBindWindowRenderer(struct DkdWindow *pWindow, struct DkdRenderer *pRenderer);
 
 void
-dkdGetWindowCloseFlag(const struct DkdWindow *pWindow, int *pCloseFlag);
+dkdGetWindowCloseFlag(int *pCloseFlag, const struct DkdWindow *pWindow);
 
 int
 dkdPollWindowEvents(const struct DkdWindow *pWindow);

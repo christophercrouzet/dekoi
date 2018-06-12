@@ -18,8 +18,8 @@ struct DkdBootstrapHandles {
 };
 
 int
-dkdSetupBootstrap(const struct DkdBootstrapCreateInfos *pCreateInfos,
-                  struct DkdBootstrapHandles *pHandles);
+dkdSetupBootstrap(struct DkdBootstrapHandles *pHandles,
+                  const struct DkdBootstrapCreateInfos *pCreateInfos);
 
 void
 dkdCleanupBootstrap(struct DkdBootstrapHandles *pHandles);

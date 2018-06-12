@@ -55,10 +55,10 @@ dkdGetDefaultAllocator(const struct DkdAllocationCallbacks **ppAllocator);
 
 int
 dkdCreateDekoiAllocationCallbacks(
+    struct DkAllocationCallbacks **ppDekoiAllocator,
     struct DkdDekoiAllocationCallbacksData *pData,
     const struct DkdAllocationCallbacks *pAllocator,
-    const struct DkdLoggingCallbacks *pLogger,
-    struct DkAllocationCallbacks **ppDekoiAllocator);
+    const struct DkdLoggingCallbacks *pLogger);
 
 void
 dkdDestroyDekoiAllocationCallbacks(

@@ -23,8 +23,8 @@ struct DkdApplicationCreateInfo {
 };
 
 int
-dkdCreateApplication(const struct DkdApplicationCreateInfo *pCreateInfo,
-                     struct DkdApplication **ppApplication);
+dkdCreateApplication(struct DkdApplication **ppApplication,
+                     const struct DkdApplicationCreateInfo *pCreateInfo);
 
 void
 dkdDestroyApplication(struct DkdApplication *pApplication);

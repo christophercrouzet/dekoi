@@ -31,9 +31,9 @@ struct DkdApplicationCallbacksData {
 };
 
 int
-dkdSetup(const struct DkdAllocationCallbacks *pAllocator,
-         const struct DkdApplicationCallbacks *pApplicationCallbacks,
-         struct DkdBootstrapHandles *pHandles)
+dkdSetup(struct DkdBootstrapHandles *pHandles,
+         const struct DkdAllocationCallbacks *pAllocator,
+         const struct DkdApplicationCallbacks *pApplicationCallbacks)
 {
     struct DkdBootstrapCreateInfos createInfos;
 
@@ -69,7 +69,7 @@ dkdSetup(const struct DkdAllocationCallbacks *pAllocator,
     createInfos.renderer.instanceCount = instanceCount;
     createInfos.renderer.pAllocator = pAllocator;
 
-    return dkdSetupBootstrap(&createInfos, pHandles);
+    return dkdSetupBootstrap(pHandles, &createInfos);
 }
 
 void
@@ -118,7 +118,7 @@ main(void)
     applicationCallbacks.pData = &applicationCallbacksData;
     applicationCallbacks.pfnRun = dkdApplicationRunCallback;
 
-    if (dkdSetup(pAllocator, &applicationCallbacks, &handles)) {
+    if (dkdSetup(&handles, pAllocator, &applicationCallbacks)) {
         out = 1;
         goto exit;
     }

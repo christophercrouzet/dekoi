@@ -31,18 +31,18 @@ dkdOpenFile(struct DkdFile *pFile,
 }
 
 int
-dkdGetFileSize(struct DkdFile *pFile,
-               const struct DkdLoggingCallbacks *pLogger,
-               size_t *pSize)
+dkdGetFileSize(size_t *pSize,
+               struct DkdFile *pFile,
+               const struct DkdLoggingCallbacks *pLogger)
 {
     int out;
     fpos_t position;
     long size;
 
+    assert(pSize != NULL);
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
     assert(pLogger != NULL);
-    assert(pSize != NULL);
 
     out = 0;
 
@@ -91,15 +91,15 @@ exit:
 }
 
 int
-dkdReadFile(struct DkdFile *pFile,
+dkdReadFile(void *pBuffer,
+            struct DkdFile *pFile,
             size_t size,
-            const struct DkdLoggingCallbacks *pLogger,
-            void *pBuffer)
+            const struct DkdLoggingCallbacks *pLogger)
 {
+    assert(pBuffer != NULL);
     assert(pFile != NULL);
     assert(pFile->pHandle != NULL);
     assert(pLogger != NULL);
-    assert(pBuffer != NULL);
 
     if (fread(pBuffer, 1, size, pFile->pHandle) != size) {
         DKD_LOG_ERROR(pLogger, "could not read the file '%s'\n", pFile->pPath);

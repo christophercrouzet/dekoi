@@ -94,7 +94,7 @@ dkdSetup(struct DkdBootstrapHandles *pHandles)
     createInfos.renderer.vertexCount = vertexCount;
     createInfos.renderer.instanceCount = instanceCount;
 
-    return dkdSetupBootstrap(&createInfos, pHandles);
+    return dkdSetupBootstrap(pHandles, &createInfos);
 }
 
 void

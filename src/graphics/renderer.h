@@ -37,20 +37,20 @@ struct DkLoggingCallbacks;
 struct DkRenderer;
 
 typedef enum DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
-    void *pData,
-    const struct DkLoggingCallbacks *pLogger,
     DkUint32 *pExtensionCount,
-    const char ***pppExtensionNames);
+    const char ***pppExtensionNames,
+    void *pData,
+    const struct DkLoggingCallbacks *pLogger);
 typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(
     void *pData,
     const struct DkLoggingCallbacks *pLogger,
     const char **ppExtensionNames);
 typedef enum DkResult (*DkPfnCreateSurfaceCallback)(
+    VkSurfaceKHR *pSurfaceHandle,
     void *pData,
     VkInstance instanceHandle,
     const VkAllocationCallbacks *pBackEndAllocator,
-    const struct DkLoggingCallbacks *pLogger,
-    VkSurfaceKHR *pSurfaceHandle);
+    const struct DkLoggingCallbacks *pLogger);
 
 struct DkWindowSystemIntegrationCallbacks {
     void *pData;
@@ -110,8 +110,8 @@ struct DkRendererCreateInfo {
 };
 
 enum DkResult
-dkCreateRenderer(const struct DkRendererCreateInfo *pCreateInfo,
-                 struct DkRenderer **ppRenderer);
+dkCreateRenderer(struct DkRenderer **ppRenderer,
+                 const struct DkRendererCreateInfo *pCreateInfo);
 
 void
 dkDestroyRenderer(struct DkRenderer *pRenderer);

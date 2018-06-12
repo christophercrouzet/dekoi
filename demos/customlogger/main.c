@@ -18,8 +18,8 @@ static const uint32_t vertexCount = 0;
 static const uint32_t instanceCount = 0;
 
 int
-dkdSetup(const struct DkdLoggingCallbacks *pLogger,
-         struct DkdBootstrapHandles *pHandles)
+dkdSetup(struct DkdBootstrapHandles *pHandles,
+         const struct DkdLoggingCallbacks *pLogger)
 {
     struct DkdBootstrapCreateInfos createInfos;
 
@@ -52,7 +52,7 @@ dkdSetup(const struct DkdLoggingCallbacks *pLogger,
     createInfos.renderer.instanceCount = instanceCount;
     createInfos.renderer.pLogger = pLogger;
 
-    return dkdSetupBootstrap(&createInfos, pHandles);
+    return dkdSetupBootstrap(pHandles, &createInfos);
 }
 
 void
@@ -74,7 +74,7 @@ main(void)
 
     dkdGetCustomLogger(&pLogger);
 
-    if (dkdSetup(pLogger, &handles)) {
+    if (dkdSetup(&handles, pLogger)) {
         out = 1;
         goto exit;
     }

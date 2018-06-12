@@ -138,15 +138,15 @@ dkdGetDefaultLogger(const struct DkdLoggingCallbacks **ppLogger)
 }
 
 int
-dkdCreateDekoiLoggingCallbacks(struct DkdDekoiLoggingCallbacksData *pData,
+dkdCreateDekoiLoggingCallbacks(struct DkLoggingCallbacks **ppDekoiLogger,
+                               struct DkdDekoiLoggingCallbacksData *pData,
                                const struct DkdAllocationCallbacks *pAllocator,
-                               const struct DkdLoggingCallbacks *pLogger,
-                               struct DkLoggingCallbacks **ppDekoiLogger)
+                               const struct DkdLoggingCallbacks *pLogger)
 {
+    assert(ppDekoiLogger != NULL);
     assert(pData != NULL);
     assert(pAllocator != NULL);
     assert(pLogger != NULL);
-    assert(ppDekoiLogger != NULL);
 
     *ppDekoiLogger = (struct DkLoggingCallbacks *)DKD_ALLOCATE(
         pAllocator, sizeof **ppDekoiLogger);

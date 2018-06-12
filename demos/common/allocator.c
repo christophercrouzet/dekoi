@@ -185,15 +185,15 @@ dkdGetDefaultAllocator(const struct DkdAllocationCallbacks **ppAllocator)
 
 int
 dkdCreateDekoiAllocationCallbacks(
+    struct DkAllocationCallbacks **ppDekoiAllocator,
     struct DkdDekoiAllocationCallbacksData *pData,
     const struct DkdAllocationCallbacks *pAllocator,
-    const struct DkdLoggingCallbacks *pLogger,
-    struct DkAllocationCallbacks **ppDekoiAllocator)
+    const struct DkdLoggingCallbacks *pLogger)
 {
+    assert(ppDekoiAllocator != NULL);
     assert(pData != NULL);
     assert(pAllocator != NULL);
     assert(pLogger != NULL);
-    assert(ppDekoiAllocator != NULL);
 
     *ppDekoiAllocator = (struct DkAllocationCallbacks *)DKD_ALLOCATE(
         pAllocator, sizeof **ppDekoiAllocator);

@@ -20,14 +20,14 @@ struct DkdApplication {
 };
 
 int
-dkdCreateApplication(const struct DkdApplicationCreateInfo *pCreateInfo,
-                     struct DkdApplication **ppApplication)
+dkdCreateApplication(struct DkdApplication **ppApplication,
+                     const struct DkdApplicationCreateInfo *pCreateInfo)
 {
     const struct DkdLoggingCallbacks *pLogger;
     const struct DkdAllocationCallbacks *pAllocator;
 
-    assert(pCreateInfo != NULL);
     assert(ppApplication != NULL);
+    assert(pCreateInfo != NULL);
 
     if (pCreateInfo->pLogger == NULL) {
         dkdGetDefaultLogger(&pLogger);
@@ -83,7 +83,7 @@ dkdRunApplication(struct DkdApplication *pApplication)
 
     while (1) {
         dkdPollWindowEvents(pApplication->pWindow);
-        dkdGetWindowCloseFlag(pApplication->pWindow, &pApplication->stopFlag);
+        dkdGetWindowCloseFlag(&pApplication->stopFlag, pApplication->pWindow);
         if (pApplication->stopFlag) {
             break;
         }

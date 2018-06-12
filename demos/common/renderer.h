@@ -39,9 +39,9 @@ struct DkdRendererCreateInfo {
 };
 
 int
-dkdCreateRenderer(struct DkdWindow *pWindow,
-                  const struct DkdRendererCreateInfo *pCreateInfo,
-                  struct DkdRenderer **ppRenderer);
+dkdCreateRenderer(struct DkdRenderer **ppRenderer,
+                  struct DkdWindow *pWindow,
+                  const struct DkdRendererCreateInfo *pCreateInfo);
 
 void
 dkdDestroyRenderer(struct DkdWindow *pWindow, struct DkdRenderer *pRenderer);

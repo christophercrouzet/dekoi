@@ -22,20 +22,20 @@ struct DkdRenderer {
 };
 
 static int
-dkdCreateShaderCode(const char *pFilePath,
+dkdCreateShaderCode(DkSize *pShaderCodeSize,
+                    DkUint32 **ppShaderCode,
+                    const char *pFilePath,
                     const struct DkdAllocationCallbacks *pAllocator,
-                    const struct DkdLoggingCallbacks *pLogger,
-                    DkSize *pShaderCodeSize,
-                    DkUint32 **ppShaderCode)
+                    const struct DkdLoggingCallbacks *pLogger)
 {
     int out;
     struct DkdFile file;
 
+    assert(pShaderCodeSize != NULL);
+    assert(ppShaderCode != NULL);
     assert(pFilePath != NULL);
     assert(pAllocator != NULL);
     assert(pLogger != NULL);
-    assert(pShaderCodeSize != NULL);
-    assert(ppShaderCode != NULL);
 
     out = 0;
 
@@ -44,7 +44,7 @@ dkdCreateShaderCode(const char *pFilePath,
         goto exit;
     }
 
-    if (dkdGetFileSize(&file, pLogger, (size_t *)pShaderCodeSize)) {
+    if (dkdGetFileSize((size_t *)pShaderCodeSize, &file, pLogger)) {
         out = 1;
         goto file_closing;
     }
@@ -60,7 +60,7 @@ dkdCreateShaderCode(const char *pFilePath,
         goto file_closing;
     }
 
-    if (dkdReadFile(&file, *pShaderCodeSize, pLogger, (void *)*ppShaderCode)) {
+    if (dkdReadFile((void *)*ppShaderCode, &file, *pShaderCodeSize, pLogger)) {
         out = 1;
         goto code_undo;
     }
@@ -91,9 +91,9 @@ dkdDestroyShaderCode(DkUint32 *pShaderCode,
 }
 
 int
-dkdCreateRenderer(struct DkdWindow *pWindow,
-                  const struct DkdRendererCreateInfo *pCreateInfo,
-                  struct DkdRenderer **ppRenderer)
+dkdCreateRenderer(struct DkdRenderer **ppRenderer,
+                  struct DkdWindow *pWindow,
+                  const struct DkdRendererCreateInfo *pCreateInfo)
 {
     int out;
     unsigned int i;
@@ -103,9 +103,9 @@ dkdCreateRenderer(struct DkdWindow *pWindow,
     struct DkShaderCreateInfo *pShaderInfos;
     struct DkRendererCreateInfo backEndInfo;
 
+    assert(ppRenderer != NULL);
     assert(pWindow != NULL);
     assert(pCreateInfo != NULL);
-    assert(ppRenderer != NULL);
 
     if (pCreateInfo->pLogger == NULL) {
         dkdGetDefaultLogger(&pLogger);
@@ -121,7 +121,7 @@ dkdCreateRenderer(struct DkdWindow *pWindow,
 
     out = 0;
 
-    dkdGetDekoiWindowSystemIntegrator(pWindow, &pWindowSystemIntegrator);
+    dkdGetDekoiWindowSystemIntegrator(&pWindowSystemIntegrator, pWindow);
 
     if (pCreateInfo->shaderCount > 0) {
         pShaderInfos = (struct DkShaderCreateInfo *)DKD_ALLOCATE(
@@ -140,11 +140,11 @@ dkdCreateRenderer(struct DkdWindow *pWindow,
             DkSize codeSize;
             DkUint32 *pCode;
 
-            if (dkdCreateShaderCode(pCreateInfo->pShaderInfos[i].pFilePath,
+            if (dkdCreateShaderCode(&codeSize,
+                                    &pCode,
+                                    pCreateInfo->pShaderInfos[i].pFilePath,
                                     pAllocator,
-                                    pLogger,
-                                    &codeSize,
-                                    &pCode)) {
+                                    pLogger)) {
                 out = 1;
                 goto shader_infos_cleanup;
             }
@@ -172,18 +172,18 @@ dkdCreateRenderer(struct DkdWindow *pWindow,
     (*ppRenderer)->dekoiLoggerData.pLogger = pLogger;
     (*ppRenderer)->dekoiAllocatorData.pAllocator = pAllocator;
 
-    if (dkdCreateDekoiLoggingCallbacks(&(*ppRenderer)->dekoiLoggerData,
+    if (dkdCreateDekoiLoggingCallbacks(&(*ppRenderer)->pDekoiLogger,
+                                       &(*ppRenderer)->dekoiLoggerData,
                                        (*ppRenderer)->pAllocator,
-                                       (*ppRenderer)->pLogger,
-                                       &(*ppRenderer)->pDekoiLogger)) {
+                                       (*ppRenderer)->pLogger)) {
         out = 1;
         goto renderer_undo;
     }
 
-    if (dkdCreateDekoiAllocationCallbacks(&(*ppRenderer)->dekoiAllocatorData,
+    if (dkdCreateDekoiAllocationCallbacks(&(*ppRenderer)->pDekoiAllocator,
+                                          &(*ppRenderer)->dekoiAllocatorData,
                                           (*ppRenderer)->pAllocator,
-                                          (*ppRenderer)->pLogger,
-                                          &(*ppRenderer)->pDekoiAllocator)) {
+                                          (*ppRenderer)->pLogger)) {
         out = 1;
         goto dekoi_logger_undo;
     }
@@ -222,7 +222,7 @@ dkdCreateRenderer(struct DkdWindow *pWindow,
                                  ? NULL
                                  : (*ppRenderer)->pDekoiAllocator;
 
-    if (dkCreateRenderer(&backEndInfo, &(*ppRenderer)->pHandle) != DK_SUCCESS) {
+    if (dkCreateRenderer(&(*ppRenderer)->pHandle, &backEndInfo) != DK_SUCCESS) {
         out = 1;
         goto dekoi_allocator_undo;
     }

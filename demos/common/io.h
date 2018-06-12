@@ -18,15 +18,15 @@ dkdOpenFile(struct DkdFile *pFile,
             const struct DkdLoggingCallbacks *pLogger);
 
 int
-dkdGetFileSize(struct DkdFile *pFile,
-               const struct DkdLoggingCallbacks *pLogger,
-               size_t *pSize);
+dkdGetFileSize(size_t *pSize,
+               struct DkdFile *pFile,
+               const struct DkdLoggingCallbacks *pLogger);
 
 int
-dkdReadFile(struct DkdFile *pFile,
+dkdReadFile(void *pBuffer,
+            struct DkdFile *pFile,
             size_t size,
-            const struct DkdLoggingCallbacks *pLogger,
-            void *pBuffer);
+            const struct DkdLoggingCallbacks *pLogger);
 
 int
 dkdCloseFile(struct DkdFile *pFile, const struct DkdLoggingCallbacks *pLogger);

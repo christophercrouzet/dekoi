@@ -9,31 +9,31 @@
 #include <stddef.h>
 
 int
-dkdSetupBootstrap(const struct DkdBootstrapCreateInfos *pCreateInfos,
-                  struct DkdBootstrapHandles *pHandles)
+dkdSetupBootstrap(struct DkdBootstrapHandles *pHandles,
+                  const struct DkdBootstrapCreateInfos *pCreateInfos)
 {
     int out;
 
-    assert(pCreateInfos != NULL);
     assert(pHandles != NULL);
+    assert(pCreateInfos != NULL);
 
     out = 0;
 
-    if (dkdCreateApplication(&pCreateInfos->application,
-                             &pHandles->pApplication)) {
+    if (dkdCreateApplication(&pHandles->pApplication,
+                             &pCreateInfos->application)) {
         out = 1;
         goto exit;
     }
 
-    if (dkdCreateWindow(pHandles->pApplication,
-                        &pCreateInfos->window,
-                        &pHandles->pWindow)) {
+    if (dkdCreateWindow(&pHandles->pWindow,
+                        pHandles->pApplication,
+                        &pCreateInfos->window)) {
         out = 1;
         goto application_undo;
     }
 
     if (dkdCreateRenderer(
-            pHandles->pWindow, &pCreateInfos->renderer, &pHandles->pRenderer)) {
+            &pHandles->pRenderer, pHandles->pWindow, &pCreateInfos->renderer)) {
         out = 1;
         goto window_undo;
     }

@@ -75,10 +75,10 @@ void
 dkdGetDefaultLogger(const struct DkdLoggingCallbacks **ppLogger);
 
 int
-dkdCreateDekoiLoggingCallbacks(struct DkdDekoiLoggingCallbacksData *pData,
+dkdCreateDekoiLoggingCallbacks(struct DkLoggingCallbacks **ppDekoiLogger,
+                               struct DkdDekoiLoggingCallbacksData *pData,
                                const struct DkdAllocationCallbacks *pAllocator,
-                               const struct DkdLoggingCallbacks *pLogger,
-                               struct DkLoggingCallbacks **ppDekoiLogger);
+                               const struct DkdLoggingCallbacks *pLogger);
 
 void
 dkdDestroyDekoiLoggingCallbacks(
