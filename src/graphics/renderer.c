@@ -439,11 +439,16 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
     allocateInfo.pNext = NULL;
     allocateInfo.allocationSize = memoryRequirements.size;
 
-    dkpPickMemoryTypeIndex(&allocateInfo.memoryTypeIndex,
-                           pDevice,
-                           memoryRequirements.memoryTypeBits,
-                           memoryProperties,
-                           pLogger);
+    if (dkpPickMemoryTypeIndex(&allocateInfo.memoryTypeIndex,
+                               pDevice,
+                               memoryRequirements.memoryTypeBits,
+                               memoryProperties,
+                               pLogger)
+        != DK_SUCCESS) {
+        DKP_LOG_ERROR(pLogger, "failed to pick a memory type index\n");
+        out = DK_ERROR;
+        goto buffer_undo;
+    }
 
     if (vkAllocateMemory(pDevice->logicalHandle,
                          &allocateInfo,
