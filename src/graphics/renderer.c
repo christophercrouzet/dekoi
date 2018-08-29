@@ -2207,7 +2207,6 @@ dkpCreateShaders(struct DkpShader **ppShaders,
             goto shaders_undo;
         }
 
-        DKP_ASSERT(dkpCheckShaderStage(pShaderInfos[i].stage));
         (*ppShaders)[i].stage
             = dkpTranslateShaderStageToBackEnd(pShaderInfos[i].stage);
         (*ppShaders)[i].pEntryPointName = pShaderInfos[i].pEntryPointName;
