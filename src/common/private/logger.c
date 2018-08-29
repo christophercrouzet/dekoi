@@ -14,21 +14,25 @@
 #define ZR_ASSERT DKP_ASSERT
 #include <zero/logger.h>
 
-static enum ZrLogLevel
-dkpTranslateLogLevelToZero(enum DkLogLevel level)
+static void
+dkpTranslateLogLevelToZero(enum ZrLogLevel *pZeroLevel, enum DkLogLevel level)
 {
     switch (level) {
         case DK_LOG_LEVEL_DEBUG:
-            return ZR_LOG_LEVEL_DEBUG;
+            *pZeroLevel = ZR_LOG_LEVEL_DEBUG;
+            return;
         case DK_LOG_LEVEL_INFO:
-            return ZR_LOG_LEVEL_INFO;
+            *pZeroLevel = ZR_LOG_LEVEL_INFO;
+            return;
         case DK_LOG_LEVEL_WARNING:
-            return ZR_LOG_LEVEL_WARNING;
+            *pZeroLevel = ZR_LOG_LEVEL_WARNING;
+            return;
         case DK_LOG_LEVEL_ERROR:
-            return ZR_LOG_LEVEL_ERROR;
+            *pZeroLevel = ZR_LOG_LEVEL_ERROR;
+            return;
         default:
             DKP_ASSERT(0);
-            return ZR_LOG_LEVEL_DEBUG;
+            *pZeroLevel = ZR_LOG_LEVEL_DEBUG;
     };
 }
 
@@ -40,12 +44,15 @@ dkpLogVaList(void *pData,
              const char *pFormat,
              va_list args)
 {
+    enum ZrLogLevel zeroLevel;
+
     DKP_UNUSED(pData);
 
     DKP_ASSERT(pFile != NULL);
     DKP_ASSERT(pFormat != NULL);
 
-    zrLogVaList(dkpTranslateLogLevelToZero(level), pFile, line, pFormat, args);
+    dkpTranslateLogLevelToZero(&zeroLevel, level);
+    zrLogVaList(zeroLevel, pFile, line, pFormat, args);
 }
 
 static void

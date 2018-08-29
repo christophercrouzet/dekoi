@@ -114,7 +114,7 @@ enum DkResult {
     DK_ERROR_NOT_AVAILABLE = -4
 };
 
-const char *
-dkGetResultString(enum DkResult result);
+void
+dkGetResultString(const char **ppString, enum DkResult result);
 
 #endif /* DEKOI_COMMON_COMMON_H */

@@ -15,21 +15,25 @@
 #define ZR_ASSERT assert
 #include <zero/logger.h>
 
-static enum ZrLogLevel
-dkdTranslateLogLevelToZero(enum DkdLogLevel level)
+static void
+dkdTranslateLogLevelToZero(enum ZrLogLevel *pDekoiLevel, enum DkdLogLevel level)
 {
     switch (level) {
         case DKD_LOG_LEVEL_DEBUG:
-            return ZR_LOG_LEVEL_DEBUG;
+            *pDekoiLevel = ZR_LOG_LEVEL_DEBUG;
+            return;
         case DKD_LOG_LEVEL_INFO:
-            return ZR_LOG_LEVEL_INFO;
+            *pDekoiLevel = ZR_LOG_LEVEL_INFO;
+            return;
         case DKD_LOG_LEVEL_WARNING:
-            return ZR_LOG_LEVEL_WARNING;
+            *pDekoiLevel = ZR_LOG_LEVEL_WARNING;
+            return;
         case DKD_LOG_LEVEL_ERROR:
-            return ZR_LOG_LEVEL_ERROR;
+            *pDekoiLevel = ZR_LOG_LEVEL_ERROR;
+            return;
         default:
             assert(0);
-            return ZR_LOG_LEVEL_DEBUG;
+            *pDekoiLevel = ZR_LOG_LEVEL_DEBUG;
     };
 }
 
@@ -41,12 +45,15 @@ dkdLogVaList(void *pData,
              const char *pFormat,
              va_list args)
 {
+    enum ZrLogLevel zeroLevel;
+
     DKD_UNUSED(pData);
 
     assert(pFile != NULL);
     assert(pFormat != NULL);
 
-    zrLogVaList(dkdTranslateLogLevelToZero(level), pFile, line, pFormat, args);
+    dkdTranslateLogLevelToZero(&zeroLevel, level);
+    zrLogVaList(zeroLevel, pFile, line, pFormat, args);
 }
 
 static void
@@ -70,40 +77,48 @@ dkdLog(void *pData,
 static const struct DkdLoggingCallbacks dkdDefaultLogger
     = {NULL, dkdLog, dkdLogVaList};
 
-static enum DkdLogLevel
-dkdTranslateLogLevelFromDekoi(enum DkLogLevel level)
+static void
+dkdTranslateLogLevelFromDekoi(enum DkdLogLevel *pLevel,
+                              enum DkLogLevel dekoiLevel)
 {
-    switch (level) {
+    switch (dekoiLevel) {
         case DK_LOG_LEVEL_DEBUG:
-            return DKD_LOG_LEVEL_DEBUG;
+            *pLevel = DKD_LOG_LEVEL_DEBUG;
+            return;
         case DK_LOG_LEVEL_INFO:
-            return DKD_LOG_LEVEL_INFO;
+            *pLevel = DKD_LOG_LEVEL_INFO;
+            return;
         case DK_LOG_LEVEL_WARNING:
-            return DKD_LOG_LEVEL_WARNING;
+            *pLevel = DKD_LOG_LEVEL_WARNING;
+            return;
         case DK_LOG_LEVEL_ERROR:
-            return DKD_LOG_LEVEL_ERROR;
+            *pLevel = DKD_LOG_LEVEL_ERROR;
+            return;
         default:
             assert(0);
-            return DKD_LOG_LEVEL_DEBUG;
+            *pLevel = DKD_LOG_LEVEL_DEBUG;
     };
 }
 
 static void
 dkdHandleDekoiLoggingVaList(void *pData,
-                            enum DkLogLevel level,
+                            enum DkLogLevel dekoiLevel,
                             const char *pFile,
                             int line,
                             const char *pFormat,
                             va_list args)
 {
+    enum DkdLogLevel level;
+
     assert(pData != NULL);
     assert(pFile != NULL);
     assert(pFormat != NULL);
 
+    dkdTranslateLogLevelFromDekoi(&level, dekoiLevel);
     ((struct DkdDekoiLoggingCallbacksData *)pData)
         ->pLogger->pfnLogVaList(
             ((struct DkdDekoiLoggingCallbacksData *)pData)->pLogger->pData,
-            dkdTranslateLogLevelFromDekoi(level),
+            level,
             pFile,
             line,
             pFormat,

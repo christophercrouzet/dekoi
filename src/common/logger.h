@@ -31,7 +31,7 @@ struct DkLoggingCallbacks {
     DkPfnLogVaListCallback pfnLogVaList;
 };
 
-const char *
-dkGetLogLevelString(enum DkLogLevel level);
+void
+dkGetLogLevelString(const char **ppString, enum DkLogLevel level);
 
 #endif /* DEKOI_COMMON_LOGGER_H */

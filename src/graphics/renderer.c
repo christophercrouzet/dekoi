@@ -152,22 +152,24 @@ struct DkRenderer {
     uint32_t instanceCount;
 };
 
-static const char *
-dkpGetSemaphoreIdString(enum DkpSemaphoreId semaphoreId)
+static void
+dkpGetSemaphoreIdString(const char **ppString, enum DkpSemaphoreId semaphoreId)
 {
     switch (semaphoreId) {
         case DKP_SEMAPHORE_ID_IMAGE_ACQUIRED:
-            return "image acquired";
+            *ppString = "image acquired";
+            return;
         case DKP_SEMAPHORE_ID_PRESENT_COMPLETED:
-            return "present completed";
+            *ppString = "present completed";
+            return;
         default:
             DKP_ASSERT(0);
-            return "invalid";
+            *ppString = "invalid";
     }
 }
 
-static int
-dkpCheckShaderStage(enum DkShaderStage shaderStage)
+static void
+dkpCheckShaderStage(int *pValid, enum DkShaderStage shaderStage)
 {
     switch (shaderStage) {
         case DK_SHADER_STAGE_VERTEX:
@@ -176,59 +178,72 @@ dkpCheckShaderStage(enum DkShaderStage shaderStage)
         case DK_SHADER_STAGE_GEOMETRY:
         case DK_SHADER_STAGE_FRAGMENT:
         case DK_SHADER_STAGE_COMPUTE:
-            return DKP_TRUE;
+            *pValid = DKP_TRUE;
+            return;
         default:
-            return DKP_FALSE;
+            *pValid = DKP_FALSE;
     }
 }
 
-static VkShaderStageFlagBits
-dkpTranslateShaderStageToBackEnd(enum DkShaderStage shaderStage)
+static void
+dkpTranslateShaderStageToBackEnd(VkShaderStageFlagBits *pBackEndShaderStage,
+                                 enum DkShaderStage shaderStage)
 {
     switch (shaderStage) {
         case DK_SHADER_STAGE_VERTEX:
-            return VK_SHADER_STAGE_VERTEX_BIT;
+            *pBackEndShaderStage = VK_SHADER_STAGE_VERTEX_BIT;
+            return;
         case DK_SHADER_STAGE_TESSELLATION_CONTROL:
-            return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            *pBackEndShaderStage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            return;
         case DK_SHADER_STAGE_TESSELLATION_EVALUATION:
-            return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            *pBackEndShaderStage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            return;
         case DK_SHADER_STAGE_GEOMETRY:
-            return VK_SHADER_STAGE_GEOMETRY_BIT;
+            *pBackEndShaderStage = VK_SHADER_STAGE_GEOMETRY_BIT;
+            return;
         case DK_SHADER_STAGE_FRAGMENT:
-            return VK_SHADER_STAGE_FRAGMENT_BIT;
+            *pBackEndShaderStage = VK_SHADER_STAGE_FRAGMENT_BIT;
+            return;
         case DK_SHADER_STAGE_COMPUTE:
-            return VK_SHADER_STAGE_COMPUTE_BIT;
+            *pBackEndShaderStage = VK_SHADER_STAGE_COMPUTE_BIT;
+            return;
         default:
             DKP_ASSERT(0);
-            return (VkShaderStageFlagBits)0;
+            *pBackEndShaderStage = (VkShaderStageFlagBits)0;
     }
 }
 
-static VkVertexInputRate
-dkpTranslateVertexInputRateToBackEnd(enum DkVertexInputRate inputRate)
+static void
+dkpTranslateVertexInputRateToBackEnd(VkVertexInputRate *pBackEndInputRate,
+                                     enum DkVertexInputRate inputRate)
 {
     switch (inputRate) {
         case DK_VERTEX_INPUT_RATE_VERTEX:
-            return VK_VERTEX_INPUT_RATE_VERTEX;
+            *pBackEndInputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            return;
         case DK_VERTEX_INPUT_RATE_INSTANCE:
-            return VK_VERTEX_INPUT_RATE_INSTANCE;
+            *pBackEndInputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+            return;
         default:
             DKP_ASSERT(0);
-            return (VkVertexInputRate)0;
+            *pBackEndInputRate = (VkVertexInputRate)0;
     }
 }
 
-static VkFormat
-dkpTranslateFormatToBackEnd(enum DkFormat format)
+static void
+dkpTranslateFormatToBackEnd(VkFormat *pBackEndFormat, enum DkFormat format)
 {
     switch (format) {
         case DK_FORMAT_R32G32_SFLOAT:
-            return VK_FORMAT_R32G32_SFLOAT;
+            *pBackEndFormat = VK_FORMAT_R32G32_SFLOAT;
+            return;
         case DK_FORMAT_R32G32B32_SFLOAT:
-            return VK_FORMAT_R32G32B32_SFLOAT;
+            *pBackEndFormat = VK_FORMAT_R32G32B32_SFLOAT;
+            return;
         default:
             DKP_ASSERT(0);
-            return (VkFormat)0;
+            *pBackEndFormat = (VkFormat)0;
     }
 }
 
@@ -2064,9 +2079,14 @@ dkpCreateSemaphores(VkSemaphore **ppSemaphoreHandles,
                               pBackEndAllocator,
                               &(*ppSemaphoreHandles)[i])
             != VK_SUCCESS) {
+            const char *pSemaphoreDescription;
+
+            dkpGetSemaphoreIdString(&pSemaphoreDescription,
+                                    (enum DkpSemaphoreId)i);
+
             DKP_LOG_ERROR(pLogger,
                           "failed to create a '%s' semaphore\n",
-                          dkpGetSemaphoreIdString((enum DkpSemaphoreId)i));
+                          pSemaphoreDescription);
             out = DK_ERROR;
             goto semaphores_undo;
         }
@@ -2196,6 +2216,8 @@ dkpCreateShaders(struct DkpShader **ppShaders,
     }
 
     for (i = 0; i < shaderCount; ++i) {
+        VkShaderStageFlagBits backEndShaderStage;
+
         if (dkpCreateShaderModule(&(*ppShaders)[i].moduleHandle,
                                   pDevice,
                                   (size_t)pShaderInfos[i].codeSize,
@@ -2207,8 +2229,10 @@ dkpCreateShaders(struct DkpShader **ppShaders,
             goto shaders_undo;
         }
 
-        (*ppShaders)[i].stage
-            = dkpTranslateShaderStageToBackEnd(pShaderInfos[i].stage);
+        dkpTranslateShaderStageToBackEnd(&backEndShaderStage,
+                                         pShaderInfos[i].stage);
+
+        (*ppShaders)[i].stage = backEndShaderStage;
         (*ppShaders)[i].pEntryPointName = pShaderInfos[i].pEntryPointName;
     }
 
@@ -3855,7 +3879,8 @@ dkpCheckRendererCreateInfo(int *pValid,
     }
 
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
-        if (!dkpCheckShaderStage(pCreateInfo->pShaderInfos[i].stage)) {
+        dkpCheckShaderStage(pValid, pCreateInfo->pShaderInfos[i].stage);
+        if (!(*pValid)) {
             DKP_LOG_ERROR(pLogger,
                           "invalid enum value for "
                           "'pCreateInfo->pShaderInfos[%d].stage'\n",
@@ -3898,11 +3923,15 @@ dkpCreateVertexBindingDescriptions(
     }
 
     for (i = 0; i < vertexBindingDescriptionCount; ++i) {
+        VkVertexInputRate backEndInputRate;
+
+        dkpTranslateVertexInputRateToBackEnd(&backEndInputRate,
+                                             pCreateInfos[i].inputRate);
+
         (*ppVertexBindingDescriptions)[i].binding = i;
         (*ppVertexBindingDescriptions)[i].stride
             = (uint32_t)pCreateInfos[i].stride;
-        (*ppVertexBindingDescriptions)[i].inputRate
-            = dkpTranslateVertexInputRateToBackEnd(pCreateInfos[i].inputRate);
+        (*ppVertexBindingDescriptions)[i].inputRate = backEndInputRate;
     }
 
     return DK_SUCCESS;
@@ -3951,14 +3980,17 @@ dkpCreateVertexAttributeDescriptions(
     }
 
     for (i = 0; i < vertexAttributeDescriptionCount; ++i) {
+        VkFormat backEndFormat;
+
+        dkpTranslateFormatToBackEnd(&backEndFormat, pCreateInfos[i].format);
+
         (*ppVertexAttributeDescriptions)[i].location
             = (uint32_t)pCreateInfos[i].location;
         (*ppVertexAttributeDescriptions)[i].binding
             = (uint32_t)pCreateInfos[i].binding;
         (*ppVertexAttributeDescriptions)[i].offset
             = (uint32_t)pCreateInfos[i].offset;
-        (*ppVertexAttributeDescriptions)[i].format
-            = dkpTranslateFormatToBackEnd(pCreateInfos[i].format);
+        (*ppVertexAttributeDescriptions)[i].format = backEndFormat;
     }
 
     return DK_SUCCESS;

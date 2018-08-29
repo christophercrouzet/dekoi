@@ -1,20 +1,25 @@
 #include "common.h"
 
-const char *
-dkGetResultString(enum DkResult result)
+void
+dkGetResultString(const char **ppString, enum DkResult result)
 {
     switch (result) {
         case DK_SUCCESS:
-            return "success";
+            *ppString = "success";
+            return;
         case DK_ERROR:
-            return "error";
+            *ppString = "error";
+            return;
         case DK_ERROR_INVALID_VALUE:
-            return "invalid value";
+            *ppString = "invalid value";
+            return;
         case DK_ERROR_ALLOCATION:
-            return "allocation error";
+            *ppString = "allocation error";
+            return;
         case DK_ERROR_NOT_AVAILABLE:
-            return "not available";
+            *ppString = "not available";
+            return;
         default:
-            return "invalid";
+            *ppString = "invalid";
     }
 }
