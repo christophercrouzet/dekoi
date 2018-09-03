@@ -28,7 +28,7 @@ static const struct Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
                                          {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
                                          {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
-static const char *pApplicationName = "vertexbuffer";
+static const char applicationName[] = "vertexbuffer";
 static const unsigned int majorVersion = 1;
 static const unsigned int minorVersion = 0;
 static const unsigned int patchVersion = 0;
@@ -59,16 +59,16 @@ dkdSetup(struct DkdBootstrapHandles *pHandles)
 
     memset(&createInfos, 0, sizeof createInfos);
 
-    createInfos.application.pName = pApplicationName;
+    createInfos.application.pName = applicationName;
     createInfos.application.majorVersion = majorVersion;
     createInfos.application.minorVersion = minorVersion;
     createInfos.application.patchVersion = patchVersion;
 
     createInfos.window.width = width;
     createInfos.window.height = height;
-    createInfos.window.pTitle = pApplicationName;
+    createInfos.window.pTitle = applicationName;
 
-    createInfos.renderer.pApplicationName = pApplicationName;
+    createInfos.renderer.pApplicationName = applicationName;
     createInfos.renderer.applicationMajorVersion = majorVersion;
     createInfos.renderer.applicationMinorVersion = minorVersion;
     createInfos.renderer.applicationPatchVersion = patchVersion;
