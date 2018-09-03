@@ -170,7 +170,7 @@ dkpGetSemaphoreIdDescription(const char **ppDescription,
 }
 
 static void
-dkpCheckShaderStage(int *pValid, enum DkShaderStage shaderStage)
+dkpValidateShaderStage(int *pValid, enum DkShaderStage shaderStage)
 {
     switch (shaderStage) {
         case DK_SHADER_STAGE_VERTEX:
@@ -3861,9 +3861,9 @@ dkpRecreateRendererSwapChain(struct DkRenderer *pRenderer)
 }
 
 static void
-dkpCheckRendererCreateInfo(int *pValid,
-                           const struct DkRendererCreateInfo *pCreateInfo,
-                           const struct DkLoggingCallbacks *pLogger)
+dkpValidateRendererCreateInfo(int *pValid,
+                              const struct DkRendererCreateInfo *pCreateInfo,
+                              const struct DkLoggingCallbacks *pLogger)
 {
     uint32_t i;
 
@@ -3880,7 +3880,7 @@ dkpCheckRendererCreateInfo(int *pValid,
     }
 
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
-        dkpCheckShaderStage(pValid, pCreateInfo->pShaderInfos[i].stage);
+        dkpValidateShaderStage(pValid, pCreateInfo->pShaderInfos[i].stage);
         if (!(*pValid)) {
             DKP_LOG_ERROR(pLogger,
                           "invalid enum value for "
@@ -4137,7 +4137,7 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
         goto exit;
     }
 
-    dkpCheckRendererCreateInfo(&valid, pCreateInfo, pLogger);
+    dkpValidateRendererCreateInfo(&valid, pCreateInfo, pLogger);
     if (!valid) {
         out = DK_ERROR_INVALID_VALUE;
         goto exit;
