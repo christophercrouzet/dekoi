@@ -106,7 +106,7 @@ DKP_STATIC_ASSERT(sizeof(DkBool32) == 4, invalid_bool32_type);
 #define DK_FALSE ((DkBool32)0)
 #define DK_TRUE ((DkBool32)1)
 
-enum DkResult {
+enum DkStatus {
     DK_SUCCESS = 0,
     DK_ERROR = -1,
     DK_ERROR_INVALID_VALUE = -2,
@@ -115,6 +115,6 @@ enum DkResult {
 };
 
 void
-dkGetResultString(const char **ppString, enum DkResult result);
+dkGetStatusString(const char **ppString, enum DkStatus status);
 
 #endif /* DEKOI_COMMON_COMMON_H */

@@ -40,7 +40,7 @@ dkdOnFramebufferSizeChanged(GLFWwindow *pWindowHandle, int width, int height)
         pWindow->pRenderer, (unsigned int)width, (unsigned int)height);
 }
 
-static enum DkResult
+static enum DkStatus
 dkdCreateVulkanInstanceExtensionNames(
     DkUint32 *pExtensionCount,
     const char ***pppExtensionNames,
@@ -80,7 +80,7 @@ dkdDestroyVulkanInstanceExtensionNames(
     assert(ppExtensionNames != NULL);
 }
 
-static enum DkResult
+static enum DkStatus
 dkdCreateVulkanSurface(VkSurfaceKHR *pSurfaceHandle,
                        void *pData,
                        VkInstance instanceHandle,

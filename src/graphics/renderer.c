@@ -283,7 +283,7 @@ dkpFilterQueueFamilyIndices(uint32_t *pFilteredQueueFamilyCount,
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpPickMemoryTypeIndex(uint32_t *pMemoryTypeIndex,
                        const struct DkpDevice *pDevice,
                        uint32_t typeFilter,
@@ -313,7 +313,7 @@ dkpPickMemoryTypeIndex(uint32_t *pMemoryTypeIndex,
     return DK_ERROR;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCopyBuffer(const struct DkpDevice *pDevice,
               const struct DkpBuffer *pDestination,
               const struct DkpBuffer *pSource,
@@ -322,7 +322,7 @@ dkpCopyBuffer(const struct DkpDevice *pDevice,
               const struct DkpQueues *pQueues,
               const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     VkCommandBufferAllocateInfo allocateInfo;
     VkCommandBuffer commandBuffer;
     VkCommandBufferBeginInfo beginInfo;
@@ -406,7 +406,7 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpMakeBuffer(struct DkpBuffer *pBuffer,
               const struct DkpDevice *pDevice,
               VkDeviceSize size,
@@ -415,7 +415,7 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
               const VkAllocationCallbacks *pBackEndAllocator,
               const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     VkBufferCreateInfo bufferInfo;
     VkMemoryRequirements memoryRequirements;
     VkMemoryAllocateInfo allocateInfo;
@@ -513,7 +513,7 @@ dkpDiscardBuffer(const struct DkpDevice *pDevice,
     vkDestroyBuffer(pDevice->logicalHandle, pBuffer->handle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateInstanceLayerNames(uint32_t *pLayerCount,
                             const char ***pppLayerNames,
                             const struct DkAllocationCallbacks *pAllocator,
@@ -555,14 +555,14 @@ dkpDestroyInstanceLayerNames(const char **ppLayerNames,
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCheckInstanceLayersSupport(int *pSupported,
                               uint32_t requiredLayerCount,
                               const char *const *ppRequiredLayerNames,
                               const struct DkAllocationCallbacks *pAllocator,
                               const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t j;
     uint32_t layerCount;
@@ -633,7 +633,7 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateInstanceExtensionNames(
     uint32_t *pExtensionCount,
     const char ***pppExtensionNames,
@@ -708,7 +708,7 @@ dkpDestroyInstanceExtensionNames(
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCheckInstanceExtensionsSupport(
     int *pSupported,
     uint32_t requiredExtensionCount,
@@ -716,7 +716,7 @@ dkpCheckInstanceExtensionsSupport(
     const struct DkAllocationCallbacks *pAllocator,
     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t j;
     uint32_t extensionCount;
@@ -791,7 +791,7 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateInstance(
     VkInstance *pInstanceHandle,
     const char *pApplicationName,
@@ -803,7 +803,7 @@ dkpCreateInstance(
     const struct DkAllocationCallbacks *pAllocator,
     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t layerCount;
     const char **ppLayerNames;
     int layersSupported;
@@ -963,7 +963,7 @@ dkpHandleDebugReport(VkDebugReportFlagsEXT flags,
     return VK_FALSE;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateDebugReportCallback(VkDebugReportCallbackEXT *pCallbackHandle,
                              VkInstance instanceHandle,
                              struct DkpDebugReportCallbackData *pData,
@@ -1031,7 +1031,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
 }
 #endif /* DKP_RENDERER_DEBUG_REPORT */
 
-static enum DkResult
+static enum DkStatus
 dkpCreateSurface(
     VkSurfaceKHR *pSurfaceHandle,
     VkInstance instanceHandle,
@@ -1073,7 +1073,7 @@ dkpDestroySurface(VkInstance instanceHandle,
     vkDestroySurfaceKHR(instanceHandle, surfaceHandle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateDeviceExtensionNames(uint32_t *pExtensionCount,
                               const char ***pppExtensionNames,
                               enum DkpPresentSupport presentSupport,
@@ -1115,7 +1115,7 @@ dkpDestroyDeviceExtensionNames(const char **ppExtensionNames,
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCheckDeviceExtensionsSupport(int *pSupported,
                                 VkPhysicalDevice physicalDeviceHandle,
                                 uint32_t requiredExtensionCount,
@@ -1123,7 +1123,7 @@ dkpCheckDeviceExtensionsSupport(int *pSupported,
                                 const struct DkAllocationCallbacks *pAllocator,
                                 const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t j;
     uint32_t extensionCount;
@@ -1199,14 +1199,14 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpPickDeviceQueueFamilies(uint32_t *pQueueFamilyIndices,
                            VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
                            const struct DkAllocationCallbacks *pAllocator,
                            const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t propertyCount;
     VkQueueFamilyProperties *pProperties;
@@ -1362,7 +1362,7 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpPickSwapChainPresentMode(VkPresentModeKHR *pPresentMode,
                             uint32_t presentModeCount,
                             const VkPresentModeKHR *pPresentModes)
@@ -1396,7 +1396,7 @@ dkpPickSwapChainPresentMode(VkPresentModeKHR *pPresentMode,
     return DK_ERROR_NOT_AVAILABLE;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpPickSwapChainImageUsage(VkImageUsageFlags *pImageUsage,
                            VkSurfaceCapabilitiesKHR capabilities)
 {
@@ -1489,7 +1489,7 @@ dkpPickSwapChainPreTransform(VkSurfaceTransformFlagBitsKHR *pPreTransform,
     *pPreTransform = capabilities.currentTransform;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
                            VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
@@ -1498,7 +1498,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
                            const struct DkAllocationCallbacks *pAllocator,
                            const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     VkSurfaceCapabilitiesKHR capabilities;
     uint32_t formatCount;
     VkSurfaceFormatKHR *pFormats;
@@ -1625,14 +1625,14 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCheckSwapChainSupport(int *pSupported,
                          VkPhysicalDevice physicalDeviceHandle,
                          VkSurfaceKHR surfaceHandle,
                          const struct DkAllocationCallbacks *pAllocator,
                          const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult result;
+    enum DkStatus status;
     VkExtent2D imageExtent;
     struct DkpSwapChainProperties swapChainProperties;
 
@@ -1650,26 +1650,26 @@ dkpCheckSwapChainSupport(int *pSupported,
     */
     imageExtent.width = 0;
     imageExtent.height = 0;
-    result = dkpPickSwapChainProperties(&swapChainProperties,
+    status = dkpPickSwapChainProperties(&swapChainProperties,
                                         physicalDeviceHandle,
                                         surfaceHandle,
                                         &imageExtent,
                                         DK_LOG_LEVEL_INFO,
                                         pAllocator,
                                         pLogger);
-    if (result == DK_SUCCESS) {
+    if (status == DK_SUCCESS) {
         *pSupported = DKP_TRUE;
         return DK_SUCCESS;
     }
 
-    if (result == DK_ERROR_NOT_AVAILABLE) {
+    if (status == DK_ERROR_NOT_AVAILABLE) {
         return DK_SUCCESS;
     }
 
     return DK_ERROR;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpInspectPhysicalDevice(int *pSuitable,
                          uint32_t *pQueueFamilyIndices,
                          VkPhysicalDevice physicalDeviceHandle,
@@ -1746,7 +1746,7 @@ dkpInspectPhysicalDevice(int *pSuitable,
     return DK_SUCCESS;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
                       uint32_t *pQueueFamilyIndices,
                       VkInstance instanceHandle,
@@ -1756,7 +1756,7 @@ dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
                       const struct DkAllocationCallbacks *pAllocator,
                       const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t physicalDeviceCount;
     VkPhysicalDevice *pPhysicalDeviceHandles;
@@ -1835,7 +1835,7 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpMakeDevice(struct DkpDevice *pDevice,
               VkInstance instanceHandle,
               VkSurfaceKHR surfaceHandle,
@@ -1843,7 +1843,7 @@ dkpMakeDevice(struct DkpDevice *pDevice,
               const struct DkAllocationCallbacks *pAllocator,
               const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     enum DkpPresentSupport presentSupport;
     uint32_t extensionCount;
@@ -1991,7 +1991,7 @@ dkpDiscardDevice(struct DkpDevice *pDevice,
     vkDestroyDevice(pDevice->logicalHandle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpGetDeviceQueues(struct DkpQueues *pQueues, const struct DkpDevice *pDevice)
 {
     uint32_t i;
@@ -2037,14 +2037,14 @@ dkpGetDeviceQueues(struct DkpQueues *pQueues, const struct DkpDevice *pDevice)
     return DK_SUCCESS;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateSemaphores(VkSemaphore **ppSemaphoreHandles,
                     const struct DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const struct DkAllocationCallbacks *pAllocator,
                     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     unsigned int i;
     VkSemaphoreCreateInfo createInfo;
 
@@ -2132,7 +2132,7 @@ dkpDestroySemaphores(const struct DkpDevice *pDevice,
     DKP_FREE(pAllocator, pSemaphoreHandles);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateShaderModule(VkShaderModule *pShaderModuleHandle,
                       const struct DkpDevice *pDevice,
                       size_t shaderCodeSize,
@@ -2181,7 +2181,7 @@ dkpDestroyShaderModule(const struct DkpDevice *pDevice,
         pDevice->logicalHandle, shaderModuleHandle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateShaders(struct DkpShader **ppShaders,
                  const struct DkpDevice *pDevice,
                  uint32_t shaderCount,
@@ -2190,7 +2190,7 @@ dkpCreateShaders(struct DkpShader **ppShaders,
                  const struct DkAllocationCallbacks *pAllocator,
                  const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
 
     DKP_ASSERT(ppShaders != NULL);
@@ -2275,7 +2275,7 @@ dkpDestroyShaders(const struct DkpDevice *pDevice,
     DKP_FREE(pAllocator, pShaders);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateVertexBuffers(
     struct DkpBuffer **ppVertexBuffers,
     const struct DkpDevice *pDevice,
@@ -2287,7 +2287,7 @@ dkpCreateVertexBuffers(
     const struct DkAllocationCallbacks *pAllocator,
     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     struct DkpBuffer stagingBuffer;
 
@@ -2434,7 +2434,7 @@ dkpDestroyVertexBuffers(const struct DkpDevice *pDevice,
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateSwapChainImages(uint32_t *pImageCount,
                          VkImage **ppImageHandles,
                          const struct DkpDevice *pDevice,
@@ -2442,7 +2442,7 @@ dkpCreateSwapChainImages(uint32_t *pImageCount,
                          const struct DkAllocationCallbacks *pAllocator,
                          const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
 
     DKP_ASSERT(pImageCount != NULL);
     DKP_ASSERT(ppImageHandles != NULL);
@@ -2506,7 +2506,7 @@ dkpDestroySwapChainImages(VkImage *pImageHandles,
     DKP_FREE(pAllocator, pImageHandles);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateSwapChainImageViews(VkImageView **ppImageViewHandles,
                              const struct DkpDevice *pDevice,
                              uint32_t imageCount,
@@ -2516,7 +2516,7 @@ dkpCreateSwapChainImageViews(VkImageView **ppImageViewHandles,
                              const struct DkAllocationCallbacks *pAllocator,
                              const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     VkImageViewCreateInfo createInfo;
 
@@ -2613,7 +2613,7 @@ dkpDestroySwapChainImageViews(const struct DkpDevice *pDevice,
     DKP_FREE(pAllocator, pImageViewHandles);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
                  const struct DkpDevice *pDevice,
                  VkSurfaceKHR surfaceHandle,
@@ -2623,7 +2623,7 @@ dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
                  const struct DkAllocationCallbacks *pAllocator,
                  const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     struct DkpSwapChainProperties swapChainProperties;
     VkSharingMode imageSharingMode;
     uint32_t queueFamilyIndexCount;
@@ -2793,7 +2793,7 @@ dkpDiscardSwapChain(const struct DkpDevice *pDevice,
         pDevice->logicalHandle, pSwapChain->handle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
                     const struct DkpDevice *pDevice,
                     const struct DkpSwapChain *pSwapChain,
@@ -2801,7 +2801,7 @@ dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
                     const struct DkAllocationCallbacks *pAllocator,
                     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t colorAttachmentCount;
     VkAttachmentDescription *pColorAttachments;
@@ -2947,7 +2947,7 @@ dkpDestroyRenderPass(const struct DkpDevice *pDevice,
         pDevice->logicalHandle, renderPassHandle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreatePipelineLayout(VkPipelineLayout *pPipelineLayoutHandle,
                         const struct DkpDevice *pDevice,
                         const VkAllocationCallbacks *pBackEndAllocator,
@@ -2995,7 +2995,7 @@ dkpDestroyPipelineLayout(const struct DkpDevice *pDevice,
         pDevice->logicalHandle, pipelineLayoutHandle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateGraphicsPipeline(
     VkPipeline *pPipelineHandle,
     const struct DkpDevice *pDevice,
@@ -3012,7 +3012,7 @@ dkpCreateGraphicsPipeline(
     const struct DkAllocationCallbacks *pAllocator,
     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     VkPipelineShaderStageCreateInfo *pShaderStageInfos;
     uint32_t viewportCount;
@@ -3259,7 +3259,7 @@ dkpDestroyGraphicsPipeline(const struct DkpDevice *pDevice,
         pDevice->logicalHandle, pipelineHandle, pBackEndAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateFramebuffers(VkFramebuffer **ppFramebufferHandles,
                       const struct DkpDevice *pDevice,
                       const struct DkpSwapChain *pSwapChain,
@@ -3269,7 +3269,7 @@ dkpCreateFramebuffers(VkFramebuffer **ppFramebufferHandles,
                       const struct DkAllocationCallbacks *pAllocator,
                       const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
 
     DKP_ASSERT(ppFramebufferHandles != NULL);
@@ -3369,13 +3369,13 @@ dkpDestroyFramebuffers(const struct DkpDevice *pDevice,
     DKP_FREE(pAllocator, pFramebufferHandles);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpMakeCommandPools(struct DkpCommandPools *pCommandPools,
                     const struct DkpDevice *pDevice,
                     const VkAllocationCallbacks *pBackEndAllocator,
                     const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     uint32_t j;
     VkCommandPoolCreateInfo createInfo;
@@ -3455,7 +3455,7 @@ dkpDiscardCommandPools(const struct DkpDevice *pDevice,
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateGraphicsCommandBuffers(VkCommandBuffer **ppCommandBufferHandles,
                                 const struct DkpDevice *pDevice,
                                 const struct DkpSwapChain *pSwapChain,
@@ -3463,7 +3463,7 @@ dkpCreateGraphicsCommandBuffers(VkCommandBuffer **ppCommandBufferHandles,
                                 const struct DkAllocationCallbacks *pAllocator,
                                 const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     VkCommandBufferAllocateInfo allocateInfo;
 
     DKP_ASSERT(ppCommandBufferHandles != NULL);
@@ -3532,7 +3532,7 @@ dkpDestroyGraphicsCommandBuffers(const struct DkpDevice *pDevice,
     DKP_FREE(pAllocator, pCommandBufferHandles);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
                                 VkRenderPass renderPassHandle,
                                 VkPipeline pipelineHandle,
@@ -3547,7 +3547,7 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
                                 const struct DkAllocationCallbacks *pAllocator,
                                 const struct DkLoggingCallbacks *pLogger)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     VkBuffer *pBuffers;
     VkDeviceSize *pOffsets;
@@ -3655,10 +3655,10 @@ exit:
     return out;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpMakeRendererSwapChainSystem(struct DkRenderer *pRenderer)
 {
-    enum DkResult out;
+    enum DkStatus out;
 
     DKP_ASSERT(pRenderer != NULL);
 
@@ -3850,7 +3850,7 @@ dkpDiscardRendererSwapChainSystem(struct DkRenderer *pRenderer)
                         pRenderer->pAllocator);
 }
 
-static enum DkResult
+static enum DkStatus
 dkpRecreateRendererSwapChain(struct DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
@@ -3892,7 +3892,7 @@ dkpCheckRendererCreateInfo(int *pValid,
     *pValid = DKP_TRUE;
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateVertexBindingDescriptions(
     VkVertexInputBindingDescription **ppVertexBindingDescriptions,
     uint32_t vertexBindingDescriptionCount,
@@ -3949,7 +3949,7 @@ dkpDestroyVertexBindingDescriptions(
     }
 }
 
-static enum DkResult
+static enum DkStatus
 dkpCreateVertexAttributeDescriptions(
     VkVertexInputAttributeDescription **ppVertexAttributeDescriptions,
     uint32_t vertexAttributeDescriptionCount,
@@ -4105,11 +4105,11 @@ dkpNotifyBackEndInternalFreeing(void *pData,
                   size);
 }
 
-enum DkResult
+enum DkStatus
 dkCreateRenderer(struct DkRenderer **ppRenderer,
                  const struct DkRendererCreateInfo *pCreateInfo)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t i;
     const struct DkLoggingCallbacks *pLogger;
     const struct DkAllocationCallbacks *pAllocator;
@@ -4447,7 +4447,7 @@ dkDestroyRenderer(struct DkRenderer *pRenderer)
     DKP_FREE(pRenderer->pAllocator, pRenderer);
 }
 
-enum DkResult
+enum DkStatus
 dkResizeRendererSurface(struct DkRenderer *pRenderer,
                         DkUint32 width,
                         DkUint32 height)
@@ -4459,10 +4459,10 @@ dkResizeRendererSurface(struct DkRenderer *pRenderer,
     return dkpRecreateRendererSwapChain(pRenderer);
 }
 
-enum DkResult
+enum DkStatus
 dkDrawRendererImage(struct DkRenderer *pRenderer)
 {
-    enum DkResult out;
+    enum DkStatus out;
     uint32_t imageIndex;
     uint32_t waitSemaphoreCount;
     VkSemaphore *pWaitSemaphores;

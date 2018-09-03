@@ -1,9 +1,9 @@
 #include "common.h"
 
 void
-dkGetResultString(const char **ppString, enum DkResult result)
+dkGetStatusString(const char **ppString, enum DkStatus status)
 {
-    switch (result) {
+    switch (status) {
         case DK_SUCCESS:
             *ppString = "success";
             return;

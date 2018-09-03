@@ -36,7 +36,7 @@ DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(VkSurfaceKHR);
 struct DkLoggingCallbacks;
 struct DkRenderer;
 
-typedef enum DkResult (*DkPfnCreateInstanceExtensionNamesCallback)(
+typedef enum DkStatus (*DkPfnCreateInstanceExtensionNamesCallback)(
     DkUint32 *pExtensionCount,
     const char ***pppExtensionNames,
     void *pData,
@@ -45,7 +45,7 @@ typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(
     void *pData,
     const struct DkLoggingCallbacks *pLogger,
     const char **ppExtensionNames);
-typedef enum DkResult (*DkPfnCreateSurfaceCallback)(
+typedef enum DkStatus (*DkPfnCreateSurfaceCallback)(
     VkSurfaceKHR *pSurfaceHandle,
     void *pData,
     VkInstance instanceHandle,
@@ -109,19 +109,19 @@ struct DkRendererCreateInfo {
     const struct DkAllocationCallbacks *pAllocator;
 };
 
-enum DkResult
+enum DkStatus
 dkCreateRenderer(struct DkRenderer **ppRenderer,
                  const struct DkRendererCreateInfo *pCreateInfo);
 
 void
 dkDestroyRenderer(struct DkRenderer *pRenderer);
 
-enum DkResult
+enum DkStatus
 dkResizeRendererSurface(struct DkRenderer *pRenderer,
                         DkUint32 width,
                         DkUint32 height);
 
-enum DkResult
+enum DkStatus
 dkDrawRendererImage(struct DkRenderer *pRenderer);
 
 #endif /* DEKOI_GRAPHICS_RENDERING_H */
