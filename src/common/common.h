@@ -115,6 +115,6 @@ enum DkStatus {
 };
 
 void
-dkGetStatusString(const char **ppString, enum DkStatus status);
+dkGetStatusDescription(const char **ppDescription, enum DkStatus status);
 
 #endif /* DEKOI_COMMON_COMMON_H */

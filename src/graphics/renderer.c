@@ -153,18 +153,19 @@ struct DkRenderer {
 };
 
 static void
-dkpGetSemaphoreIdString(const char **ppString, enum DkpSemaphoreId semaphoreId)
+dkpGetSemaphoreIdDescription(const char **ppDescription,
+                             enum DkpSemaphoreId semaphoreId)
 {
     switch (semaphoreId) {
         case DKP_SEMAPHORE_ID_IMAGE_ACQUIRED:
-            *ppString = "image acquired";
+            *ppDescription = "image acquired";
             return;
         case DKP_SEMAPHORE_ID_PRESENT_COMPLETED:
-            *ppString = "present completed";
+            *ppDescription = "present completed";
             return;
         default:
             DKP_ASSERT(0);
-            *ppString = "invalid";
+            *ppDescription = "invalid";
     }
 }
 
@@ -2081,8 +2082,8 @@ dkpCreateSemaphores(VkSemaphore **ppSemaphoreHandles,
             != VK_SUCCESS) {
             const char *pSemaphoreDescription;
 
-            dkpGetSemaphoreIdString(&pSemaphoreDescription,
-                                    (enum DkpSemaphoreId)i);
+            dkpGetSemaphoreIdDescription(&pSemaphoreDescription,
+                                         (enum DkpSemaphoreId)i);
 
             DKP_LOG_ERROR(pLogger,
                           "failed to create a '%s' semaphore\n",

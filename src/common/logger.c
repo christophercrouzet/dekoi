@@ -1,22 +1,22 @@
 #include "logger.h"
 
 void
-dkGetLogLevelString(const char **ppString, enum DkLogLevel level)
+dkGetLogLevelName(const char **ppName, enum DkLogLevel level)
 {
     switch (level) {
         case DK_LOG_LEVEL_DEBUG:
-            *ppString = "debug";
+            *ppName = "debug";
             return;
         case DK_LOG_LEVEL_INFO:
-            *ppString = "info";
+            *ppName = "info";
             return;
         case DK_LOG_LEVEL_WARNING:
-            *ppString = "warning";
+            *ppName = "warning";
             return;
         case DK_LOG_LEVEL_ERROR:
-            *ppString = "error";
+            *ppName = "error";
             return;
         default:
-            *ppString = "invalid";
+            *ppName = "invalid";
     }
 }
