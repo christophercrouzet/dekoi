@@ -26,7 +26,7 @@
 
 #define DKP_LOG(pLogger, level, ...)                                           \
     do {                                                                       \
-        if (level >= DKP_LOGGING_LEVEL) {                                      \
+        if (level <= DKP_LOGGING_LEVEL) {                                      \
             (pLogger)->pfnLog(                                                 \
                 (pLogger)->pData, level, __FILE__, __LINE__, __VA_ARGS__);     \
         }                                                                      \

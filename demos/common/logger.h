@@ -23,7 +23,7 @@
 
 #define DKD_LOG(pLogger, level, ...)                                           \
     do {                                                                       \
-        if (level >= DKD_LOGGING_LEVEL) {                                      \
+        if (level <= DKD_LOGGING_LEVEL) {                                      \
             (pLogger)->pfnLog(                                                 \
                 (pLogger)->pData, level, __FILE__, __LINE__, __VA_ARGS__);     \
         }                                                                      \
@@ -45,11 +45,11 @@
     DKD_LOG(pLogger, DKD_LOG_LEVEL_ERROR, __VA_ARGS__)
 
 enum DkdLogLevel {
-    DKD_LOG_LEVEL_DEBUG = 0,
-    DKD_LOG_LEVEL_TRACE = 1,
+    DKD_LOG_LEVEL_ERROR = 0,
+    DKD_LOG_LEVEL_WARNING = 1,
     DKD_LOG_LEVEL_INFO = 2,
-    DKD_LOG_LEVEL_WARNING = 3,
-    DKD_LOG_LEVEL_ERROR = 4
+    DKD_LOG_LEVEL_TRACE = 3,
+    DKD_LOG_LEVEL_DEBUG = 4
 };
 
 struct DkdAllocationCallbacks;

@@ -6,11 +6,11 @@
 #include <stdarg.h>
 
 enum DkLogLevel {
-    DK_LOG_LEVEL_DEBUG = 0,
-    DK_LOG_LEVEL_TRACE = 1,
+    DK_LOG_LEVEL_ERROR = 0,
+    DK_LOG_LEVEL_WARNING = 1,
     DK_LOG_LEVEL_INFO = 2,
-    DK_LOG_LEVEL_WARNING = 3,
-    DK_LOG_LEVEL_ERROR = 4
+    DK_LOG_LEVEL_TRACE = 3,
+    DK_LOG_LEVEL_DEBUG = 4
 } DkLogLevel;
 
 typedef void (*DkPfnLogCallback)(void *pData,
