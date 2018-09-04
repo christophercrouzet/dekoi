@@ -14,7 +14,9 @@
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_WARNING
 #elif defined(DK_SET_LOGGING_LEVEL_ERROR)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_ERROR
-#elif DK_ENABLE_DEBUGGING
+#elif defined(DK_ENABLE_DEBUGGING)                                             \
+    || (!defined(DK_DISABLE_DEBUGGING)                                         \
+        && (defined(DEBUG) || !defined(NDEBUG)))
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_DEBUG
 #else
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_WARNING
