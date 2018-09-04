@@ -11,7 +11,7 @@ enum DkLogLevel {
     DK_LOG_LEVEL_INFO = 2,
     DK_LOG_LEVEL_TRACE = 3,
     DK_LOG_LEVEL_DEBUG = 4
-} DkLogLevel;
+};
 
 typedef void (*DkPfnLogCallback)(void *pData,
                                  enum DkLogLevel level,
