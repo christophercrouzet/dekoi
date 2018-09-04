@@ -14,9 +14,9 @@
 #elif defined(DKD_SET_LOGGING_LEVEL_ERROR)
 #define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_ERROR
 #elif defined(DKD_ENABLE_DEBUGGING)
-#define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_WARNING
+#define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_DEBUG
 #else
-#define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_ERROR
+#define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_WARNING
 #endif
 
 #define DKD_LOG(pLogger, level, ...)                                           \
