@@ -7,9 +7,10 @@
 
 enum DkLogLevel {
     DK_LOG_LEVEL_DEBUG = 0,
-    DK_LOG_LEVEL_INFO = 1,
-    DK_LOG_LEVEL_WARNING = 2,
-    DK_LOG_LEVEL_ERROR = 3
+    DK_LOG_LEVEL_TRACE = 1,
+    DK_LOG_LEVEL_INFO = 2,
+    DK_LOG_LEVEL_WARNING = 3,
+    DK_LOG_LEVEL_ERROR = 4
 } DkLogLevel;
 
 typedef void (*DkPfnLogCallback)(void *pData,

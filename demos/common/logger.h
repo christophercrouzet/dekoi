@@ -7,6 +7,8 @@
 
 #if defined(DKD_SET_LOGGING_LEVEL_DEBUG)
 #define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_DEBUG
+#elif defined(DKD_SET_LOGGING_LEVEL_TRACE)
+#define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_TRACE
 #elif defined(DKD_SET_LOGGING_LEVEL_INFO)
 #define DKD_LOGGING_LEVEL DKD_LOG_LEVEL_INFO
 #elif defined(DKD_SET_LOGGING_LEVEL_WARNING)
@@ -30,6 +32,9 @@
 #define DKD_LOG_DEBUG(pLogger, ...)                                            \
     DKD_LOG(pLogger, DKD_LOG_LEVEL_DEBUG, __VA_ARGS__)
 
+#define DKD_LOG_TRACE(pLogger, ...)                                            \
+    DKD_LOG(pLogger, DKD_LOG_LEVEL_TRACE, __VA_ARGS__)
+
 #define DKD_LOG_INFO(pLogger, ...)                                             \
     DKD_LOG(pLogger, DKD_LOG_LEVEL_INFO, __VA_ARGS__)
 
@@ -41,9 +46,10 @@
 
 enum DkdLogLevel {
     DKD_LOG_LEVEL_DEBUG = 0,
-    DKD_LOG_LEVEL_INFO = 1,
-    DKD_LOG_LEVEL_WARNING = 2,
-    DKD_LOG_LEVEL_ERROR = 3
+    DKD_LOG_LEVEL_TRACE = 1,
+    DKD_LOG_LEVEL_INFO = 2,
+    DKD_LOG_LEVEL_WARNING = 3,
+    DKD_LOG_LEVEL_ERROR = 4
 };
 
 struct DkdAllocationCallbacks;

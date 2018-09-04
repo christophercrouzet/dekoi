@@ -21,6 +21,9 @@ dkpTranslateLogLevelToZero(enum ZrLogLevel *pZeroLevel, enum DkLogLevel level)
         case DK_LOG_LEVEL_DEBUG:
             *pZeroLevel = ZR_LOG_LEVEL_DEBUG;
             return;
+        case DK_LOG_LEVEL_TRACE:
+            *pZeroLevel = ZR_LOG_LEVEL_TRACE;
+            return;
         case DK_LOG_LEVEL_INFO:
             *pZeroLevel = ZR_LOG_LEVEL_INFO;
             return;

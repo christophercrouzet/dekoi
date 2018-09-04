@@ -22,6 +22,9 @@ dkdTranslateLogLevelToZero(enum ZrLogLevel *pDekoiLevel, enum DkdLogLevel level)
         case DKD_LOG_LEVEL_DEBUG:
             *pDekoiLevel = ZR_LOG_LEVEL_DEBUG;
             return;
+        case DKD_LOG_LEVEL_TRACE:
+            *pDekoiLevel = ZR_LOG_LEVEL_TRACE;
+            return;
         case DKD_LOG_LEVEL_INFO:
             *pDekoiLevel = ZR_LOG_LEVEL_INFO;
             return;
@@ -84,6 +87,9 @@ dkdTranslateLogLevelFromDekoi(enum DkdLogLevel *pLevel,
     switch (dekoiLevel) {
         case DK_LOG_LEVEL_DEBUG:
             *pLevel = DKD_LOG_LEVEL_DEBUG;
+            return;
+        case DK_LOG_LEVEL_TRACE:
+            *pLevel = DKD_LOG_LEVEL_TRACE;
             return;
         case DK_LOG_LEVEL_INFO:
             *pLevel = DKD_LOG_LEVEL_INFO;

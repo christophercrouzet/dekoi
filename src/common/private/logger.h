@@ -8,6 +8,8 @@
 
 #if defined(DK_SET_LOGGING_LEVEL_DEBUG)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_DEBUG
+#elif defined(DK_SET_LOGGING_LEVEL_TRACE)
+#define DKP_LOGGING_LEVEL DK_LOG_LEVEL_TRACE
 #elif defined(DK_SET_LOGGING_LEVEL_INFO)
 #define DKP_LOGGING_LEVEL DK_LOG_LEVEL_INFO
 #elif defined(DK_SET_LOGGING_LEVEL_WARNING)
@@ -32,6 +34,9 @@
 
 #define DKP_LOG_DEBUG(pLogger, ...)                                            \
     DKP_LOG(pLogger, DK_LOG_LEVEL_DEBUG, __VA_ARGS__)
+
+#define DKP_LOG_TRACE(pLogger, ...)                                            \
+    DKP_LOG(pLogger, DK_LOG_LEVEL_TRACE, __VA_ARGS__)
 
 #define DKP_LOG_INFO(pLogger, ...)                                             \
     DKP_LOG(pLogger, DK_LOG_LEVEL_INFO, __VA_ARGS__)

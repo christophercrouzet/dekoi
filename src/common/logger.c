@@ -7,6 +7,9 @@ dkGetLogLevelName(const char **ppName, enum DkLogLevel level)
         case DK_LOG_LEVEL_DEBUG:
             *ppName = "debug";
             return;
+        case DK_LOG_LEVEL_TRACE:
+            *ppName = "trace";
+            return;
         case DK_LOG_LEVEL_INFO:
             *ppName = "info";
             return;
