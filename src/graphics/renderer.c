@@ -310,7 +310,7 @@ dkpPickMemoryTypeIndex(uint32_t *pMemoryTypeIndex,
         }
     }
 
-    DKP_LOG_ERROR(pLogger, "could not find a suitable memory type\n");
+    DKP_LOG_TRACE(pLogger, "could not find a suitable memory type\n");
     return DK_ERROR;
 }
 
@@ -350,7 +350,7 @@ dkpCopyBuffer(const struct DkpDevice *pDevice,
             pDevice->logicalHandle, &allocateInfo, &commandBuffer)
         != VK_SUCCESS) {
         out = DK_ERROR;
-        DKP_LOG_ERROR(pLogger, "failed to allocate copy command buffers\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate copy command buffers\n");
         goto exit;
     }
 
@@ -361,7 +361,7 @@ dkpCopyBuffer(const struct DkpDevice *pDevice,
 
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
         out = DK_ERROR;
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not begin the copy command buffer recording\n");
         goto allocate_command_buffers_cleanup;
     }
@@ -375,7 +375,7 @@ dkpCopyBuffer(const struct DkpDevice *pDevice,
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         out = DK_ERROR;
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not end the copy command buffer recording\n");
         goto allocate_command_buffers_cleanup;
     }
@@ -392,7 +392,7 @@ dkpCopyBuffer(const struct DkpDevice *pDevice,
 
     if (vkQueueSubmit(pQueues->transferHandle, 1, &submitInfo, VK_NULL_HANDLE)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "could not submit the copy command buffer\n");
+        DKP_LOG_TRACE(pLogger, "could not submit the copy command buffer\n");
         out = DK_ERROR;
         goto allocate_command_buffers_cleanup;
     }
@@ -443,7 +443,7 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
                        pBackEndAllocator,
                        &pBuffer->handle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create the buffer\n");
+        DKP_LOG_TRACE(pLogger, "failed to create the buffer\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -461,7 +461,7 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
                                memoryProperties,
                                pLogger)
         != DK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to pick a memory type index\n");
+        DKP_LOG_TRACE(pLogger, "failed to pick a memory type index\n");
         out = DK_ERROR;
         goto buffer_undo;
     }
@@ -471,7 +471,7 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
                          pBackEndAllocator,
                          &pBuffer->memoryHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the buffer memory\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the buffer memory\n");
         out = DK_ERROR;
         goto buffer_undo;
     }
@@ -479,7 +479,7 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
     if (vkBindBufferMemory(
             pDevice->logicalHandle, pBuffer->handle, pBuffer->memoryHandle, 0)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to bind the buffer memory\n");
+        DKP_LOG_TRACE(pLogger, "failed to bind the buffer memory\n");
         out = DK_ERROR;
         goto allocate_memory_undo;
     }
@@ -530,7 +530,7 @@ dkpCreateInstanceLayerNames(uint32_t *pLayerCount,
         *pppLayerNames = (const char **)DKP_ALLOCATE(
             pAllocator, sizeof **pppLayerNames * *pLayerCount);
         if (*pppLayerNames == NULL) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "failed to allocate the instance layer names\n");
             return DK_ERROR_ALLOCATION;
         }
@@ -577,7 +577,7 @@ dkpCheckInstanceLayersSupport(int *pSupported,
     out = DK_SUCCESS;
 
     if (vkEnumerateInstanceLayerProperties(&layerCount, NULL) != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not retrieve the number of instance layer "
                       "properties available\n");
         out = DK_ERROR;
@@ -592,7 +592,7 @@ dkpCheckInstanceLayersSupport(int *pSupported,
     pLayers = (VkLayerProperties *)DKP_ALLOCATE(pAllocator,
                                                 sizeof *pLayers * layerCount);
     if (pLayers == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the instance layer properties\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
@@ -600,7 +600,7 @@ dkpCheckInstanceLayersSupport(int *pSupported,
 
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(
+        DKP_LOG_TRACE(
             pLogger,
             "could not enumerate the instance layer properties available\n");
         out = DK_ERROR;
@@ -665,7 +665,7 @@ dkpCreateInstanceExtensionNames(
         ppBuffer = (const char **)DKP_ALLOCATE(
             pAllocator, sizeof *ppBuffer * (*pExtensionCount + 1));
         if (ppBuffer == NULL) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "failed to allocate the instance extension names\n");
             return DK_ERROR_ALLOCATION;
         }
@@ -732,7 +732,7 @@ dkpCheckInstanceExtensionsSupport(
 
     if (vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not retrieve the number of instance extension "
                       "properties available\n");
         out = DK_ERROR;
@@ -747,7 +747,7 @@ dkpCheckInstanceExtensionsSupport(
     pExtensions = (VkExtensionProperties *)DKP_ALLOCATE(
         pAllocator, sizeof *pExtensions * extensionCount);
     if (pExtensions == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the instance extension properties\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
@@ -756,7 +756,7 @@ dkpCheckInstanceExtensionsSupport(
     if (vkEnumerateInstanceExtensionProperties(
             NULL, &extensionCount, pExtensions)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not enumerate the instance extension properties "
                       "available\n");
         out = DK_ERROR;
@@ -837,7 +837,7 @@ dkpCreateInstance(
     }
 
     if (!layersSupported) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "one or more instance layers are not supported\n");
         out = DK_ERROR;
         goto layer_names_cleanup;
@@ -864,7 +864,7 @@ dkpCreateInstance(
     }
 
     if (!extensionsSupported) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "one or more instance extensions are not supported\n");
         out = DK_ERROR;
         goto extension_names_cleanup;
@@ -895,26 +895,26 @@ dkpCreateInstance(
         case VK_SUCCESS:
             break;
         case VK_ERROR_LAYER_NOT_PRESENT:
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "some requested instance layers are not supported\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
-            DKP_LOG_ERROR(
+            DKP_LOG_TRACE(
                 pLogger,
                 "some requested instance extensions are not supported\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_INCOMPATIBLE_DRIVER:
-            DKP_LOG_ERROR(pLogger, "the driver is incompatible\n");
+            DKP_LOG_TRACE(pLogger, "the driver is incompatible\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_INITIALIZATION_FAILED:
-            DKP_LOG_ERROR(pLogger, "failed to initialize the instance\n");
+            DKP_LOG_TRACE(pLogger, "failed to initialize the instance\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         default:
-            DKP_LOG_ERROR(pLogger, "failed to create the instance\n");
+            DKP_LOG_TRACE(pLogger, "failed to create the instance\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
     }
@@ -958,7 +958,7 @@ dkpHandleDebugReport(VkDebugReportFlagsEXT flags,
     DKP_UNUSED(messageCode);
     DKP_UNUSED(pLayerPrefix);
 
-    DKP_LOG_ERROR(((struct DkpDebugReportCallbackData *)pUserData)->pLogger,
+    DKP_LOG_TRACE(((struct DkpDebugReportCallbackData *)pUserData)->pLogger,
                   "validation layer: %s\n",
                   pMessage);
     return VK_FALSE;
@@ -989,7 +989,7 @@ dkpCreateDebugReportCallback(VkDebugReportCallbackEXT *pCallbackHandle,
     function = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(
         instanceHandle, "vkCreateDebugReportCallbackEXT");
     if (function == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not retrieve the 'vkCreateDebugReportCallbackEXT' "
                       "function\n");
         return DK_ERROR;
@@ -998,7 +998,7 @@ dkpCreateDebugReportCallback(VkDebugReportCallbackEXT *pCallbackHandle,
     if (function(
             instanceHandle, &createInfo, pBackEndAllocator, pCallbackHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create the debug report callback\n");
+        DKP_LOG_TRACE(pLogger, "failed to create the debug report callback\n");
         return DK_ERROR;
     }
 
@@ -1021,7 +1021,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
     function = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
         instanceHandle, "vkDestroyDebugReportCallbackEXT");
     if (function == NULL) {
-        DKP_LOG_ERROR(
+        DKP_LOG_TRACE(
             pLogger,
             "could not retrieve the 'vkDestroyDebugReportCallbackEXT' "
             "function\n");
@@ -1053,7 +1053,7 @@ dkpCreateSurface(
             pBackEndAllocator,
             pLogger)
         != DK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "the window system integrator's 'createSurface' callback "
                       "returned an error\n");
         return DK_ERROR;
@@ -1096,7 +1096,7 @@ dkpCreateDeviceExtensionNames(uint32_t *pExtensionCount,
     *pppExtensionNames = (const char **)DKP_ALLOCATE(
         pAllocator, sizeof **pppExtensionNames * *pExtensionCount);
     if (*pppExtensionNames == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the device extension names\n");
         return DK_ERROR_ALLOCATION;
     }
@@ -1140,7 +1140,7 @@ dkpCheckDeviceExtensionsSupport(int *pSupported,
     if (vkEnumerateDeviceExtensionProperties(
             physicalDeviceHandle, NULL, &extensionCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not retrieve the number of device extension "
                       "properties available\n");
         out = DK_ERROR;
@@ -1155,7 +1155,7 @@ dkpCheckDeviceExtensionsSupport(int *pSupported,
     pExtensions = (VkExtensionProperties *)DKP_ALLOCATE(
         pAllocator, sizeof *pExtensions * extensionCount);
     if (pExtensions == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the device extension properties\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
@@ -1164,7 +1164,7 @@ dkpCheckDeviceExtensionsSupport(int *pSupported,
     if (vkEnumerateDeviceExtensionProperties(
             physicalDeviceHandle, NULL, &extensionCount, pExtensions)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(
+        DKP_LOG_TRACE(
             pLogger,
             "could not enumerate the device extension properties available\n");
         out = DK_ERROR;
@@ -1232,7 +1232,7 @@ dkpPickDeviceQueueFamilies(uint32_t *pQueueFamilyIndices,
     pProperties = (VkQueueFamilyProperties *)DKP_ALLOCATE(
         pAllocator, sizeof *pProperties * propertyCount);
     if (pProperties == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the queue family properties\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
@@ -1264,7 +1264,7 @@ dkpPickDeviceQueueFamilies(uint32_t *pQueueFamilyIndices,
             if (vkGetPhysicalDeviceSurfaceSupportKHR(
                     physicalDeviceHandle, i, surfaceHandle, &presentSupported)
                 != VK_SUCCESS) {
-                DKP_LOG_ERROR(pLogger,
+                DKP_LOG_TRACE(pLogger,
                               "could not determine support for presentation\n");
                 out = DK_ERROR;
                 goto properties_cleanup;
@@ -1513,7 +1513,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             physicalDeviceHandle, surfaceHandle, &capabilities)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "could not retrieve the surface capabilities\n");
+        DKP_LOG_TRACE(pLogger, "could not retrieve the surface capabilities\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -1521,14 +1521,14 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     if (vkGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDeviceHandle, surfaceHandle, &formatCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not count the number of the surface formats\n");
         out = DK_ERROR;
         goto exit;
     }
 
     if (formatCount == 0) {
-        DKP_LOG_ERROR(pLogger, "could not find a suitable surface format\n");
+        DKP_LOG_TRACE(pLogger, "could not find a suitable surface format\n");
         out = DK_ERROR_NOT_AVAILABLE;
         goto exit;
     }
@@ -1536,7 +1536,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     pFormats = (VkSurfaceFormatKHR *)DKP_ALLOCATE(
         pAllocator, sizeof *pFormats * formatCount);
     if (pFormats == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the surface formats\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the surface formats\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -1544,7 +1544,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     if (vkGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDeviceHandle, surfaceHandle, &formatCount, pFormats)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "could not enumerate the surface formats\n");
+        DKP_LOG_TRACE(pLogger, "could not enumerate the surface formats\n");
         out = DK_ERROR;
         goto formats_cleanup;
     }
@@ -1552,7 +1552,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     if (vkGetPhysicalDeviceSurfacePresentModesKHR(
             physicalDeviceHandle, surfaceHandle, &presentModeCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(
+        DKP_LOG_TRACE(
             pLogger,
             "could not count the number of the surface present modes\n");
         out = DK_ERROR;
@@ -1560,7 +1560,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     }
 
     if (presentModeCount == 0) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not find a suitable surface present mode\n");
         out = DK_ERROR_NOT_AVAILABLE;
         goto formats_cleanup;
@@ -1569,7 +1569,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     pPresentModes = (VkPresentModeKHR *)DKP_ALLOCATE(
         pAllocator, sizeof *pPresentModes * presentModeCount);
     if (pPresentModes == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the surface present modes\n");
         out = DK_ERROR_ALLOCATION;
         goto formats_cleanup;
@@ -1580,7 +1580,7 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
                                                   &presentModeCount,
                                                   pPresentModes)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not enumerate the surface present modes\n");
         out = DK_ERROR;
         goto present_modes_cleanup;
@@ -1772,14 +1772,14 @@ dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
 
     if (vkEnumeratePhysicalDevices(instanceHandle, &physicalDeviceCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not count the number of the physical devices\n");
         out = DK_ERROR;
         goto exit;
     }
 
     if (physicalDeviceCount == 0) {
-        DKP_LOG_ERROR(pLogger, "could not fine a suitable physical device\n");
+        DKP_LOG_TRACE(pLogger, "could not fine a suitable physical device\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -1787,7 +1787,7 @@ dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
     pPhysicalDeviceHandles = (VkPhysicalDevice *)DKP_ALLOCATE(
         pAllocator, sizeof *pPhysicalDeviceHandles * physicalDeviceCount);
     if (pPhysicalDeviceHandles == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the physical devices\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the physical devices\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -1795,7 +1795,7 @@ dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
     if (vkEnumeratePhysicalDevices(
             instanceHandle, &physicalDeviceCount, pPhysicalDeviceHandles)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "could not enumerate the physical devices\n");
+        DKP_LOG_TRACE(pLogger, "could not enumerate the physical devices\n");
         out = DK_ERROR;
         goto physical_devices_cleanup;
     }
@@ -1824,7 +1824,7 @@ dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
     }
 
     if (*pPhysicalDeviceHandle == NULL) {
-        DKP_LOG_ERROR(pLogger, "could not find a suitable physical device\n");
+        DKP_LOG_TRACE(pLogger, "could not find a suitable physical device\n");
         out = DK_ERROR;
         goto physical_devices_cleanup;
     }
@@ -1893,7 +1893,7 @@ dkpMakeDevice(struct DkpDevice *pDevice,
     pQueuePriorities = (float *)DKP_ALLOCATE(
         pAllocator, sizeof *pQueuePriorities * queueCount);
     if (pQueuePriorities == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the device queue priorities\n");
         out = DK_ERROR_ALLOCATION;
         goto extension_names_cleanup;
@@ -1910,7 +1910,7 @@ dkpMakeDevice(struct DkpDevice *pDevice,
     pQueueInfos = (VkDeviceQueueCreateInfo *)DKP_ALLOCATE(
         pAllocator, sizeof *pQueueInfos * pDevice->filteredQueueFamilyCount);
     if (pQueueInfos == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the device queue infos\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the device queue infos\n");
         out = DK_ERROR_ALLOCATION;
         goto queue_priorities_cleanup;
     }
@@ -1943,27 +1943,27 @@ dkpMakeDevice(struct DkpDevice *pDevice,
         case VK_SUCCESS:
             break;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
-            DKP_LOG_ERROR(
+            DKP_LOG_TRACE(
                 pLogger,
                 "some requested device extensions are not supported\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         case VK_ERROR_FEATURE_NOT_PRESENT:
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "some requested device features are not supported\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         case VK_ERROR_TOO_MANY_OBJECTS:
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "too many devices have already been created\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         case VK_ERROR_DEVICE_LOST:
-            DKP_LOG_ERROR(pLogger, "the device has been lost\n");
+            DKP_LOG_TRACE(pLogger, "the device has been lost\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         default:
-            DKP_LOG_ERROR(pLogger, "failed to create the device\n");
+            DKP_LOG_TRACE(pLogger, "failed to create the device\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
     }
@@ -2065,7 +2065,7 @@ dkpCreateSemaphores(VkSemaphore **ppSemaphoreHandles,
     *ppSemaphoreHandles = (VkSemaphore *)DKP_ALLOCATE(
         pAllocator, sizeof **ppSemaphoreHandles * DKP_SEMAPHORE_ID_ENUM_COUNT);
     if (*ppSemaphoreHandles == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the semaphores\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the semaphores\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -2085,7 +2085,7 @@ dkpCreateSemaphores(VkSemaphore **ppSemaphoreHandles,
             dkpGetSemaphoreIdDescription(&pSemaphoreDescription,
                                          (enum DkpSemaphoreId)i);
 
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "failed to create a '%s' semaphore\n",
                           pSemaphoreDescription);
             out = DK_ERROR;
@@ -2161,7 +2161,7 @@ dkpCreateShaderModule(VkShaderModule *pShaderModuleHandle,
                              pBackEndAllocator,
                              pShaderModuleHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create the shader module\n");
+        DKP_LOG_TRACE(pLogger, "failed to create the shader module\n");
         return DK_ERROR;
     }
 
@@ -2207,7 +2207,7 @@ dkpCreateShaders(struct DkpShader **ppShaders,
     *ppShaders = (struct DkpShader *)DKP_ALLOCATE(
         pAllocator, sizeof **ppShaders * shaderCount);
     if (*ppShaders == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the shaders\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the shaders\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -2311,7 +2311,7 @@ dkpCreateVertexBuffers(
     *ppVertexBuffers = (struct DkpBuffer *)DKP_ALLOCATE(
         pAllocator, sizeof **ppVertexBuffers * vertexBufferCount);
     if (*ppVertexBuffers == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the vertex buffers\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the vertex buffers\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -2346,7 +2346,7 @@ dkpCreateVertexBuffers(
                         0,
                         &pData)
             != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "failed to map a vertex staging buffer memory\n");
             out = DK_ERROR;
             goto vertex_buffers_undo;
@@ -2458,14 +2458,14 @@ dkpCreateSwapChainImages(uint32_t *pImageCount,
     if (vkGetSwapchainImagesKHR(
             pDevice->logicalHandle, swapChainHandle, pImageCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "could not retrieve the number of swap chain images\n");
         out = DK_ERROR;
         goto exit;
     }
 
     if (*pImageCount == 0) {
-        DKP_LOG_ERROR(pLogger, "could not find a suitable swap chain image\n");
+        DKP_LOG_TRACE(pLogger, "could not find a suitable swap chain image\n");
         out = DK_ERROR;
         goto exit;
     }
@@ -2473,7 +2473,7 @@ dkpCreateSwapChainImages(uint32_t *pImageCount,
     *ppImageHandles = (VkImage *)DKP_ALLOCATE(
         pAllocator, sizeof **ppImageHandles * *pImageCount);
     if (*ppImageHandles == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the swap chain images\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the swap chain images\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -2483,7 +2483,7 @@ dkpCreateSwapChainImages(uint32_t *pImageCount,
                                 pImageCount,
                                 *ppImageHandles)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "could not retrieve the swap chain images\n");
+        DKP_LOG_TRACE(pLogger, "could not retrieve the swap chain images\n");
         out = DK_ERROR;
         goto images_undo;
     }
@@ -2535,7 +2535,7 @@ dkpCreateSwapChainImageViews(VkImageView **ppImageViewHandles,
     *ppImageViewHandles = (VkImageView *)DKP_ALLOCATE(
         pAllocator, sizeof **ppImageViewHandles * imageCount);
     if (*ppImageViewHandles == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the swap chain image views\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
@@ -2567,7 +2567,7 @@ dkpCreateSwapChainImageViews(VkImageView **ppImageViewHandles,
                               pBackEndAllocator,
                               &(*ppImageViewHandles)[i])
             != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger, "failed to create an image view\n");
+            DKP_LOG_TRACE(pLogger, "failed to create an image view\n");
             out = DK_ERROR;
             goto image_views_undo;
         }
@@ -2660,7 +2660,7 @@ dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
         pQueueFamilyIndices = (uint32_t *)DKP_ALLOCATE(
             pAllocator, sizeof *pQueueFamilyIndices * queueFamilyIndexCount);
         if (pQueueFamilyIndices == NULL) {
-            DKP_LOG_ERROR(
+            DKP_LOG_TRACE(
                 pLogger,
                 "failed to allocate the swap chain's queue family indices\n");
             out = DK_ERROR_ALLOCATION;
@@ -2703,20 +2703,20 @@ dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
         case VK_SUCCESS:
             break;
         case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "the swap chain's surface is already in use\n");
             out = DK_ERROR;
             goto queue_family_indices_cleanup;
         case VK_ERROR_DEVICE_LOST:
-            DKP_LOG_ERROR(pLogger, "the swap chain's device has been lost\n");
+            DKP_LOG_TRACE(pLogger, "the swap chain's device has been lost\n");
             out = DK_ERROR;
             goto queue_family_indices_cleanup;
         case VK_ERROR_SURFACE_LOST_KHR:
-            DKP_LOG_ERROR(pLogger, "the swap chain's surface has been lost\n");
+            DKP_LOG_TRACE(pLogger, "the swap chain's surface has been lost\n");
             out = DK_ERROR;
             goto queue_family_indices_cleanup;
         default:
-            DKP_LOG_ERROR(pLogger, "failed to create the swap chain\n");
+            DKP_LOG_TRACE(pLogger, "failed to create the swap chain\n");
             out = DK_ERROR;
             goto queue_family_indices_cleanup;
     }
@@ -2827,7 +2827,7 @@ dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
     pColorAttachments = (VkAttachmentDescription *)DKP_ALLOCATE(
         pAllocator, sizeof *pColorAttachments * colorAttachmentCount);
     if (pColorAttachments == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the color attachments\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the color attachments\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -2835,7 +2835,7 @@ dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
     pColorAttachmentReferences = (VkAttachmentReference *)DKP_ALLOCATE(
         pAllocator, sizeof *pColorAttachmentReferences * colorAttachmentCount);
     if (pColorAttachmentReferences == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the color attachment references\n");
         out = DK_ERROR_ALLOCATION;
         goto color_attachments_cleanup;
@@ -2861,7 +2861,7 @@ dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
     pSubpasses = (VkSubpassDescription *)DKP_ALLOCATE(
         pAllocator, sizeof *pSubpasses * subpassCount);
     if (pSubpasses == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the subpasses\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the subpasses\n");
         out = DK_ERROR_ALLOCATION;
         goto color_attachment_references_cleanup;
     }
@@ -2881,7 +2881,7 @@ dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
     pSubpassDependencies = (VkSubpassDependency *)DKP_ALLOCATE(
         pAllocator, sizeof *pSubpassDependencies * subpassDependencyCount);
     if (pSubpassDependencies == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the subpass dependencies\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the subpass dependencies\n");
         out = DK_ERROR_ALLOCATION;
         goto subpasses_cleanup;
     }
@@ -2913,7 +2913,7 @@ dkpCreateRenderPass(VkRenderPass *pRenderPassHandle,
                            pBackEndAllocator,
                            pRenderPassHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to created the render pass\n");
+        DKP_LOG_TRACE(pLogger, "failed to created the render pass\n");
         out = DK_ERROR;
         goto subpass_dependencies_cleanup;
     }
@@ -2975,7 +2975,7 @@ dkpCreatePipelineLayout(VkPipelineLayout *pPipelineLayoutHandle,
                                pBackEndAllocator,
                                pPipelineLayoutHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create the pipeline layout\n");
+        DKP_LOG_TRACE(pLogger, "failed to create the pipeline layout\n");
         return DK_ERROR;
     }
 
@@ -3048,7 +3048,7 @@ dkpCreateGraphicsPipeline(
     pShaderStageInfos = (VkPipelineShaderStageCreateInfo *)DKP_ALLOCATE(
         pAllocator, sizeof *pShaderStageInfos * shaderCount);
     if (pShaderStageInfos == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the shader stage infos\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the shader stage infos\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -3068,7 +3068,7 @@ dkpCreateGraphicsPipeline(
     pViewports = (VkViewport *)DKP_ALLOCATE(pAllocator,
                                             sizeof *pViewports * viewportCount);
     if (pViewports == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the viewports\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the viewports\n");
         out = DK_ERROR_ALLOCATION;
         goto shader_stage_infos_cleanup;
     }
@@ -3084,7 +3084,7 @@ dkpCreateGraphicsPipeline(
     pScissors = (VkRect2D *)DKP_ALLOCATE(pAllocator,
                                          sizeof *pScissors * scissorCount);
     if (pScissors == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the scissors\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the scissors\n");
         out = DK_ERROR_ALLOCATION;
         goto viewports_cleanup;
     }
@@ -3100,7 +3100,7 @@ dkpCreateGraphicsPipeline(
             (sizeof *pColorBlendAttachmentStates
              * colorBlendAttachmentStateCount));
     if (pColorBlendAttachmentStates == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the color blend attachment states\n");
         out = DK_ERROR_ALLOCATION;
         goto scissors_cleanup;
@@ -3189,7 +3189,7 @@ dkpCreateGraphicsPipeline(
     pCreateInfos = (VkGraphicsPipelineCreateInfo *)DKP_ALLOCATE(
         pAllocator, sizeof *pCreateInfos * createInfoCount);
     if (pCreateInfos == NULL) {
-        DKP_LOG_ERROR(
+        DKP_LOG_TRACE(
             pLogger, "failed to allocate the graphics pipeline create infos\n");
         out = DK_ERROR_ALLOCATION;
         goto color_blend_attachment_states_cleanup;
@@ -3222,7 +3222,7 @@ dkpCreateGraphicsPipeline(
                                   pBackEndAllocator,
                                   pPipelineHandle)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger, "failed to create the graphics pipelines\n");
+        DKP_LOG_TRACE(pLogger, "failed to create the graphics pipelines\n");
         out = DK_ERROR;
         goto create_infos_cleanup;
     }
@@ -3290,7 +3290,7 @@ dkpCreateFramebuffers(VkFramebuffer **ppFramebufferHandles,
     *ppFramebufferHandles = (VkFramebuffer *)DKP_ALLOCATE(
         pAllocator, sizeof **ppFramebufferHandles * pSwapChain->imageCount);
     if (*ppFramebufferHandles == NULL) {
-        DKP_LOG_ERROR(pLogger, "failed to allocate the frame buffers\n");
+        DKP_LOG_TRACE(pLogger, "failed to allocate the frame buffers\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
     }
@@ -3321,7 +3321,7 @@ dkpCreateFramebuffers(VkFramebuffer **ppFramebufferHandles,
                                 pBackEndAllocator,
                                 &(*ppFramebufferHandles)[i])
             != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger, "failed to create a frame buffer\n");
+            DKP_LOG_TRACE(pLogger, "failed to create a frame buffer\n");
             out = DK_ERROR;
             goto frame_buffers_undo;
         }
@@ -3408,7 +3408,7 @@ dkpMakeCommandPools(struct DkpCommandPools *pCommandPools,
                                 pBackEndAllocator,
                                 &pCommandPools->handles[i])
             != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger, "failed to create a command pool\n");
+            DKP_LOG_TRACE(pLogger, "failed to create a command pool\n");
             out = DK_ERROR;
             goto command_pools_undo;
         }
@@ -3487,7 +3487,7 @@ dkpCreateGraphicsCommandBuffers(VkCommandBuffer **ppCommandBufferHandles,
     *ppCommandBufferHandles = (VkCommandBuffer *)DKP_ALLOCATE(
         pAllocator, sizeof **ppCommandBufferHandles * pSwapChain->imageCount);
     if (*ppCommandBufferHandles == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to create the graphics command buffers\n");
         out = DK_ERROR_ALLOCATION;
         goto exit;
@@ -3496,7 +3496,7 @@ dkpCreateGraphicsCommandBuffers(VkCommandBuffer **ppCommandBufferHandles,
     if (vkAllocateCommandBuffers(
             pDevice->logicalHandle, &allocateInfo, *ppCommandBufferHandles)
         != VK_SUCCESS) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the graphics command buffers\n");
         out = DK_ERROR;
         goto command_buffers_undo;
@@ -3571,7 +3571,7 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
         pBuffers = (VkBuffer *)DKP_ALLOCATE(
             pAllocator, sizeof *pBuffers * vertexBufferCount);
         if (pBuffers == NULL) {
-            DKP_LOG_ERROR(pLogger, "failed to create the vertex buffers\n");
+            DKP_LOG_TRACE(pLogger, "failed to create the vertex buffers\n");
             out = DK_ERROR_ALLOCATION;
             goto exit;
         }
@@ -3579,7 +3579,7 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
         pOffsets = (VkDeviceSize *)DKP_ALLOCATE(
             pAllocator, sizeof *pOffsets * vertexBufferCount);
         if (pOffsets == NULL) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "failed to create the vertex buffer offsets\n");
             out = DK_ERROR_ALLOCATION;
             goto buffers_cleanup;
@@ -3605,7 +3605,7 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
 
         if (vkBeginCommandBuffer(pCommandBufferHandles[i], &beginInfo)
             != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "could not begin the command buffer recording\n");
             out = DK_ERROR;
             goto offsets_cleanup;
@@ -3635,7 +3635,7 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
         vkCmdEndRenderPass(pCommandBufferHandles[i]);
 
         if (vkEndCommandBuffer(pCommandBufferHandles[i]) != VK_SUCCESS) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "could not end the command buffer recording\n");
             out = DK_ERROR;
             goto offsets_cleanup;
@@ -3874,7 +3874,7 @@ dkpValidateRendererCreateInfo(int *pValid,
     *pValid = DKP_FALSE;
 
     if (pCreateInfo->shaderCount == 0) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "'pCreateInfo->shaderCount' must be greater than 0\n");
         return;
     }
@@ -3882,7 +3882,7 @@ dkpValidateRendererCreateInfo(int *pValid,
     for (i = 0; i < pCreateInfo->shaderCount; ++i) {
         dkpValidateShaderStage(pValid, pCreateInfo->pShaderInfos[i].stage);
         if (!(*pValid)) {
-            DKP_LOG_ERROR(pLogger,
+            DKP_LOG_TRACE(pLogger,
                           "invalid enum value for "
                           "'pCreateInfo->pShaderInfos[%d].stage'\n",
                           i);
@@ -3918,7 +3918,7 @@ dkpCreateVertexBindingDescriptions(
             sizeof **ppVertexBindingDescriptions
                 * vertexBindingDescriptionCount);
     if (*ppVertexBindingDescriptions == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the vertex binding descriptions\n");
         return DK_ERROR_ALLOCATION;
     }
@@ -3975,7 +3975,7 @@ dkpCreateVertexAttributeDescriptions(
             sizeof **ppVertexAttributeDescriptions
                 * vertexAttributeDescriptionCount);
     if (*ppVertexAttributeDescriptions == NULL) {
-        DKP_LOG_ERROR(pLogger,
+        DKP_LOG_TRACE(pLogger,
                       "failed to allocate the vertex attribute descriptions\n");
         return DK_ERROR_ALLOCATION;
     }
@@ -4085,7 +4085,7 @@ dkpNotifyBackEndInternalAllocation(void *pData,
 
     DKP_ASSERT(pData != NULL);
 
-    DKP_LOG_DEBUG(((struct DkpBackEndAllocationCallbacksData *)pData)->pLogger,
+    DKP_LOG_TRACE(((struct DkpBackEndAllocationCallbacksData *)pData)->pLogger,
                   "renderer back-end internal allocation of %zu bytes\n",
                   size);
 }
@@ -4101,7 +4101,7 @@ dkpNotifyBackEndInternalFreeing(void *pData,
 
     DKP_ASSERT(pData != NULL);
 
-    DKP_LOG_DEBUG(((struct DkpBackEndAllocationCallbacksData *)pData)->pLogger,
+    DKP_LOG_TRACE(((struct DkpBackEndAllocationCallbacksData *)pData)->pLogger,
                   "renderer back-end internal freeing of %zu bytes\n",
                   size);
 }
