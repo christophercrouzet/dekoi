@@ -1490,7 +1490,6 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
                            VkPhysicalDevice physicalDeviceHandle,
                            VkSurfaceKHR surfaceHandle,
                            const VkExtent2D *pDesiredImageExtent,
-                           enum DkLogLevel notAvailableErrorLogLevel,
                            const struct DkAllocationCallbacks *pAllocator,
                            const struct DkLoggingCallbacks *pLogger)
 {
@@ -1584,20 +1583,15 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     out = dkpPickSwapChainPresentMode(
         &pSwapChainProperties->presentMode, presentModeCount, pPresentModes);
     if (out != DK_SUCCESS) {
-        DKP_LOG(pLogger,
-                out == DK_ERROR_NOT_AVAILABLE ? notAvailableErrorLogLevel
-                                              : DK_LOG_LEVEL_ERROR,
-                "could not find a suitable present mode\n");
+        DKP_LOG_TRACE(pLogger, "could not find a suitable present mode\n");
         goto present_modes_cleanup;
     }
 
     out = dkpPickSwapChainImageUsage(&pSwapChainProperties->imageUsage,
                                      capabilities);
     if (out != DK_SUCCESS) {
-        DKP_LOG(pLogger,
-                out == DK_ERROR_NOT_AVAILABLE ? notAvailableErrorLogLevel
-                                              : DK_LOG_LEVEL_ERROR,
-                "one or more image usage flags are not supported\n");
+        DKP_LOG_TRACE(pLogger,
+                      "one or more image usage flags are not supported\n");
         goto present_modes_cleanup;
     }
 
@@ -1650,7 +1644,6 @@ dkpCheckSwapChainSupport(int *pSupported,
                                         physicalDeviceHandle,
                                         surfaceHandle,
                                         &imageExtent,
-                                        DK_LOG_LEVEL_INFO,
                                         pAllocator,
                                         pLogger);
     if (status == DK_SUCCESS) {
@@ -2634,7 +2627,6 @@ dkpInitializeSwapChain(struct DkpSwapChain *pSwapChain,
                                      pDevice->physicalHandle,
                                      surfaceHandle,
                                      pDesiredImageExtent,
-                                     DK_LOG_LEVEL_ERROR,
                                      pAllocator,
                                      pLogger);
     if (out != DK_SUCCESS) {
