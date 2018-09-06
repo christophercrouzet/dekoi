@@ -455,14 +455,13 @@ dkpMakeBuffer(struct DkpBuffer *pBuffer,
     allocateInfo.pNext = NULL;
     allocateInfo.allocationSize = memoryRequirements.size;
 
-    if (dkpPickMemoryTypeIndex(&allocateInfo.memoryTypeIndex,
-                               pDevice,
-                               memoryRequirements.memoryTypeBits,
-                               memoryProperties,
-                               pLogger)
-        != DK_SUCCESS) {
+    out = dkpPickMemoryTypeIndex(&allocateInfo.memoryTypeIndex,
+                                 pDevice,
+                                 memoryRequirements.memoryTypeBits,
+                                 memoryProperties,
+                                 pLogger);
+    if (out != DK_SUCCESS) {
         DKP_LOG_TRACE(pLogger, "failed to pick a memory type index\n");
-        out = DK_ERROR;
         goto buffer_undo;
     }
 
@@ -822,17 +821,15 @@ dkpCreateInstance(
 
     out = DK_SUCCESS;
 
-    if (dkpCreateInstanceLayerNames(
-            &layerCount, &ppLayerNames, pAllocator, pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateInstanceLayerNames(
+        &layerCount, &ppLayerNames, pAllocator, pLogger);
+    if (out != DK_SUCCESS) {
         goto exit;
     }
 
-    if (dkpCheckInstanceLayersSupport(
-            &layersSupported, layerCount, ppLayerNames, pAllocator, pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCheckInstanceLayersSupport(
+        &layersSupported, layerCount, ppLayerNames, pAllocator, pLogger);
+    if (out != DK_SUCCESS) {
         goto layer_names_cleanup;
     }
 
@@ -843,23 +840,21 @@ dkpCreateInstance(
         goto layer_names_cleanup;
     }
 
-    if (dkpCreateInstanceExtensionNames(&extensionCount,
-                                        &ppExtensionNames,
-                                        pWindowSystemIntegrator,
-                                        pAllocator,
-                                        pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateInstanceExtensionNames(&extensionCount,
+                                          &ppExtensionNames,
+                                          pWindowSystemIntegrator,
+                                          pAllocator,
+                                          pLogger);
+    if (out != DK_SUCCESS) {
         goto layer_names_cleanup;
     }
 
-    if (dkpCheckInstanceExtensionsSupport(&extensionsSupported,
-                                          extensionCount,
-                                          ppExtensionNames,
-                                          pAllocator,
-                                          pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCheckInstanceExtensionsSupport(&extensionsSupported,
+                                            extensionCount,
+                                            ppExtensionNames,
+                                            pAllocator,
+                                            pLogger);
+    if (out != DK_SUCCESS) {
         goto extension_names_cleanup;
     }
 
@@ -1804,16 +1799,15 @@ dkpPickPhysicalDevice(VkPhysicalDevice *pPhysicalDeviceHandle,
     for (i = 0; i < physicalDeviceCount; ++i) {
         int suitable;
 
-        if (dkpInspectPhysicalDevice(&suitable,
-                                     pQueueFamilyIndices,
-                                     pPhysicalDeviceHandles[i],
-                                     surfaceHandle,
-                                     extensionCount,
-                                     ppExtensionNames,
-                                     pAllocator,
-                                     pLogger)
-            != DK_SUCCESS) {
-            out = DK_ERROR;
+        out = dkpInspectPhysicalDevice(&suitable,
+                                       pQueueFamilyIndices,
+                                       pPhysicalDeviceHandles[i],
+                                       surfaceHandle,
+                                       extensionCount,
+                                       ppExtensionNames,
+                                       pAllocator,
+                                       pLogger);
+        if (out != DK_SUCCESS) {
             goto physical_devices_cleanup;
         }
 
@@ -1866,26 +1860,24 @@ dkpMakeDevice(struct DkpDevice *pDevice,
                          ? DKP_PRESENT_SUPPORT_DISABLED
                          : DKP_PRESENT_SUPPORT_ENABLED;
 
-    if (dkpCreateDeviceExtensionNames(&extensionCount,
-                                      &ppExtensionNames,
-                                      presentSupport,
-                                      pAllocator,
-                                      pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateDeviceExtensionNames(&extensionCount,
+                                        &ppExtensionNames,
+                                        presentSupport,
+                                        pAllocator,
+                                        pLogger);
+    if (out != DK_SUCCESS) {
         goto exit;
     }
 
-    if (dkpPickPhysicalDevice(&pDevice->physicalHandle,
-                              pDevice->queueFamilyIndices,
-                              instanceHandle,
-                              surfaceHandle,
-                              extensionCount,
-                              ppExtensionNames,
-                              pAllocator,
-                              pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpPickPhysicalDevice(&pDevice->physicalHandle,
+                                pDevice->queueFamilyIndices,
+                                instanceHandle,
+                                surfaceHandle,
+                                extensionCount,
+                                ppExtensionNames,
+                                pAllocator,
+                                pLogger);
+    if (out != DK_SUCCESS) {
         goto extension_names_cleanup;
     }
 
@@ -2219,14 +2211,13 @@ dkpCreateShaders(struct DkpShader **ppShaders,
     for (i = 0; i < shaderCount; ++i) {
         VkShaderStageFlagBits backEndShaderStage;
 
-        if (dkpCreateShaderModule(&(*ppShaders)[i].moduleHandle,
-                                  pDevice,
-                                  (size_t)pShaderInfos[i].codeSize,
-                                  (uint32_t *)pShaderInfos[i].pCode,
-                                  pBackEndAllocator,
-                                  pLogger)
-            != DK_SUCCESS) {
-            out = DK_ERROR;
+        out = dkpCreateShaderModule(&(*ppShaders)[i].moduleHandle,
+                                    pDevice,
+                                    (size_t)pShaderInfos[i].codeSize,
+                                    (uint32_t *)pShaderInfos[i].pCode,
+                                    pBackEndAllocator,
+                                    pLogger);
+        if (out != DK_SUCCESS) {
             goto shaders_undo;
         }
 
@@ -2324,16 +2315,15 @@ dkpCreateVertexBuffers(
     for (i = 0; i < vertexBufferCount; ++i) {
         void *pData;
 
-        if (dkpMakeBuffer(&stagingBuffer,
-                          pDevice,
-                          (VkDeviceSize)pVertexBufferInfos[i].size,
-                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                              | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          pBackEndAllocator,
-                          pLogger)
-            != DK_SUCCESS) {
-            out = DK_ERROR;
+        out = dkpMakeBuffer(&stagingBuffer,
+                            pDevice,
+                            (VkDeviceSize)pVertexBufferInfos[i].size,
+                            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                                | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                            pBackEndAllocator,
+                            pLogger);
+        if (out != DK_SUCCESS) {
             stagingBuffer.handle = VK_NULL_HANDLE;
             stagingBuffer.memoryHandle = VK_NULL_HANDLE;
             goto vertex_buffers_undo;
@@ -2357,16 +2347,15 @@ dkpCreateVertexBuffers(
                (size_t)pVertexBufferInfos[i].size);
         vkUnmapMemory(pDevice->logicalHandle, stagingBuffer.memoryHandle);
 
-        if (dkpMakeBuffer(&(*ppVertexBuffers)[i],
-                          pDevice,
-                          (VkDeviceSize)pVertexBufferInfos[i].size,
-                          VK_BUFFER_USAGE_TRANSFER_DST_BIT
-                              | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                          pBackEndAllocator,
-                          pLogger)
-            != DK_SUCCESS) {
-            out = DK_ERROR;
+        out = dkpMakeBuffer(&(*ppVertexBuffers)[i],
+                            pDevice,
+                            (VkDeviceSize)pVertexBufferInfos[i].size,
+                            VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                                | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                            pBackEndAllocator,
+                            pLogger);
+        if (out != DK_SUCCESS) {
             (*ppVertexBuffers)[i].handle = VK_NULL_HANDLE;
             (*ppVertexBuffers)[i].memoryHandle = VK_NULL_HANDLE;
             goto vertex_buffers_undo;
@@ -2641,15 +2630,14 @@ dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
 
     out = DK_SUCCESS;
 
-    if (dkpPickSwapChainProperties(&swapChainProperties,
-                                   pDevice->physicalHandle,
-                                   surfaceHandle,
-                                   pDesiredImageExtent,
-                                   DK_LOG_LEVEL_ERROR,
-                                   pAllocator,
-                                   pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpPickSwapChainProperties(&swapChainProperties,
+                                     pDevice->physicalHandle,
+                                     surfaceHandle,
+                                     pDesiredImageExtent,
+                                     DK_LOG_LEVEL_ERROR,
+                                     pAllocator,
+                                     pLogger);
+    if (out != DK_SUCCESS) {
         goto exit;
     }
 
@@ -2723,27 +2711,25 @@ dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
 
     pSwapChain->imageExtent = swapChainProperties.imageExtent;
 
-    if (dkpCreateSwapChainImages(&pSwapChain->imageCount,
-                                 &pSwapChain->pImageHandles,
-                                 pDevice,
-                                 pSwapChain->handle,
-                                 pAllocator,
-                                 pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateSwapChainImages(&pSwapChain->imageCount,
+                                   &pSwapChain->pImageHandles,
+                                   pDevice,
+                                   pSwapChain->handle,
+                                   pAllocator,
+                                   pLogger);
+    if (out != DK_SUCCESS) {
         goto queue_family_indices_cleanup;
     }
 
-    if (dkpCreateSwapChainImageViews(&pSwapChain->pImageViewHandles,
-                                     pDevice,
-                                     pSwapChain->imageCount,
-                                     pSwapChain->pImageHandles,
-                                     swapChainProperties.format.format,
-                                     pBackEndAllocator,
-                                     pAllocator,
-                                     pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateSwapChainImageViews(&pSwapChain->pImageViewHandles,
+                                       pDevice,
+                                       pSwapChain->imageCount,
+                                       pSwapChain->pImageHandles,
+                                       swapChainProperties.format.format,
+                                       pBackEndAllocator,
+                                       pAllocator,
+                                       pLogger);
+    if (out != DK_SUCCESS) {
         goto images_undo;
     }
 
@@ -3665,99 +3651,92 @@ dkpMakeRendererSwapChainSystem(struct DkRenderer *pRenderer)
 
     out = DK_SUCCESS;
 
-    if (dkpMakeSwapChain(&pRenderer->swapChain,
-                         &pRenderer->device,
-                         pRenderer->surfaceHandle,
-                         &pRenderer->surfaceExtent,
-                         VK_NULL_HANDLE,
-                         &pRenderer->backEndAllocator,
-                         pRenderer->pAllocator,
-                         pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpMakeSwapChain(&pRenderer->swapChain,
+                           &pRenderer->device,
+                           pRenderer->surfaceHandle,
+                           &pRenderer->surfaceExtent,
+                           VK_NULL_HANDLE,
+                           &pRenderer->backEndAllocator,
+                           pRenderer->pAllocator,
+                           pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto exit;
     }
 
-    if (dkpCreateRenderPass(&pRenderer->renderPassHandle,
-                            &pRenderer->device,
-                            &pRenderer->swapChain,
-                            &pRenderer->backEndAllocator,
-                            pRenderer->pAllocator,
-                            pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateRenderPass(&pRenderer->renderPassHandle,
+                              &pRenderer->device,
+                              &pRenderer->swapChain,
+                              &pRenderer->backEndAllocator,
+                              pRenderer->pAllocator,
+                              pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto swap_chain_undo;
     }
 
-    if (dkpCreatePipelineLayout(&pRenderer->pipelineLayoutHandle,
-                                &pRenderer->device,
-                                &pRenderer->backEndAllocator,
-                                pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreatePipelineLayout(&pRenderer->pipelineLayoutHandle,
+                                  &pRenderer->device,
+                                  &pRenderer->backEndAllocator,
+                                  pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto render_pass_undo;
     }
 
-    if (dkpCreateGraphicsPipeline(&pRenderer->graphicsPipelineHandle,
-                                  &pRenderer->device,
-                                  pRenderer->pipelineLayoutHandle,
-                                  pRenderer->renderPassHandle,
-                                  pRenderer->shaderCount,
-                                  pRenderer->pShaders,
-                                  &pRenderer->swapChain.imageExtent,
-                                  pRenderer->vertexBindingDescriptionCount,
-                                  pRenderer->pVertexBindingDescriptions,
-                                  pRenderer->vertexAttributeDescriptionCount,
-                                  pRenderer->pVertexAttributeDescriptions,
-                                  &pRenderer->backEndAllocator,
-                                  pRenderer->pAllocator,
-                                  pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateGraphicsPipeline(&pRenderer->graphicsPipelineHandle,
+                                    &pRenderer->device,
+                                    pRenderer->pipelineLayoutHandle,
+                                    pRenderer->renderPassHandle,
+                                    pRenderer->shaderCount,
+                                    pRenderer->pShaders,
+                                    &pRenderer->swapChain.imageExtent,
+                                    pRenderer->vertexBindingDescriptionCount,
+                                    pRenderer->pVertexBindingDescriptions,
+                                    pRenderer->vertexAttributeDescriptionCount,
+                                    pRenderer->pVertexAttributeDescriptions,
+                                    &pRenderer->backEndAllocator,
+                                    pRenderer->pAllocator,
+                                    pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto pipeline_layout_undo;
     }
 
-    if (dkpCreateFramebuffers(&pRenderer->pFramebufferHandles,
-                              &pRenderer->device,
-                              &pRenderer->swapChain,
-                              pRenderer->renderPassHandle,
-                              &pRenderer->swapChain.imageExtent,
-                              &pRenderer->backEndAllocator,
-                              pRenderer->pAllocator,
-                              pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateFramebuffers(&pRenderer->pFramebufferHandles,
+                                &pRenderer->device,
+                                &pRenderer->swapChain,
+                                pRenderer->renderPassHandle,
+                                &pRenderer->swapChain.imageExtent,
+                                &pRenderer->backEndAllocator,
+                                pRenderer->pAllocator,
+                                pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto graphics_pipeline_undo;
     }
 
-    if (dkpCreateGraphicsCommandBuffers(
-            &pRenderer->pGraphicsCommandBufferHandles,
-            &pRenderer->device,
-            &pRenderer->swapChain,
-            pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
-            pRenderer->pAllocator,
-            pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateGraphicsCommandBuffers(
+        &pRenderer->pGraphicsCommandBufferHandles,
+        &pRenderer->device,
+        &pRenderer->swapChain,
+        pRenderer->commandPools.handleMap[DKP_QUEUE_TYPE_GRAPHICS],
+        pRenderer->pAllocator,
+        pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto framebuffers_undo;
     }
 
-    if (dkpRecordGraphicsCommandBuffers(
-            &pRenderer->swapChain,
-            pRenderer->renderPassHandle,
-            pRenderer->graphicsPipelineHandle,
-            pRenderer->pFramebufferHandles,
-            pRenderer->pGraphicsCommandBufferHandles,
-            &pRenderer->swapChain.imageExtent,
-            &pRenderer->clearColor,
-            pRenderer->vertexBufferCount,
-            pRenderer->pVertexBuffers,
-            pRenderer->vertexCount,
-            pRenderer->instanceCount,
-            pRenderer->pAllocator,
-            pRenderer->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpRecordGraphicsCommandBuffers(
+        &pRenderer->swapChain,
+        pRenderer->renderPassHandle,
+        pRenderer->graphicsPipelineHandle,
+        pRenderer->pFramebufferHandles,
+        pRenderer->pGraphicsCommandBufferHandles,
+        &pRenderer->swapChain.imageExtent,
+        &pRenderer->clearColor,
+        pRenderer->vertexBufferCount,
+        pRenderer->pVertexBuffers,
+        pRenderer->vertexCount,
+        pRenderer->instanceCount,
+        pRenderer->pAllocator,
+        pRenderer->pLogger);
+    if (out != DK_SUCCESS) {
         goto graphics_command_buffers_undo;
     }
 
@@ -4186,140 +4165,134 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
 
     (*ppRenderer)->vertexBindingDescriptionCount
         = (uint32_t)pCreateInfo->vertexBindingDescriptionCount;
-    if (dkpCreateVertexBindingDescriptions(
-            &(*ppRenderer)->pVertexBindingDescriptions,
-            (*ppRenderer)->vertexBindingDescriptionCount,
-            pCreateInfo->pVertexBindingDescriptionInfos,
-            (*ppRenderer)->pAllocator,
-            (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+
+    out = dkpCreateVertexBindingDescriptions(
+        &(*ppRenderer)->pVertexBindingDescriptions,
+        (*ppRenderer)->vertexBindingDescriptionCount,
+        pCreateInfo->pVertexBindingDescriptionInfos,
+        (*ppRenderer)->pAllocator,
+        (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto renderer_undo;
     }
 
     (*ppRenderer)->vertexAttributeDescriptionCount
         = (uint32_t)pCreateInfo->vertexAttributeDescriptionCount;
-    if (dkpCreateVertexAttributeDescriptions(
-            &(*ppRenderer)->pVertexAttributeDescriptions,
-            (*ppRenderer)->vertexAttributeDescriptionCount,
-            pCreateInfo->pVertexAttributeDescriptionInfos,
-            (*ppRenderer)->pAllocator,
-            (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+
+    out = dkpCreateVertexAttributeDescriptions(
+        &(*ppRenderer)->pVertexAttributeDescriptions,
+        (*ppRenderer)->vertexAttributeDescriptionCount,
+        pCreateInfo->pVertexAttributeDescriptionInfos,
+        (*ppRenderer)->pAllocator,
+        (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto vertex_binding_descriptions_undo;
     }
 
-    if (dkpCreateInstance(&(*ppRenderer)->instanceHandle,
-                          pCreateInfo->pApplicationName,
-                          (unsigned int)pCreateInfo->applicationMajorVersion,
-                          (unsigned int)pCreateInfo->applicationMinorVersion,
-                          (unsigned int)pCreateInfo->applicationPatchVersion,
-                          pCreateInfo->pWindowSystemIntegrator,
-                          &(*ppRenderer)->backEndAllocator,
-                          (*ppRenderer)->pAllocator,
-                          (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateInstance(&(*ppRenderer)->instanceHandle,
+                            pCreateInfo->pApplicationName,
+                            (unsigned int)pCreateInfo->applicationMajorVersion,
+                            (unsigned int)pCreateInfo->applicationMinorVersion,
+                            (unsigned int)pCreateInfo->applicationPatchVersion,
+                            pCreateInfo->pWindowSystemIntegrator,
+                            &(*ppRenderer)->backEndAllocator,
+                            (*ppRenderer)->pAllocator,
+                            (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto vertex_attribute_descriptions_undo;
     }
 
 #if DKP_RENDERER_DEBUG_REPORT
     (*ppRenderer)->debugReportCallbackData.pLogger = (*ppRenderer)->pLogger;
 
-    if (dkpCreateDebugReportCallback(&(*ppRenderer)->debugReportCallbackHandle,
-                                     (*ppRenderer)->instanceHandle,
-                                     &(*ppRenderer)->debugReportCallbackData,
-                                     &(*ppRenderer)->backEndAllocator,
-                                     (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateDebugReportCallback(
+        &(*ppRenderer)->debugReportCallbackHandle,
+        (*ppRenderer)->instanceHandle,
+        &(*ppRenderer)->debugReportCallbackData,
+        &(*ppRenderer)->backEndAllocator,
+        (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto instance_undo;
     }
 #endif /* DKP_RENDERER_DEBUG_REPORT */
 
     if (!headless) {
-        if (dkpCreateSurface(&(*ppRenderer)->surfaceHandle,
-                             (*ppRenderer)->instanceHandle,
-                             pCreateInfo->pWindowSystemIntegrator,
-                             &(*ppRenderer)->backEndAllocator,
-                             (*ppRenderer)->pLogger)
-            != DK_SUCCESS) {
-            out = DK_ERROR;
+        out = dkpCreateSurface(&(*ppRenderer)->surfaceHandle,
+                               (*ppRenderer)->instanceHandle,
+                               pCreateInfo->pWindowSystemIntegrator,
+                               &(*ppRenderer)->backEndAllocator,
+                               (*ppRenderer)->pLogger);
+        if (out != DK_SUCCESS) {
             goto debug_report_callback_undo;
         }
     } else {
         (*ppRenderer)->surfaceHandle = VK_NULL_HANDLE;
     }
 
-    if (dkpMakeDevice(&(*ppRenderer)->device,
-                      (*ppRenderer)->instanceHandle,
-                      (*ppRenderer)->surfaceHandle,
-                      &(*ppRenderer)->backEndAllocator,
-                      (*ppRenderer)->pAllocator,
-                      (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpMakeDevice(&(*ppRenderer)->device,
+                        (*ppRenderer)->instanceHandle,
+                        (*ppRenderer)->surfaceHandle,
+                        &(*ppRenderer)->backEndAllocator,
+                        (*ppRenderer)->pAllocator,
+                        (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto surface_undo;
     }
 
-    if (dkpGetDeviceQueues(&(*ppRenderer)->queues, &(*ppRenderer)->device)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpGetDeviceQueues(&(*ppRenderer)->queues, &(*ppRenderer)->device);
+    if (out != DK_SUCCESS) {
         goto device_undo;
     }
 
-    if (dkpCreateSemaphores(&(*ppRenderer)->pSemaphoreHandles,
-                            &(*ppRenderer)->device,
-                            &(*ppRenderer)->backEndAllocator,
-                            (*ppRenderer)->pAllocator,
-                            (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpCreateSemaphores(&(*ppRenderer)->pSemaphoreHandles,
+                              &(*ppRenderer)->device,
+                              &(*ppRenderer)->backEndAllocator,
+                              (*ppRenderer)->pAllocator,
+                              (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto device_undo;
     }
 
     (*ppRenderer)->shaderCount = (uint32_t)pCreateInfo->shaderCount;
-    if (dkpCreateShaders(&(*ppRenderer)->pShaders,
-                         &(*ppRenderer)->device,
-                         (*ppRenderer)->shaderCount,
-                         pCreateInfo->pShaderInfos,
-                         &(*ppRenderer)->backEndAllocator,
-                         (*ppRenderer)->pAllocator,
-                         (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+
+    out = dkpCreateShaders(&(*ppRenderer)->pShaders,
+                           &(*ppRenderer)->device,
+                           (*ppRenderer)->shaderCount,
+                           pCreateInfo->pShaderInfos,
+                           &(*ppRenderer)->backEndAllocator,
+                           (*ppRenderer)->pAllocator,
+                           (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto semaphores_undo;
     }
 
-    if (dkpMakeCommandPools(&(*ppRenderer)->commandPools,
-                            &(*ppRenderer)->device,
-                            &(*ppRenderer)->backEndAllocator,
-                            (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+    out = dkpMakeCommandPools(&(*ppRenderer)->commandPools,
+                              &(*ppRenderer)->device,
+                              &(*ppRenderer)->backEndAllocator,
+                              (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto shaders_undo;
     }
 
     (*ppRenderer)->vertexBufferCount = (uint32_t)pCreateInfo->vertexBufferCount;
-    if (dkpCreateVertexBuffers(
-            &(*ppRenderer)->pVertexBuffers,
-            &(*ppRenderer)->device,
-            (*ppRenderer)->vertexBufferCount,
-            pCreateInfo->pVertexBufferInfos,
-            (*ppRenderer)->commandPools.handleMap[DKP_QUEUE_TYPE_TRANSFER],
-            &(*ppRenderer)->queues,
-            &(*ppRenderer)->backEndAllocator,
-            (*ppRenderer)->pAllocator,
-            (*ppRenderer)->pLogger)
-        != DK_SUCCESS) {
-        out = DK_ERROR;
+
+    out = dkpCreateVertexBuffers(
+        &(*ppRenderer)->pVertexBuffers,
+        &(*ppRenderer)->device,
+        (*ppRenderer)->vertexBufferCount,
+        pCreateInfo->pVertexBufferInfos,
+        (*ppRenderer)->commandPools.handleMap[DKP_QUEUE_TYPE_TRANSFER],
+        &(*ppRenderer)->queues,
+        &(*ppRenderer)->backEndAllocator,
+        (*ppRenderer)->pAllocator,
+        (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
         goto command_pools_undo;
     }
 
     if (!headless) {
-        if (dkpMakeRendererSwapChainSystem(*ppRenderer) != DK_SUCCESS) {
-            out = DK_ERROR;
+        out = dkpMakeRendererSwapChainSystem(*ppRenderer);
+        if (out != DK_SUCCESS) {
             goto vertex_buffers_undo;
         }
     }
