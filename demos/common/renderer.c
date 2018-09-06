@@ -54,7 +54,7 @@ dkdCreateShaderCode(DkSize *pShaderCodeSize,
     *ppShaderCode = (DkUint32 *)DKD_ALLOCATE(pAllocator, *pShaderCodeSize);
     if (*ppShaderCode == NULL) {
         DKD_LOG_ERROR(pLogger,
-                      "failed to allocate the shader code for the file '%s'\n",
+                      "failed to allocate the shader code for the file ‘%s’\n",
                       pFilePath);
         out = 1;
         goto file_closing;

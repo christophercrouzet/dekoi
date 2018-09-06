@@ -22,7 +22,7 @@ dkdOpenFile(struct DkdFile *pFile,
     errno = 0;
     pFile->pHandle = fopen(pPath, pMode);
     if (pFile->pHandle == NULL) {
-        DKD_LOG_ERROR(pLogger, "could not open the file '%s'\n", pPath);
+        DKD_LOG_ERROR(pLogger, "could not open the file ‘%s’\n", pPath);
         return 1;
     }
 
@@ -50,7 +50,7 @@ dkdGetFileSize(size_t *pSize,
     if (fgetpos(pFile->pHandle, &position) != 0) {
         DKD_LOG_ERROR(pLogger,
                       "could not retrieve the current cursor position for the "
-                      "file '%s'\n",
+                      "file ‘%s’\n",
                       pFile->pPath);
         out = 1;
         goto exit;
@@ -59,7 +59,7 @@ dkdGetFileSize(size_t *pSize,
     errno = 0;
     if (fseek(pFile->pHandle, 0, SEEK_END) != 0) {
         DKD_LOG_ERROR(pLogger,
-                      "could not reach the end of the file '%s'\n",
+                      "could not reach the end of the file ‘%s’\n",
                       pFile->pPath);
         out = 1;
         goto exit;
@@ -68,7 +68,7 @@ dkdGetFileSize(size_t *pSize,
     size = ftell(pFile->pHandle);
     if (size == EOF) {
         DKD_LOG_ERROR(pLogger,
-                      "could not retrieve the size of the file '%s'\n",
+                      "could not retrieve the size of the file ‘%s’\n",
                       pFile->pPath);
         out = 1;
         goto position_restoration;
@@ -81,7 +81,7 @@ position_restoration:
     if (fsetpos(pFile->pHandle, &position) != 0) {
         DKD_LOG_ERROR(
             pLogger,
-            "could not restore the cursor position for the file '%s'\n",
+            "could not restore the cursor position for the file ‘%s’\n",
             pFile->pPath);
         out = 1;
     }
@@ -102,7 +102,7 @@ dkdReadFile(void *pBuffer,
     assert(pLogger != NULL);
 
     if (fread(pBuffer, 1, size, pFile->pHandle) != size) {
-        DKD_LOG_ERROR(pLogger, "could not read the file '%s'\n", pFile->pPath);
+        DKD_LOG_ERROR(pLogger, "could not read the file ‘%s’\n", pFile->pPath);
         return 1;
     }
 
@@ -117,7 +117,7 @@ dkdCloseFile(struct DkdFile *pFile, const struct DkdLoggingCallbacks *pLogger)
     assert(pLogger != NULL);
 
     if (fclose(pFile->pHandle) == EOF) {
-        DKD_LOG_ERROR(pLogger, "could not close the file '%s'\n", pFile->pPath);
+        DKD_LOG_ERROR(pLogger, "could not close the file ‘%s’\n", pFile->pPath);
         return 1;
     }
 

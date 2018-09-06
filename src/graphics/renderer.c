@@ -990,7 +990,7 @@ dkpCreateDebugReportCallback(VkDebugReportCallbackEXT *pCallbackHandle,
         instanceHandle, "vkCreateDebugReportCallbackEXT");
     if (function == NULL) {
         DKP_LOG_TRACE(pLogger,
-                      "could not retrieve the 'vkCreateDebugReportCallbackEXT' "
+                      "could not retrieve the ‘vkCreateDebugReportCallbackEXT’ "
                       "function\n");
         return DK_ERROR;
     }
@@ -1023,7 +1023,7 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
     if (function == NULL) {
         DKP_LOG_TRACE(
             pLogger,
-            "could not retrieve the 'vkDestroyDebugReportCallbackEXT' "
+            "could not retrieve the ‘vkDestroyDebugReportCallbackEXT’ "
             "function\n");
         return;
     }
@@ -1054,7 +1054,7 @@ dkpCreateSurface(
             pLogger)
         != DK_SUCCESS) {
         DKP_LOG_TRACE(pLogger,
-                      "the window system integrator's 'createSurface' callback "
+                      "the window system integrator's ‘createSurface’ callback "
                       "returned an error\n");
         return DK_ERROR;
     }
@@ -2076,7 +2076,7 @@ dkpCreateSemaphores(VkSemaphore **ppSemaphoreHandles,
                                          (enum DkpSemaphoreId)i);
 
             DKP_LOG_TRACE(pLogger,
-                          "failed to create a '%s' semaphore\n",
+                          "failed to create a ‘%s’ semaphore\n",
                           pSemaphoreDescription);
             out = DK_ERROR;
             goto semaphores_undo;
@@ -3862,7 +3862,7 @@ dkpValidateRendererCreateInfo(int *pValid,
 
     if (pCreateInfo->shaderCount == 0) {
         DKP_LOG_TRACE(pLogger,
-                      "'pCreateInfo->shaderCount' must be greater than 0\n");
+                      "‘pCreateInfo->shaderCount’ must be greater than 0\n");
         return;
     }
 
@@ -3871,7 +3871,7 @@ dkpValidateRendererCreateInfo(int *pValid,
         if (!(*pValid)) {
             DKP_LOG_TRACE(pLogger,
                           "invalid enum value for "
-                          "'pCreateInfo->pShaderInfos[%d].stage'\n",
+                          "‘pCreateInfo->pShaderInfos[%d].stage’\n",
                           i);
             return;
         }
@@ -4113,13 +4113,13 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
     }
 
     if (ppRenderer == NULL) {
-        DKP_LOG_ERROR(pLogger, "invalid argument 'ppRenderer' (NULL)\n");
+        DKP_LOG_ERROR(pLogger, "invalid argument ‘ppRenderer’ (NULL)\n");
         out = DK_ERROR_INVALID_VALUE;
         goto exit;
     }
 
     if (pCreateInfo == NULL) {
-        DKP_LOG_ERROR(pLogger, "invalid argument 'pCreateInfo' (NULL)\n");
+        DKP_LOG_ERROR(pLogger, "invalid argument ’pCreateInfo’ (NULL)\n");
         out = DK_ERROR_INVALID_VALUE;
         goto exit;
     }
