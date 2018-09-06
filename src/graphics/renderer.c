@@ -408,13 +408,13 @@ exit:
 }
 
 static enum DkStatus
-dkpMakeBuffer(struct DkpBuffer *pBuffer,
-              const struct DkpDevice *pDevice,
-              VkDeviceSize size,
-              VkBufferUsageFlags usage,
-              VkMemoryPropertyFlags memoryProperties,
-              const VkAllocationCallbacks *pBackEndAllocator,
-              const struct DkLoggingCallbacks *pLogger)
+dkpInitializeBuffer(struct DkpBuffer *pBuffer,
+                    const struct DkpDevice *pDevice,
+                    VkDeviceSize size,
+                    VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags memoryProperties,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    const struct DkLoggingCallbacks *pLogger)
 {
     enum DkStatus out;
     VkBufferCreateInfo bufferInfo;
@@ -497,9 +497,9 @@ exit:
 }
 
 static void
-dkpDiscardBuffer(const struct DkpDevice *pDevice,
-                 struct DkpBuffer *pBuffer,
-                 const VkAllocationCallbacks *pBackEndAllocator)
+dkpTerminateBuffer(const struct DkpDevice *pDevice,
+                   struct DkpBuffer *pBuffer,
+                   const VkAllocationCallbacks *pBackEndAllocator)
 {
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
@@ -1831,12 +1831,12 @@ exit:
 }
 
 static enum DkStatus
-dkpMakeDevice(struct DkpDevice *pDevice,
-              VkInstance instanceHandle,
-              VkSurfaceKHR surfaceHandle,
-              const VkAllocationCallbacks *pBackEndAllocator,
-              const struct DkAllocationCallbacks *pAllocator,
-              const struct DkLoggingCallbacks *pLogger)
+dkpInitializeDevice(struct DkpDevice *pDevice,
+                    VkInstance instanceHandle,
+                    VkSurfaceKHR surfaceHandle,
+                    const VkAllocationCallbacks *pBackEndAllocator,
+                    const struct DkAllocationCallbacks *pAllocator,
+                    const struct DkLoggingCallbacks *pLogger)
 {
     enum DkStatus out;
     uint32_t i;
@@ -1974,8 +1974,8 @@ exit:
 }
 
 static void
-dkpDiscardDevice(struct DkpDevice *pDevice,
-                 const VkAllocationCallbacks *pBackEndAllocator)
+dkpTerminateDevice(struct DkpDevice *pDevice,
+                   const VkAllocationCallbacks *pBackEndAllocator)
 {
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
@@ -2315,14 +2315,14 @@ dkpCreateVertexBuffers(
     for (i = 0; i < vertexBufferCount; ++i) {
         void *pData;
 
-        out = dkpMakeBuffer(&stagingBuffer,
-                            pDevice,
-                            (VkDeviceSize)pVertexBufferInfos[i].size,
-                            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                                | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                            pBackEndAllocator,
-                            pLogger);
+        out = dkpInitializeBuffer(&stagingBuffer,
+                                  pDevice,
+                                  (VkDeviceSize)pVertexBufferInfos[i].size,
+                                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                                      | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                  pBackEndAllocator,
+                                  pLogger);
         if (out != DK_SUCCESS) {
             stagingBuffer.handle = VK_NULL_HANDLE;
             stagingBuffer.memoryHandle = VK_NULL_HANDLE;
@@ -2347,14 +2347,14 @@ dkpCreateVertexBuffers(
                (size_t)pVertexBufferInfos[i].size);
         vkUnmapMemory(pDevice->logicalHandle, stagingBuffer.memoryHandle);
 
-        out = dkpMakeBuffer(&(*ppVertexBuffers)[i],
-                            pDevice,
-                            (VkDeviceSize)pVertexBufferInfos[i].size,
-                            VK_BUFFER_USAGE_TRANSFER_DST_BIT
-                                | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                            pBackEndAllocator,
-                            pLogger);
+        out = dkpInitializeBuffer(&(*ppVertexBuffers)[i],
+                                  pDevice,
+                                  (VkDeviceSize)pVertexBufferInfos[i].size,
+                                  VK_BUFFER_USAGE_TRANSFER_DST_BIT
+                                      | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                                  pBackEndAllocator,
+                                  pLogger);
         if (out != DK_SUCCESS) {
             (*ppVertexBuffers)[i].handle = VK_NULL_HANDLE;
             (*ppVertexBuffers)[i].memoryHandle = VK_NULL_HANDLE;
@@ -2372,14 +2372,14 @@ dkpCreateVertexBuffers(
                       pQueues,
                       pLogger);
 
-        dkpDiscardBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
+        dkpTerminateBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
         stagingBuffer.handle = VK_NULL_HANDLE;
         stagingBuffer.memoryHandle = VK_NULL_HANDLE;
     }
 
     if (stagingBuffer.handle != VK_NULL_HANDLE
         || stagingBuffer.memoryHandle != VK_NULL_HANDLE) {
-        dkpDiscardBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
+        dkpTerminateBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
     }
 
     goto exit;
@@ -2388,7 +2388,7 @@ vertex_buffers_undo:
     for (i = 0; i < vertexBufferCount; ++i) {
         if ((*ppVertexBuffers)[i].handle != VK_NULL_HANDLE
             || (*ppVertexBuffers)[i].memoryHandle != VK_NULL_HANDLE) {
-            dkpDiscardBuffer(
+            dkpTerminateBuffer(
                 pDevice, &(*ppVertexBuffers)[i], pBackEndAllocator);
         }
     }
@@ -2416,7 +2416,7 @@ dkpDestroyVertexBuffers(const struct DkpDevice *pDevice,
     for (i = 0; i < vertexBufferCount; ++i) {
         DKP_ASSERT(pVertexBuffers[i].handle != VK_NULL_HANDLE);
         DKP_ASSERT(pVertexBuffers[i].memoryHandle != VK_NULL_HANDLE);
-        dkpDiscardBuffer(pDevice, &pVertexBuffers[i], pBackEndAllocator);
+        dkpTerminateBuffer(pDevice, &pVertexBuffers[i], pBackEndAllocator);
     }
 
     if (pVertexBuffers != NULL) {
@@ -2604,14 +2604,14 @@ dkpDestroySwapChainImageViews(const struct DkpDevice *pDevice,
 }
 
 static enum DkStatus
-dkpMakeSwapChain(struct DkpSwapChain *pSwapChain,
-                 const struct DkpDevice *pDevice,
-                 VkSurfaceKHR surfaceHandle,
-                 const VkExtent2D *pDesiredImageExtent,
-                 VkSwapchainKHR oldSwapChainHandle,
-                 const VkAllocationCallbacks *pBackEndAllocator,
-                 const struct DkAllocationCallbacks *pAllocator,
-                 const struct DkLoggingCallbacks *pLogger)
+dkpInitializeSwapChain(struct DkpSwapChain *pSwapChain,
+                       const struct DkpDevice *pDevice,
+                       VkSurfaceKHR surfaceHandle,
+                       const VkExtent2D *pDesiredImageExtent,
+                       VkSwapchainKHR oldSwapChainHandle,
+                       const VkAllocationCallbacks *pBackEndAllocator,
+                       const struct DkAllocationCallbacks *pAllocator,
+                       const struct DkLoggingCallbacks *pLogger)
 {
     enum DkStatus out;
     struct DkpSwapChainProperties swapChainProperties;
@@ -2756,10 +2756,10 @@ exit:
 }
 
 static void
-dkpDiscardSwapChain(const struct DkpDevice *pDevice,
-                    struct DkpSwapChain *pSwapChain,
-                    const VkAllocationCallbacks *pBackEndAllocator,
-                    const struct DkAllocationCallbacks *pAllocator)
+dkpTerminateSwapChain(const struct DkpDevice *pDevice,
+                      struct DkpSwapChain *pSwapChain,
+                      const VkAllocationCallbacks *pBackEndAllocator,
+                      const struct DkAllocationCallbacks *pAllocator)
 {
     DKP_ASSERT(pDevice != NULL);
     DKP_ASSERT(pDevice->logicalHandle != NULL);
@@ -3357,10 +3357,10 @@ dkpDestroyFramebuffers(const struct DkpDevice *pDevice,
 }
 
 static enum DkStatus
-dkpMakeCommandPools(struct DkpCommandPools *pCommandPools,
-                    const struct DkpDevice *pDevice,
-                    const VkAllocationCallbacks *pBackEndAllocator,
-                    const struct DkLoggingCallbacks *pLogger)
+dkpInitializeCommandPools(struct DkpCommandPools *pCommandPools,
+                          const struct DkpDevice *pDevice,
+                          const VkAllocationCallbacks *pBackEndAllocator,
+                          const struct DkLoggingCallbacks *pLogger)
 {
     enum DkStatus out;
     uint32_t i;
@@ -3423,9 +3423,9 @@ exit:
 }
 
 static void
-dkpDiscardCommandPools(const struct DkpDevice *pDevice,
-                       struct DkpCommandPools *pCommandPools,
-                       const VkAllocationCallbacks *pBackEndAllocator)
+dkpTerminateCommandPools(const struct DkpDevice *pDevice,
+                         struct DkpCommandPools *pCommandPools,
+                         const VkAllocationCallbacks *pBackEndAllocator)
 {
     uint32_t i;
 
@@ -3643,7 +3643,7 @@ exit:
 }
 
 static enum DkStatus
-dkpMakeRendererSwapChainSystem(struct DkRenderer *pRenderer)
+dkpInitializeRendererSwapChainSystem(struct DkRenderer *pRenderer)
 {
     enum DkStatus out;
 
@@ -3651,14 +3651,14 @@ dkpMakeRendererSwapChainSystem(struct DkRenderer *pRenderer)
 
     out = DK_SUCCESS;
 
-    out = dkpMakeSwapChain(&pRenderer->swapChain,
-                           &pRenderer->device,
-                           pRenderer->surfaceHandle,
-                           &pRenderer->surfaceExtent,
-                           VK_NULL_HANDLE,
-                           &pRenderer->backEndAllocator,
-                           pRenderer->pAllocator,
-                           pRenderer->pLogger);
+    out = dkpInitializeSwapChain(&pRenderer->swapChain,
+                                 &pRenderer->device,
+                                 pRenderer->surfaceHandle,
+                                 &pRenderer->surfaceExtent,
+                                 VK_NULL_HANDLE,
+                                 &pRenderer->backEndAllocator,
+                                 pRenderer->pAllocator,
+                                 pRenderer->pLogger);
     if (out != DK_SUCCESS) {
         goto exit;
     }
@@ -3775,17 +3775,17 @@ render_pass_undo:
                          &pRenderer->backEndAllocator);
 
 swap_chain_undo:
-    dkpDiscardSwapChain(&pRenderer->device,
-                        &pRenderer->swapChain,
-                        &pRenderer->backEndAllocator,
-                        pRenderer->pAllocator);
+    dkpTerminateSwapChain(&pRenderer->device,
+                          &pRenderer->swapChain,
+                          &pRenderer->backEndAllocator,
+                          pRenderer->pAllocator);
 
 exit:
     return out;
 }
 
 static void
-dkpDiscardRendererSwapChainSystem(struct DkRenderer *pRenderer)
+dkpTerminateRendererSwapChainSystem(struct DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
     DKP_ASSERT(pRenderer->pGraphicsCommandBufferHandles != NULL);
@@ -3824,10 +3824,10 @@ dkpDiscardRendererSwapChainSystem(struct DkRenderer *pRenderer)
                          pRenderer->renderPassHandle,
                          &pRenderer->backEndAllocator);
 
-    dkpDiscardSwapChain(&pRenderer->device,
-                        &pRenderer->swapChain,
-                        &pRenderer->backEndAllocator,
-                        pRenderer->pAllocator);
+    dkpTerminateSwapChain(&pRenderer->device,
+                          &pRenderer->swapChain,
+                          &pRenderer->backEndAllocator,
+                          pRenderer->pAllocator);
 }
 
 static enum DkStatus
@@ -3835,8 +3835,8 @@ dkpRecreateRendererSwapChain(struct DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
 
-    dkpDiscardRendererSwapChainSystem(pRenderer);
-    return dkpMakeRendererSwapChainSystem(pRenderer);
+    dkpTerminateRendererSwapChainSystem(pRenderer);
+    return dkpInitializeRendererSwapChainSystem(pRenderer);
 }
 
 static void
@@ -4229,12 +4229,12 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
         (*ppRenderer)->surfaceHandle = VK_NULL_HANDLE;
     }
 
-    out = dkpMakeDevice(&(*ppRenderer)->device,
-                        (*ppRenderer)->instanceHandle,
-                        (*ppRenderer)->surfaceHandle,
-                        &(*ppRenderer)->backEndAllocator,
-                        (*ppRenderer)->pAllocator,
-                        (*ppRenderer)->pLogger);
+    out = dkpInitializeDevice(&(*ppRenderer)->device,
+                              (*ppRenderer)->instanceHandle,
+                              (*ppRenderer)->surfaceHandle,
+                              &(*ppRenderer)->backEndAllocator,
+                              (*ppRenderer)->pAllocator,
+                              (*ppRenderer)->pLogger);
     if (out != DK_SUCCESS) {
         goto surface_undo;
     }
@@ -4266,10 +4266,10 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
         goto semaphores_undo;
     }
 
-    out = dkpMakeCommandPools(&(*ppRenderer)->commandPools,
-                              &(*ppRenderer)->device,
-                              &(*ppRenderer)->backEndAllocator,
-                              (*ppRenderer)->pLogger);
+    out = dkpInitializeCommandPools(&(*ppRenderer)->commandPools,
+                                    &(*ppRenderer)->device,
+                                    &(*ppRenderer)->backEndAllocator,
+                                    (*ppRenderer)->pLogger);
     if (out != DK_SUCCESS) {
         goto shaders_undo;
     }
@@ -4291,7 +4291,7 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
     }
 
     if (!headless) {
-        out = dkpMakeRendererSwapChainSystem(*ppRenderer);
+        out = dkpInitializeRendererSwapChainSystem(*ppRenderer);
         if (out != DK_SUCCESS) {
             goto vertex_buffers_undo;
         }
@@ -4307,9 +4307,9 @@ vertex_buffers_undo:
                             (*ppRenderer)->pAllocator);
 
 command_pools_undo:
-    dkpDiscardCommandPools(&(*ppRenderer)->device,
-                           &(*ppRenderer)->commandPools,
-                           &(*ppRenderer)->backEndAllocator);
+    dkpTerminateCommandPools(&(*ppRenderer)->device,
+                             &(*ppRenderer)->commandPools,
+                             &(*ppRenderer)->backEndAllocator);
 
 shaders_undo:
     dkpDestroyShaders(&(*ppRenderer)->device,
@@ -4325,7 +4325,8 @@ semaphores_undo:
                          (*ppRenderer)->pAllocator);
 
 device_undo:
-    dkpDiscardDevice(&(*ppRenderer)->device, &(*ppRenderer)->backEndAllocator);
+    dkpTerminateDevice(&(*ppRenderer)->device,
+                       &(*ppRenderer)->backEndAllocator);
 
 surface_undo:
     if (!headless) {
@@ -4378,7 +4379,7 @@ dkDestroyRenderer(struct DkRenderer *pRenderer)
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
     if (!headless) {
-        dkpDiscardRendererSwapChainSystem(pRenderer);
+        dkpTerminateRendererSwapChainSystem(pRenderer);
     }
 
     dkpDestroyVertexBuffers(&pRenderer->device,
@@ -4386,9 +4387,9 @@ dkDestroyRenderer(struct DkRenderer *pRenderer)
                             pRenderer->pVertexBuffers,
                             &pRenderer->backEndAllocator,
                             pRenderer->pAllocator);
-    dkpDiscardCommandPools(&pRenderer->device,
-                           &pRenderer->commandPools,
-                           &pRenderer->backEndAllocator);
+    dkpTerminateCommandPools(&pRenderer->device,
+                             &pRenderer->commandPools,
+                             &pRenderer->backEndAllocator);
     dkpDestroyShaders(&pRenderer->device,
                       pRenderer->shaderCount,
                       pRenderer->pShaders,
@@ -4398,7 +4399,7 @@ dkDestroyRenderer(struct DkRenderer *pRenderer)
                          pRenderer->pSemaphoreHandles,
                          &pRenderer->backEndAllocator,
                          pRenderer->pAllocator);
-    dkpDiscardDevice(&pRenderer->device, &pRenderer->backEndAllocator);
+    dkpTerminateDevice(&pRenderer->device, &pRenderer->backEndAllocator);
 
     if (!headless) {
         dkpDestroySurface(pRenderer->instanceHandle,
