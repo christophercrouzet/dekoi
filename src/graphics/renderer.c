@@ -38,6 +38,11 @@ enum DkpPresentSupport {
     DKP_PRESENT_SUPPORT_ENABLED = 1
 };
 
+enum DkpOldSwapChainPreservation {
+    DKP_OLD_SWAP_CHAIN_PRESERVATION_DISABLED = 0,
+    DKP_OLD_SWAP_CHAIN_PRESERVATION_ENABLED = 1
+};
+
 enum DkpQueueType {
     DKP_QUEUE_TYPE_GRAPHICS = 0,
     DKP_QUEUE_TYPE_COMPUTE = 1,
@@ -2750,6 +2755,7 @@ exit:
 static void
 dkpTerminateSwapChain(const struct DkpDevice *pDevice,
                       struct DkpSwapChain *pSwapChain,
+                      enum DkpOldSwapChainPreservation oldSwapChainPreservation,
                       const VkAllocationCallbacks *pBackEndAllocator,
                       const struct DkAllocationCallbacks *pAllocator)
 {
@@ -2768,8 +2774,11 @@ dkpTerminateSwapChain(const struct DkpDevice *pDevice,
                                   pBackEndAllocator,
                                   pAllocator);
     dkpDestroySwapChainImages(pSwapChain->pImageHandles, pAllocator);
-    vkDestroySwapchainKHR(
-        pDevice->logicalHandle, pSwapChain->handle, pBackEndAllocator);
+
+    if (oldSwapChainPreservation == DKP_OLD_SWAP_CHAIN_PRESERVATION_DISABLED) {
+        vkDestroySwapchainKHR(
+            pDevice->logicalHandle, pSwapChain->handle, pBackEndAllocator);
+    }
 }
 
 static enum DkStatus
@@ -3635,7 +3644,8 @@ exit:
 }
 
 static enum DkStatus
-dkpInitializeRendererSwapChainSystem(struct DkRenderer *pRenderer)
+dkpInitializeRendererSwapChainSystem(struct DkRenderer *pRenderer,
+                                     VkSwapchainKHR oldSwapChainHandle)
 {
     enum DkStatus out;
 
@@ -3647,7 +3657,7 @@ dkpInitializeRendererSwapChainSystem(struct DkRenderer *pRenderer)
                                  &pRenderer->device,
                                  pRenderer->surfaceHandle,
                                  &pRenderer->surfaceExtent,
-                                 VK_NULL_HANDLE,
+                                 oldSwapChainHandle,
                                  &pRenderer->backEndAllocator,
                                  pRenderer->pAllocator,
                                  pRenderer->pLogger);
@@ -3769,6 +3779,7 @@ render_pass_undo:
 swap_chain_undo:
     dkpTerminateSwapChain(&pRenderer->device,
                           &pRenderer->swapChain,
+                          DKP_OLD_SWAP_CHAIN_PRESERVATION_DISABLED,
                           &pRenderer->backEndAllocator,
                           pRenderer->pAllocator);
 
@@ -3777,7 +3788,9 @@ exit:
 }
 
 static void
-dkpTerminateRendererSwapChainSystem(struct DkRenderer *pRenderer)
+dkpTerminateRendererSwapChainSystem(
+    struct DkRenderer *pRenderer,
+    enum DkpOldSwapChainPreservation oldSwapChainPreservation)
 {
     DKP_ASSERT(pRenderer != NULL);
     DKP_ASSERT(pRenderer->pGraphicsCommandBufferHandles != NULL);
@@ -3818,6 +3831,7 @@ dkpTerminateRendererSwapChainSystem(struct DkRenderer *pRenderer)
 
     dkpTerminateSwapChain(&pRenderer->device,
                           &pRenderer->swapChain,
+                          oldSwapChainPreservation,
                           &pRenderer->backEndAllocator,
                           pRenderer->pAllocator);
 }
@@ -3827,8 +3841,10 @@ dkpRecreateRendererSwapChain(struct DkRenderer *pRenderer)
 {
     DKP_ASSERT(pRenderer != NULL);
 
-    dkpTerminateRendererSwapChainSystem(pRenderer);
-    return dkpInitializeRendererSwapChainSystem(pRenderer);
+    dkpTerminateRendererSwapChainSystem(
+        pRenderer, DKP_OLD_SWAP_CHAIN_PRESERVATION_ENABLED);
+    return dkpInitializeRendererSwapChainSystem(pRenderer,
+                                                pRenderer->swapChain.handle);
 }
 
 static void
@@ -4283,7 +4299,7 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
     }
 
     if (!headless) {
-        out = dkpInitializeRendererSwapChainSystem(*ppRenderer);
+        out = dkpInitializeRendererSwapChainSystem(*ppRenderer, VK_NULL_HANDLE);
         if (out != DK_SUCCESS) {
             goto vertex_buffers_undo;
         }
@@ -4371,7 +4387,8 @@ dkDestroyRenderer(struct DkRenderer *pRenderer)
     vkDeviceWaitIdle(pRenderer->device.logicalHandle);
 
     if (!headless) {
-        dkpTerminateRendererSwapChainSystem(pRenderer);
+        dkpTerminateRendererSwapChainSystem(
+            pRenderer, DKP_OLD_SWAP_CHAIN_PRESERVATION_DISABLED);
     }
 
     dkpDestroyVertexBuffers(&pRenderer->device,
