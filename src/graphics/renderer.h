@@ -19,19 +19,7 @@ enum DkVertexInputRate {
 
 enum DkFormat { DK_FORMAT_R32G32_SFLOAT = 0, DK_FORMAT_R32G32B32_SFLOAT = 1 };
 
-#define DKP_DEFINE_VULKAN_HANDLE(object) typedef struct object##_T *object
-
-#if DK_ENVIRONMENT == 32
-#define DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(object)                      \
-    typedef DkUint64 object
-#else
-#define DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(object)                      \
-    typedef struct object##_T *object
-#endif /* DK_ENVIRONMENT */
-
 typedef struct VkAllocationCallbacks VkAllocationCallbacks;
-DKP_DEFINE_VULKAN_HANDLE(VkInstance);
-DKP_DEFINE_NON_DISPATCHABLE_VULKAN_HANDLE(VkSurfaceKHR);
 
 struct DkLoggingCallbacks;
 struct DkRenderer;
@@ -46,9 +34,9 @@ typedef void (*DkPfnDestroyInstanceExtensionNamesCallback)(
     const struct DkLoggingCallbacks *pLogger,
     const char **ppExtensionNames);
 typedef enum DkStatus (*DkPfnCreateSurfaceCallback)(
-    VkSurfaceKHR *pSurfaceHandle,
+    void *pSurfaceHandle,
     void *pData,
-    VkInstance instanceHandle,
+    void *pInstanceHandle,
     const VkAllocationCallbacks *pBackEndAllocator,
     const struct DkLoggingCallbacks *pLogger);
 

@@ -81,23 +81,23 @@ dkdDestroyVulkanInstanceExtensionNames(
 }
 
 static enum DkStatus
-dkdCreateVulkanSurface(VkSurfaceKHR *pSurfaceHandle,
+dkdCreateVulkanSurface(void *pSurfaceHandle,
                        void *pData,
-                       VkInstance instanceHandle,
+                       void *pInstanceHandle,
                        const VkAllocationCallbacks *pBackEndAllocator,
                        const struct DkLoggingCallbacks *pDekoiLogger)
 {
     assert(pSurfaceHandle != NULL);
     assert(pData != NULL);
-    assert(instanceHandle != NULL);
+    assert(pInstanceHandle != NULL);
     assert(pDekoiLogger != NULL);
 
     if (glfwCreateWindowSurface(
-            instanceHandle,
+            (VkInstance)pInstanceHandle,
             ((struct DkdWindowSystemIntegrationCallbacksData *)pData)
                 ->pWindowHandle,
             pBackEndAllocator,
-            pSurfaceHandle)
+            (VkSurfaceKHR *)pSurfaceHandle)
         != VK_SUCCESS) {
         DKD_LOG_ERROR(
             ((struct DkdDekoiLoggingCallbacksData *)pDekoiLogger->pData)
