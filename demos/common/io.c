@@ -79,10 +79,10 @@ dkdGetFileSize(size_t *pSize,
 position_restoration:
     errno = 0;
     if (fsetpos(pFile->pHandle, &position) != 0) {
-        DKD_LOG_ERROR(
-            pLogger,
-            "could not restore the cursor position for the file ‘%s’\n",
-            pFile->pPath);
+        DKD_LOG_ERROR(pLogger,
+                      "could not restore the cursor position for the file "
+                      "‘%s’\n",
+                      pFile->pPath);
         out = 1;
     }
 

@@ -169,9 +169,9 @@ dkdCreateWindow(struct DkdWindow **ppWindow,
         = (struct DkdWindowSystemIntegrationCallbacksData *)DKD_ALLOCATE(
             (*ppWindow)->pAllocator, sizeof *pWindowSystemIntegratorData);
     if (pWindowSystemIntegratorData == NULL) {
-        DKD_LOG_ERROR(
-            pLogger,
-            "failed to allocate the window system integrator callbacks data\n");
+        DKD_LOG_ERROR(pLogger,
+                      "failed to allocate the window system integrator "
+                      "callbacks data\n");
         out = 1;
         goto glfw_window_undo;
     }

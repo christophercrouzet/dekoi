@@ -604,9 +604,9 @@ dkpCheckInstanceLayersSupport(int *pSupported,
 
     if (vkEnumerateInstanceLayerProperties(&layerCount, pLayers)
         != VK_SUCCESS) {
-        DKP_LOG_TRACE(
-            pLogger,
-            "could not enumerate the instance layer properties available\n");
+        DKP_LOG_TRACE(pLogger,
+                      "could not enumerate the instance layer properties "
+                      "available\n");
         out = DK_ERROR;
         goto layers_cleanup;
     }
@@ -900,9 +900,9 @@ dkpCreateInstance(
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
-            DKP_LOG_TRACE(
-                pLogger,
-                "some requested instance extensions are not supported\n");
+            DKP_LOG_TRACE(pLogger,
+                          "some requested instance extensions are not "
+                          "supported\n");
             out = DK_ERROR;
             goto extension_names_cleanup;
         case VK_ERROR_INCOMPATIBLE_DRIVER:
@@ -1021,10 +1021,10 @@ dkpDestroyDebugReportCallback(VkInstance instanceHandle,
     function = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
         instanceHandle, "vkDestroyDebugReportCallbackEXT");
     if (function == NULL) {
-        DKP_LOG_TRACE(
-            pLogger,
-            "could not retrieve the ‘vkDestroyDebugReportCallbackEXT’ "
-            "function\n");
+        DKP_LOG_TRACE(pLogger,
+                      "could not retrieve the "
+                      "‘vkDestroyDebugReportCallbackEXT’ "
+                      "function\n");
         return;
     }
 
@@ -1164,9 +1164,9 @@ dkpCheckDeviceExtensionsSupport(int *pSupported,
     if (vkEnumerateDeviceExtensionProperties(
             physicalDeviceHandle, NULL, &extensionCount, pExtensions)
         != VK_SUCCESS) {
-        DKP_LOG_TRACE(
-            pLogger,
-            "could not enumerate the device extension properties available\n");
+        DKP_LOG_TRACE(pLogger,
+                      "could not enumerate the device extension properties "
+                      "available\n");
         out = DK_ERROR;
         goto extensions_cleanup;
     }
@@ -1551,9 +1551,9 @@ dkpPickSwapChainProperties(struct DkpSwapChainProperties *pSwapChainProperties,
     if (vkGetPhysicalDeviceSurfacePresentModesKHR(
             physicalDeviceHandle, surfaceHandle, &presentModeCount, NULL)
         != VK_SUCCESS) {
-        DKP_LOG_TRACE(
-            pLogger,
-            "could not count the number of the surface present modes\n");
+        DKP_LOG_TRACE(pLogger,
+                      "could not count the number of the surface present "
+                      "modes\n");
         out = DK_ERROR;
         goto formats_cleanup;
     }
@@ -1933,9 +1933,9 @@ dkpInitializeDevice(struct DkpDevice *pDevice,
         case VK_SUCCESS:
             break;
         case VK_ERROR_EXTENSION_NOT_PRESENT:
-            DKP_LOG_TRACE(
-                pLogger,
-                "some requested device extensions are not supported\n");
+            DKP_LOG_TRACE(pLogger,
+                          "some requested device extensions are not "
+                          "supported\n");
             out = DK_ERROR;
             goto queue_infos_cleanup;
         case VK_ERROR_FEATURE_NOT_PRESENT:
@@ -2645,9 +2645,9 @@ dkpInitializeSwapChain(struct DkpSwapChain *pSwapChain,
         pQueueFamilyIndices = (uint32_t *)DKP_ALLOCATE(
             pAllocator, sizeof *pQueueFamilyIndices * queueFamilyIndexCount);
         if (pQueueFamilyIndices == NULL) {
-            DKP_LOG_TRACE(
-                pLogger,
-                "failed to allocate the swap chain's queue family indices\n");
+            DKP_LOG_TRACE(pLogger,
+                          "failed to allocate the swap chain's queue family "
+                          "indices\n");
             out = DK_ERROR_ALLOCATION;
             goto exit;
         }
@@ -4479,9 +4479,9 @@ dkDrawRendererImage(struct DkRenderer *pRenderer)
             out = DK_ERROR_NOT_AVAILABLE;
             goto exit;
         case VK_TIMEOUT:
-            DKP_LOG_ERROR(
-                pRenderer->pLogger,
-                "could not find a suitable image within the time allowed\n");
+            DKP_LOG_ERROR(pRenderer->pLogger,
+                          "could not find a suitable image within the time "
+                          "allowed\n");
             out = DK_ERROR_NOT_AVAILABLE;
             goto exit;
         case VK_SUBOPTIMAL_KHR:
