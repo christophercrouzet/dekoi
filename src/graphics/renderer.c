@@ -2375,12 +2375,7 @@ dkpCreateVertexBuffers(
         stagingBuffer.memoryHandle = VK_NULL_HANDLE;
     }
 
-    if (stagingBuffer.handle != VK_NULL_HANDLE
-        || stagingBuffer.memoryHandle != VK_NULL_HANDLE) {
-        dkpTerminateBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
-    }
-
-    goto exit;
+    goto cleanup;
 
 vertex_buffers_undo:
     for (i = 0; i < vertexBufferCount; ++i) {
@@ -2392,6 +2387,12 @@ vertex_buffers_undo:
     }
 
     DKP_FREE(pAllocator, *ppVertexBuffers);
+
+cleanup:;
+    if (stagingBuffer.handle != VK_NULL_HANDLE
+        || stagingBuffer.memoryHandle != VK_NULL_HANDLE) {
+        dkpTerminateBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
+    }
 
 exit:
     return out;
