@@ -24,11 +24,13 @@ struct Vertex {
     struct Vector3 color;
 };
 
-static const struct Vertex vertices[] = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                         {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                                         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+static const struct Vertex vertices[] = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                         {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+                                         {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+                                         {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+static const uint32_t indices[] = {0, 1, 2, 2, 3, 0};
 
-static const char applicationName[] = "vertexbuffer";
+static const char applicationName[] = "indexbuffer";
 static const unsigned int majorVersion = 1;
 static const unsigned int minorVersion = 0;
 static const unsigned int patchVersion = 0;
@@ -40,6 +42,8 @@ static const struct DkdShaderCreateInfo shaderInfos[]
 static const float clearColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
 static const struct DkVertexBufferCreateInfo vertexBufferInfos[]
     = {{sizeof vertices, 0, vertices}};
+static const struct DkIndexBufferCreateInfo indexBufferInfo
+    = {sizeof indices, 0, indices};
 static const struct DkVertexBindingDescriptionCreateInfo
     bindingDescriptionInfos[]
     = {{sizeof(struct Vertex), DK_VERTEX_INPUT_RATE_VERTEX}};
@@ -48,6 +52,7 @@ static const struct DkVertexAttributeDescriptionCreateInfo
     = {{0, 0, offsetof(struct Vertex, position), DK_FORMAT_R32G32_SFLOAT},
        {0, 1, offsetof(struct Vertex, color), DK_FORMAT_R32G32B32_SFLOAT}};
 static const uint32_t vertexCount = DKD_GET_ARRAY_SIZE(vertices);
+static const uint32_t indexCount = DKD_GET_ARRAY_SIZE(indices);
 static const uint32_t instanceCount = 1;
 
 int
@@ -83,7 +88,7 @@ dkdSetup(struct DkdBootstrapHandles *pHandles)
     createInfos.renderer.vertexBufferCount
         = DKD_GET_ARRAY_SIZE(vertexBufferInfos);
     createInfos.renderer.pVertexBufferInfos = vertexBufferInfos;
-    createInfos.renderer.pIndexBufferInfo = NULL;
+    createInfos.renderer.pIndexBufferInfo = &indexBufferInfo;
     createInfos.renderer.vertexBindingDescriptionCount
         = DKD_GET_ARRAY_SIZE(bindingDescriptionInfos);
     createInfos.renderer.pVertexBindingDescriptionInfos
@@ -93,8 +98,8 @@ dkdSetup(struct DkdBootstrapHandles *pHandles)
     createInfos.renderer.pVertexAttributeDescriptionInfos
         = attributeDescriptionInfos;
     createInfos.renderer.vertexCount = vertexCount;
+    createInfos.renderer.indexCount = indexCount;
     createInfos.renderer.instanceCount = instanceCount;
-
     return dkdSetupBootstrap(pHandles, &createInfos);
 }
 

@@ -60,6 +60,12 @@ struct DkVertexBufferCreateInfo {
     const void *pData;
 };
 
+struct DkIndexBufferCreateInfo {
+    DkUint64 size;
+    DkUint64 offset;
+    const void *pData;
+};
+
 struct DkVertexBindingDescriptionCreateInfo {
     DkUint32 stride;
     enum DkVertexInputRate inputRate;
@@ -85,6 +91,7 @@ struct DkRendererCreateInfo {
     DkFloat32 clearColor[4];
     DkUint32 vertexBufferCount;
     const struct DkVertexBufferCreateInfo *pVertexBufferInfos;
+    const struct DkIndexBufferCreateInfo *pIndexBufferInfo;
     DkUint32 vertexBindingDescriptionCount;
     const struct DkVertexBindingDescriptionCreateInfo
         *pVertexBindingDescriptionInfos;
@@ -92,6 +99,7 @@ struct DkRendererCreateInfo {
     const struct DkVertexAttributeDescriptionCreateInfo
         *pVertexAttributeDescriptionInfos;
     DkUint32 vertexCount;
+    DkUint32 indexCount;
     DkUint32 instanceCount;
     const struct DkLoggingCallbacks *pLogger;
     const struct DkAllocationCallbacks *pAllocator;

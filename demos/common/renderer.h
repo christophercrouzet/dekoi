@@ -26,6 +26,7 @@ struct DkdRendererCreateInfo {
     float clearColor[4];
     uint32_t vertexBufferCount;
     const struct DkVertexBufferCreateInfo *pVertexBufferInfos;
+    const struct DkIndexBufferCreateInfo *pIndexBufferInfo;
     uint32_t vertexBindingDescriptionCount;
     const struct DkVertexBindingDescriptionCreateInfo
         *pVertexBindingDescriptionInfos;
@@ -33,6 +34,7 @@ struct DkdRendererCreateInfo {
     const struct DkVertexAttributeDescriptionCreateInfo
         *pVertexAttributeDescriptionInfos;
     uint32_t vertexCount;
+    uint32_t indexCount;
     uint32_t instanceCount;
     const struct DkdLoggingCallbacks *pLogger;
     const struct DkdAllocationCallbacks *pAllocator;

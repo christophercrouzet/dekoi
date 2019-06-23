@@ -146,6 +146,7 @@ struct DkRenderer {
     struct DkpShader *pShaders;
     uint32_t vertexBufferCount;
     struct DkpBuffer *pVertexBuffers;
+    struct DkpBuffer *pIndexBuffer;
     struct DkpSwapChain swapChain;
     VkRenderPass renderPassHandle;
     VkPipelineLayout pipelineLayoutHandle;
@@ -154,6 +155,7 @@ struct DkRenderer {
     struct DkpCommandPools commandPools;
     VkCommandBuffer *pGraphicsCommandBufferHandles;
     uint32_t vertexCount;
+    uint32_t indexCount;
     uint32_t instanceCount;
 };
 
@@ -2424,6 +2426,118 @@ dkpDestroyVertexBuffers(const struct DkpDevice *pDevice,
 }
 
 static enum DkStatus
+dkpCreateIndexBuffer(struct DkpBuffer **ppIndexBuffer,
+                     const struct DkpDevice *pDevice,
+                     const struct DkIndexBufferCreateInfo *pIndexBufferInfo,
+                     VkCommandPool commandPoolHandle,
+                     const struct DkpQueues *pQueues,
+                     const VkAllocationCallbacks *pBackEndAllocator,
+                     const struct DkAllocationCallbacks *pAllocator,
+                     const struct DkLoggingCallbacks *pLogger)
+{
+    enum DkStatus out;
+    struct DkpBuffer stagingBuffer;
+    void *pData;
+
+    DKP_ASSERT(ppIndexBuffer != NULL);
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(commandPoolHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pQueues != NULL);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+    DKP_ASSERT(pLogger != NULL);
+
+    out = DK_SUCCESS;
+
+    if (pIndexBufferInfo == NULL) {
+        *ppIndexBuffer = NULL;
+        goto exit;
+    }
+
+    *ppIndexBuffer
+        = (struct DkpBuffer *)DKP_ALLOCATE(pAllocator, sizeof **ppIndexBuffer);
+    if (*ppIndexBuffer == NULL) {
+        DKP_LOG_TRACE(pLogger, "failed to allocate the index buffer\n");
+        out = DK_ERROR_ALLOCATION;
+        goto exit;
+    }
+
+    out = dkpInitializeBuffer(&stagingBuffer,
+                              pDevice,
+                              (VkDeviceSize)pIndexBufferInfo->size,
+                              VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                                  | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                              pBackEndAllocator,
+                              pLogger);
+    if (out != DK_SUCCESS) {
+        goto exit;
+    }
+
+    if (vkMapMemory(pDevice->logicalHandle,
+                    stagingBuffer.memoryHandle,
+                    (VkDeviceSize)pIndexBufferInfo->offset,
+                    (VkDeviceSize)pIndexBufferInfo->size,
+                    0,
+                    &pData)
+        != VK_SUCCESS) {
+        DKP_LOG_TRACE(pLogger,
+                      "failed to map an index staging buffer memory\n");
+        out = DK_ERROR;
+        goto staging_buffer_cleanup;
+    }
+
+    memcpy(pData, pIndexBufferInfo->pData, (size_t)pIndexBufferInfo->size);
+    vkUnmapMemory(pDevice->logicalHandle, stagingBuffer.memoryHandle);
+
+    out = dkpInitializeBuffer(
+        *ppIndexBuffer,
+        pDevice,
+        (VkDeviceSize)pIndexBufferInfo->size,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        pBackEndAllocator,
+        pLogger);
+    if (out != DK_SUCCESS) {
+        DKP_LOG_TRACE(pLogger, "failed to initialize the index buffer\n");
+        goto staging_buffer_cleanup;
+    }
+
+    (*ppIndexBuffer)->offset = (VkDeviceSize)pIndexBufferInfo->offset;
+
+    dkpCopyBuffer(pDevice,
+                  *ppIndexBuffer,
+                  &stagingBuffer,
+                  (VkDeviceSize)pIndexBufferInfo->size,
+                  commandPoolHandle,
+                  pQueues,
+                  pLogger);
+
+staging_buffer_cleanup:
+    dkpTerminateBuffer(pDevice, &stagingBuffer, pBackEndAllocator);
+
+exit:
+    return out;
+}
+
+static void
+dkpDestroyIndexBuffer(const struct DkpDevice *pDevice,
+                      struct DkpBuffer *pIndexBuffer,
+                      const VkAllocationCallbacks *pBackEndAllocator,
+                      const struct DkAllocationCallbacks *pAllocator)
+{
+    DKP_ASSERT(pDevice != NULL);
+    DKP_ASSERT(pDevice->logicalHandle != NULL);
+    DKP_ASSERT(pIndexBuffer->handle != VK_NULL_HANDLE);
+    DKP_ASSERT(pIndexBuffer->memoryHandle != VK_NULL_HANDLE);
+    DKP_ASSERT(pBackEndAllocator != NULL);
+    DKP_ASSERT(pAllocator != NULL);
+
+    dkpTerminateBuffer(pDevice, pIndexBuffer, pBackEndAllocator);
+}
+
+static enum DkStatus
 dkpCreateSwapChainImages(uint32_t *pImageCount,
                          VkImage **ppImageHandles,
                          const struct DkpDevice *pDevice,
@@ -3531,7 +3645,9 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
                                 const VkClearValue *pClearColor,
                                 uint32_t vertexBufferCount,
                                 const struct DkpBuffer *pVertexBuffers,
+                                const struct DkpBuffer *pIndexBuffer,
                                 uint32_t vertexCount,
+                                uint32_t indexCount,
                                 uint32_t instanceCount,
                                 const struct DkAllocationCallbacks *pAllocator,
                                 const struct DkLoggingCallbacks *pLogger)
@@ -3619,7 +3735,19 @@ dkpRecordGraphicsCommandBuffers(const struct DkpSwapChain *pSwapChain,
             vkCmdBindVertexBuffers(
                 pCommandBufferHandles[i], 0, 1, pBuffers, pOffsets);
         }
-        vkCmdDraw(pCommandBufferHandles[i], vertexCount, instanceCount, 0, 0);
+
+        if (indexCount > 0) {
+            DKP_ASSERT(pIndexBuffer != NULL);
+            vkCmdBindIndexBuffer(pCommandBufferHandles[i],
+                                 pIndexBuffer->handle,
+                                 0,
+                                 VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(pCommandBufferHandles[i], indexCount, 1, 0, 0, 0);
+        } else {
+            vkCmdDraw(
+                pCommandBufferHandles[i], vertexCount, instanceCount, 0, 0);
+        }
+
         vkCmdEndRenderPass(pCommandBufferHandles[i]);
 
         if (vkEndCommandBuffer(pCommandBufferHandles[i]) != VK_SUCCESS) {
@@ -3735,7 +3863,9 @@ dkpInitializeRendererSwapChainSystem(struct DkRenderer *pRenderer,
         &pRenderer->clearColor,
         pRenderer->vertexBufferCount,
         pRenderer->pVertexBuffers,
+        pRenderer->pIndexBuffer,
         pRenderer->vertexCount,
+        pRenderer->indexCount,
         pRenderer->instanceCount,
         pRenderer->pAllocator,
         pRenderer->pLogger);
@@ -4165,6 +4295,7 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
     (*ppRenderer)->surfaceExtent.width = (uint32_t)pCreateInfo->surfaceWidth;
     (*ppRenderer)->surfaceExtent.height = (uint32_t)pCreateInfo->surfaceHeight;
     (*ppRenderer)->vertexCount = (uint32_t)pCreateInfo->vertexCount;
+    (*ppRenderer)->indexCount = (uint32_t)pCreateInfo->indexCount;
     (*ppRenderer)->instanceCount = (uint32_t)pCreateInfo->instanceCount;
 
     for (i = 0; i < 4; ++i) {
@@ -4299,14 +4430,33 @@ dkCreateRenderer(struct DkRenderer **ppRenderer,
         goto command_pools_undo;
     }
 
+    out = dkpCreateIndexBuffer(
+        &(*ppRenderer)->pIndexBuffer,
+        &(*ppRenderer)->device,
+        pCreateInfo->pIndexBufferInfo,
+        (*ppRenderer)->commandPools.handleMap[DKP_QUEUE_TYPE_TRANSFER],
+        &(*ppRenderer)->queues,
+        &(*ppRenderer)->backEndAllocator,
+        (*ppRenderer)->pAllocator,
+        (*ppRenderer)->pLogger);
+    if (out != DK_SUCCESS) {
+        goto vertex_buffers_undo;
+    }
+
     if (!headless) {
         out = dkpInitializeRendererSwapChainSystem(*ppRenderer, VK_NULL_HANDLE);
         if (out != DK_SUCCESS) {
-            goto vertex_buffers_undo;
+            goto index_buffer_undo;
         }
     }
 
     goto exit;
+
+index_buffer_undo:
+    dkpDestroyIndexBuffer(&(*ppRenderer)->device,
+                          (*ppRenderer)->pIndexBuffer,
+                          &(*ppRenderer)->backEndAllocator,
+                          (*ppRenderer)->pAllocator);
 
 vertex_buffers_undo:
     dkpDestroyVertexBuffers(&(*ppRenderer)->device,
@@ -4392,6 +4542,10 @@ dkDestroyRenderer(struct DkRenderer *pRenderer)
             pRenderer, DKP_OLD_SWAP_CHAIN_PRESERVATION_DISABLED);
     }
 
+    dkpDestroyIndexBuffer(&pRenderer->device,
+                          pRenderer->pIndexBuffer,
+                          &pRenderer->backEndAllocator,
+                          pRenderer->pAllocator);
     dkpDestroyVertexBuffers(&pRenderer->device,
                             pRenderer->vertexBufferCount,
                             pRenderer->pVertexBuffers,

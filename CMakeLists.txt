@@ -195,6 +195,9 @@ if(DEKOI_ENABLE_DEMOS)
             demos/customlogger/logger.h
             demos/customlogger/main.c)
 
+    dk_add_demo(indexbuffer
+        FILES demos/indexbuffer/main.c)
+
     dk_add_demo(triangle
         FILES demos/triangle/main.c)
 

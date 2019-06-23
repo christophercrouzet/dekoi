@@ -206,6 +206,7 @@ dkdCreateRenderer(struct DkdRenderer **ppRenderer,
     backEndInfo.clearColor[3] = (DkFloat32)pCreateInfo->clearColor[3];
     backEndInfo.vertexBufferCount = (DkUint32)pCreateInfo->vertexBufferCount;
     backEndInfo.pVertexBufferInfos = pCreateInfo->pVertexBufferInfos;
+    backEndInfo.pIndexBufferInfo = pCreateInfo->pIndexBufferInfo;
     backEndInfo.vertexBindingDescriptionCount
         = (DkUint32)pCreateInfo->vertexBindingDescriptionCount;
     backEndInfo.pVertexBindingDescriptionInfos
@@ -215,6 +216,7 @@ dkdCreateRenderer(struct DkdRenderer **ppRenderer,
     backEndInfo.pVertexAttributeDescriptionInfos
         = pCreateInfo->pVertexAttributeDescriptionInfos;
     backEndInfo.vertexCount = (DkUint32)pCreateInfo->vertexCount;
+    backEndInfo.indexCount = (DkUint32)pCreateInfo->indexCount;
     backEndInfo.instanceCount = (DkUint32)pCreateInfo->instanceCount;
     backEndInfo.pLogger
         = pCreateInfo->pLogger == NULL ? NULL : (*ppRenderer)->pDekoiLogger;
